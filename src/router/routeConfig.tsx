@@ -1,5 +1,5 @@
 import React from "react";
-import type { AppRoutesProps } from "./types.ts";
+import type { AppRoutesProps } from "./const/types";
 
 import {
     AppRoutes,
@@ -9,7 +9,7 @@ import {
     getRouteLogin,
     getRouteNewProject,
     getRouteProfile,
-} from './router.ts'
+} from '../const/router.ts'
 
 import AuthSmoke from "../dev/AuthSmoke.tsx";
 

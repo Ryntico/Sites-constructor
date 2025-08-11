@@ -1,5 +1,5 @@
 import { Navigate, useLocation } from 'react-router-dom';
-import { getRouteMain } from './router';
+import { getRouteMain } from '../const/router';
 import type {ReactElement} from "react";
 
 interface RequireAuthProps {
