@@ -6,6 +6,26 @@ import '@mantine/core/styles.css';
 import '@mantine/tiptap/styles.css';
 import { Provider } from 'react-redux';
 import { store } from './store';
+import { onAuthStateChanged } from 'firebase/auth';
+import { auth } from './services/firebase/app';
+import { setUser, fetchUserDoc } from './store/slices/authSlice';
+
+onAuthStateChanged(auth, (fbUser) => {
+	store.dispatch(
+		setUser(
+			fbUser
+				? {
+						uid: fbUser.uid,
+						email: fbUser.email,
+						displayName: fbUser.displayName,
+					}
+				: null,
+		),
+	);
+	if (fbUser) {
+		store.dispatch(fetchUserDoc(fbUser.uid));
+	}
+});
 
 createRoot(document.getElementById('root')!).render(
 	(

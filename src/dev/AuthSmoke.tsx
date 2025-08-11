@@ -1,114 +1,161 @@
 import { useEffect, useState } from 'react';
-import { onAuthStateChanged, type User } from 'firebase/auth';
-import {
-	doc,
-	setDoc,
-	getDoc,
-	serverTimestamp,
-	type Timestamp,
-	type DocumentData,
-} from 'firebase/firestore';
-import { auth, db } from '../services/firebase/app';
-import { signUp, signIn, logOut } from '../services/firebase/auth';
+import { doc, getDoc, setDoc, serverTimestamp, Timestamp } from 'firebase/firestore';
+import { db } from '../services/firebase/app';
 
-type DevPing = {
-	at?: Timestamp;
-	uid?: string | null;
-};
+import {
+	selectAuth,
+	signUp,
+	signIn,
+	signOut,
+	updateProfile,
+	fetchUserDoc,
+} from '../store/slices/authSlice';
+import { useAppDispatch, useAppSelector } from '../store/hooks.ts';
+
+type DevPing = { at?: Timestamp; uid?: string | null };
 
 export default function AuthSmoke() {
-	const [email, setEmail] = useState<string>('');
-	const [pass, setPass] = useState<string>('');
-	const [name, setName] = useState<string>('');
-	const [user, setUser] = useState<User | null>(null);
+	const dispatch = useAppDispatch();
+
+	const { user, status, error } = useAppSelector(selectAuth);
+
+	const [email, setEmail] = useState('');
+	const [pass, setPass] = useState('');
+	const [firstName, setFirst] = useState('');
+	const [lastName, setLast] = useState('');
+
 	const [ping, setPing] = useState<DevPing | null>(null);
-	const [error, setError] = useState<string>('');
+	const [localError, setLocalError] = useState('');
 
-	useEffect(() => onAuthStateChanged(auth, setUser), []);
+	useEffect(() => {
+		if (user?.uid) dispatch(fetchUserDoc(user.uid));
+	}, [user?.uid, dispatch]);
 
-	async function handlePing(): Promise<void> {
-		setError('');
+	async function handlePing() {
+		setLocalError('');
 		try {
 			const ref = doc(db, 'dev', 'ping');
-			await setDoc(ref, {
-				at: serverTimestamp(),
-				uid: auth.currentUser?.uid ?? null,
-			});
+			await setDoc(ref, { at: serverTimestamp(), uid: user?.uid ?? null });
 			const snap = await getDoc(ref);
-			const data = (snap.data() as DocumentData | undefined) ?? null;
-			setPing(data as DevPing | null);
+			setPing((snap.data() as DevPing) ?? null);
 		} catch (e) {
-			const msg = e instanceof Error ? e.message : String(e);
-			setError(msg);
+			setLocalError(e instanceof Error ? e.message : String(e));
 		}
 	}
 
-	async function handleSignUp(): Promise<void> {
-		setError('');
+	const handleSignUp = async () => {
+		setLocalError('');
 		try {
-			await signUp(email, pass, name || undefined);
+			await dispatch(
+				signUp({ email, password: pass, firstName, lastName }),
+			).unwrap();
 		} catch (e) {
-			const msg = e instanceof Error ? e.message : String(e);
-			setError(msg);
+			setLocalError(String(e));
 		}
-	}
+	};
 
-	async function handleSignIn(): Promise<void> {
-		setError('');
+	const handleSignIn = async () => {
+		setLocalError('');
 		try {
-			await signIn(email, pass);
+			await dispatch(signIn({ email, password: pass })).unwrap();
 		} catch (e) {
-			const msg = e instanceof Error ? e.message : String(e);
-			setError(msg);
+			setLocalError(String(e));
 		}
-	}
+	};
 
-	async function handleLogOut(): Promise<void> {
-		setError('');
+	const handleLogOut = async () => {
+		setLocalError('');
 		try {
-			await logOut();
+			await dispatch(signOut()).unwrap();
+			setPing(null);
 		} catch (e) {
-			const msg = e instanceof Error ? e.message : String(e);
-			setError(msg);
+			setLocalError(String(e));
 		}
-	}
+	};
+
+	const handleUpdateProfile = async () => {
+		setLocalError('');
+		try {
+			await dispatch(updateProfile({ firstName, lastName })).unwrap();
+		} catch (e) {
+			setLocalError(String(e));
+		}
+	};
+
+	const loading = status === 'loading';
 
 	return (
-		<div style={{ maxWidth: 420, margin: '40px auto', display: 'grid', gap: 12 }}>
-			<h2>Auth & Firestore smoke</h2>
+		<div style={{ maxWidth: 520, margin: '40px auto', display: 'grid', gap: 12 }}>
+			<h2>Auth & Firestore smoke (Redux)</h2>
 
-			<label>
-				Email <input value={email} onChange={(e) => setEmail(e.target.value)} />
-			</label>
-			<label>
-				Пароль{' '}
-				<input
-					type="password"
-					value={pass}
-					onChange={(e) => setPass(e.target.value)}
-				/>
-			</label>
-			<label>
-				Имя (опц.){' '}
-				<input value={name} onChange={(e) => setName(e.target.value)} />
-			</label>
+			<div style={{ display: 'grid', gap: 8 }}>
+				<label>
+					Email{' '}
+					<input value={email} onChange={(e) => setEmail(e.target.value)} />
+				</label>
+				<label>
+					Пароль{' '}
+					<input
+						type="password"
+						value={pass}
+						onChange={(e) => setPass(e.target.value)}
+					/>
+				</label>
+				<label>
+					Имя{' '}
+					<input value={firstName} onChange={(e) => setFirst(e.target.value)} />
+				</label>
+				<label>
+					Фамилия{' '}
+					<input value={lastName} onChange={(e) => setLast(e.target.value)} />
+				</label>
+			</div>
 
 			<div style={{ display: 'flex', gap: 8 }}>
-				<button onClick={handleSignUp}>Sign Up</button>
-				<button onClick={handleSignIn}>Sign In</button>
-				<button onClick={handleLogOut}>Log Out</button>
+				<button onClick={handleSignUp} disabled={loading}>
+					Sign Up
+				</button>
+				<button onClick={handleSignIn} disabled={loading}>
+					Sign In
+				</button>
+				<button onClick={handleLogOut} disabled={loading || !user}>
+					Log Out
+				</button>
+				<button onClick={handleUpdateProfile} disabled={loading || !user}>
+					Update name
+				</button>
 			</div>
 
 			<div style={{ marginTop: 8 }}>
-				<b>currentUser:</b>{' '}
-				<code>{user ? `${user.uid} (${user.email ?? ''})` : 'null'}</code>
+				<b>status:</b> {status} {loading ? '…' : ''}
+			</div>
+			{(error || localError) && (
+				<div style={{ color: 'crimson' }}>Error: {error || localError}</div>
+			)}
+
+			<div style={{ marginTop: 8 }}>
+				<b>currentUser (store):</b>{' '}
+				<pre style={{ background: '#f6f6f6', padding: 10 }}>
+					{JSON.stringify(
+						user
+							? {
+									uid: user.uid,
+									email: user.email,
+									displayName: user.displayName,
+									firstName: user.firstName,
+									lastName: user.lastName,
+								}
+							: null,
+						null,
+						2,
+					)}
+				</pre>
 			</div>
 
 			<hr />
 			<button onClick={handlePing} disabled={!user}>
 				Ping Firestore (create + read)
 			</button>
-			{error && <div style={{ color: 'crimson' }}>Error: {error}</div>}
 			<pre style={{ background: '#f6f6f6', padding: 10 }}>
 				{ping ? JSON.stringify(ping, null, 2) : '—'}
 			</pre>
