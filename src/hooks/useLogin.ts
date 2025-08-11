@@ -16,12 +16,12 @@ export const useLogin = (): UseLoginReturn => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const handleSubmit = async (values: LoginFormValues, successCallback) => {
+  const handleSubmit = async (values: LoginFormValues, successCallback?: VoidFunction) => {
     try {
       setError(null);
       setLoading(true);
 
-      const data = await signIn(values.email, values.password);
+      await signIn(values.email, values.password);
       // TODO добавить логику ?
       successCallback?.();
     } catch (err) {

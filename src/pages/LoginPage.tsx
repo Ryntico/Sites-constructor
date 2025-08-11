@@ -1,4 +1,3 @@
-import React from 'react';
 import {
   Container,
   Paper,
@@ -42,13 +41,13 @@ export const LoginPage = () => {
 
   return (
     <Container size="xs" py="xl">
-      <Paper 
-        shadow="sm" 
-        p="xl" 
-        radius="md" 
+      <Paper
+        shadow="sm"
+        p="xl"
+        radius="md"
         withBorder
-        style={{ 
-          maxWidth: 400, 
+        style={{
+          maxWidth: 400,
           margin: '0 auto',
           marginTop: '10vh'
         }}
@@ -102,8 +101,8 @@ export const LoginPage = () => {
 
             <Text ta="center" size="sm" c="dimmed">
               Нет аккаунта ?{' '}
-              <Anchor 
-                size="sm" 
+              <Anchor
+                size="sm"
                 onClick={() => navigate(getRouteSignup())}
                 style={{ cursor: 'pointer' }}
               >

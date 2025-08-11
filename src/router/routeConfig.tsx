@@ -1,4 +1,4 @@
-import React, { lazy } from "react";
+import { lazy } from "react";
 import type { AppRoutesProps } from "./const/types";
 
 import {
@@ -11,9 +11,10 @@ import {
     getRouteProfile,
 } from '../const/router.ts'
 
-import AuthSmoke from "../dev/AuthSmoke.tsx";
+// import AuthSmoke from "../dev/AuthSmoke.tsx";
 
 const LoginPage = lazy(() => import('../pages/LoginPage').then(module => ({ default: module.LoginPage })));
+const SignupPage = lazy(() => import('../pages/SignupPage').then(module => ({ default: module.SignupPage })));
 
 export const routeConfig: Record<AppRoutes, AppRoutesProps> = {
     [AppRoutes.MAIN]: {
@@ -26,7 +27,7 @@ export const routeConfig: Record<AppRoutes, AppRoutesProps> = {
     },
     [AppRoutes.SIGNUP]: {
         path: getRouteSignup(),
-        element: <AuthSmoke />,
+        element: <SignupPage />,
     },
     [AppRoutes.PROFILE]: {
         path: getRouteProfile(),
