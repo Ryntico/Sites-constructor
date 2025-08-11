@@ -27,4 +27,9 @@ export async function logOut(): Promise<void> {
 	await signOut(auth);
 }
 
-export type PublicUser = Pick<User, 'uid' | 'email' | 'displayName' | 'photoURL'>;
+export async function updateDisplayName(full: string) {
+	if (!auth.currentUser) throw new Error('Not authenticated');
+	await updateProfile(auth.currentUser, { displayName: full || null });
+	await auth.currentUser.reload();
+	return auth.currentUser;
+}
