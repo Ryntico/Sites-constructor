@@ -14,6 +14,7 @@ import {
 import AuthSmoke from "../dev/AuthSmoke.tsx";
 
 const LoginPage = lazy(() => import('../pages/LoginPage').then(module => ({ default: module.LoginPage })));
+const ProfilePage = lazy(() => import('../pages/profile/ProfilePage.tsx').then(module => ({ default: module.ProfilePage })));
 
 export const routeConfig: Record<AppRoutes, AppRoutesProps> = {
     [AppRoutes.MAIN]: {
@@ -30,7 +31,7 @@ export const routeConfig: Record<AppRoutes, AppRoutesProps> = {
     },
     [AppRoutes.PROFILE]: {
         path: getRouteProfile(),
-        element: <p>PROFILE</p>,
+        element: <ProfilePage />,
         authOnly: true,
     },
     [AppRoutes.NEW_PROJECT]: {

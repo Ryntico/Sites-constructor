@@ -14,12 +14,7 @@ import {
 import { useForm } from '@mantine/form';
 import { useNavigate } from 'react-router-dom';
 import { getRouteSignup } from "../const/router";
-import { useLogin } from '../hooks/useLogin';
-
-interface LoginFormValues {
-  email: string;
-  password: string;
-}
+import { useLogin, type LoginFormValues } from '../hooks/useLogin';
 
 export const LoginPage = () => {
   const navigate = useNavigate();

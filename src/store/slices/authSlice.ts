@@ -3,6 +3,7 @@ import { auth, db } from '../../services/firebase/app';
 import * as authApi from '../../services/firebase/auth';
 import { doc, getDoc, setDoc, serverTimestamp, Timestamp } from 'firebase/firestore';
 import type { User as FirebaseUser } from 'firebase/auth';
+import { updateUserEmail } from '../../services/firebase/auth';
 
 export type FirebaseTimestamp = Timestamp;
 
@@ -127,7 +128,7 @@ export const signOut = createAsyncThunk<void, void, { rejectValue: string }>(
 
 export const updateProfile = createAsyncThunk<
 	AuthUser,
-	{ firstName?: string; lastName?: string },
+	{ firstName?: string; lastName?: string; },
 	{ rejectValue: string }
 >('auth/updateProfile', async (payload, { rejectWithValue }) => {
 	try {
@@ -150,6 +151,20 @@ export const updateProfile = createAsyncThunk<
 		if (Object.keys(updates).length) await setDoc(ref, updates, { merge: true });
 
 		return mapAuthUser(auth.currentUser!);
+	} catch (e: unknown) {
+		const msg = e instanceof Error ? e.message : String(e);
+		return rejectWithValue(msg);
+	}
+});
+
+export const updateEmail = createAsyncThunk<
+	string,
+	{ email: string },
+	{ rejectValue: string }
+>('auth/updateEmail', async ({ email }, { rejectWithValue }) => {
+	try {
+		await updateUserEmail(email);
+		return email;
 	} catch (e: unknown) {
 		const msg = e instanceof Error ? e.message : String(e);
 		return rejectWithValue(msg);
@@ -229,6 +244,22 @@ const authSlice = createSlice({
 			.addCase(updateProfile.rejected, (s, a) => {
 				s.status = 'error';
 				s.error = a.payload ?? 'Update profile failed';
+			});
+
+		builder
+			.addCase(updateEmail.pending, (s) => {
+				s.status = 'loading';
+				s.error = null;
+			})
+			.addCase(updateEmail.fulfilled, (s, a) => {
+				s.status = 'succeeded';
+				if (s.user) {
+					s.user.email = a.payload;
+				}
+			})
+			.addCase(updateEmail.rejected, (s, a) => {
+				s.status = 'error';
+				s.error = a.payload ?? 'Update email failed';
 			});
 
 		builder.addCase(fetchUserDoc.fulfilled, (s, a) => {
