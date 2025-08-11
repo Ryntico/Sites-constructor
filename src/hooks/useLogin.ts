@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { signIn } from '../services/firebase/auth';
 
-interface LoginFormValues {
+export interface LoginFormValues {
   email: string;
   password: string;
 }
