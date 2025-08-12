@@ -1,19 +1,19 @@
 import { Navigate, useLocation } from 'react-router-dom';
-import { getRouteMain } from '../const/router';
+import { getRouteLogin } from '../const/router';
 import type {ReactElement} from "react";
+import { selectAuth } from "../store/slices/authSlice";
+import { useAppSelector } from "../store/hooks";
 
 interface RequireAuthProps {
     children: ReactElement
 }
 
 export function RequireAuth({ children }: RequireAuthProps) {
-    // TODO убрать хардкод
-    const auth = true;
+    const {user} = useAppSelector(selectAuth);
     const location = useLocation();
 
-
-    if (!auth) {
-        return <Navigate to={getRouteMain()} state={{ from: location }} replace />;
+    if (!user) {
+        return <Navigate to={getRouteLogin()} state={{ from: location }} replace />;
     }
 
     return children;
