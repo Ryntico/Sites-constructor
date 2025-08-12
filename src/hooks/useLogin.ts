@@ -1,5 +1,6 @@
-import { useState } from 'react';
-import { signIn } from '../services/firebase/auth';
+import { useCallback } from 'react';
+import { useAppDispatch, useAppSelector } from '../store/hooks';
+import { signIn } from '../store/slices/authSlice';
 
 export interface LoginFormValues {
   email: string;
@@ -13,24 +14,25 @@ interface UseLoginReturn {
 }
 
 export const useLogin = (): UseLoginReturn => {
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const dispatch = useAppDispatch();
+  const { status, error } = useAppSelector((state) => state.auth);
+  const loading = status === 'loading';
 
-  const handleSubmit = async (values: LoginFormValues, successCallback) => {
+  const handleSubmit = useCallback(async (values: LoginFormValues, successCallback?: VoidFunction) => {
     try {
-      setError(null);
-      setLoading(true);
+      const resultAction = await dispatch(signIn({
+        email: values.email,
+        password: values.password
+      }));
 
-      const data = await signIn(values.email, values.password);
-      // TODO добавить логику ?
-      successCallback?.();
+      if (signIn.fulfilled.match(resultAction)) {
+        successCallback?.();
+      }
     } catch (err) {
-      const errorMessage = err instanceof Error && err.message.includes('invalid-credential') ?
-          'неверный логин или пароль': 'ошибка на стороне сервера';
-      setError(errorMessage);
+      // Ошибка уже обработана в слайсе
+      console.error('Login error:', err);
     }
-    setLoading(false);
-  };
+  }, [dispatch]);
 
   return {
     loading,
