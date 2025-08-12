@@ -3,6 +3,7 @@ import {
 	signInWithEmailAndPassword,
 	signOut,
 	updateProfile,
+	updateEmail,
 } from 'firebase/auth';
 import type { User } from 'firebase/auth';
 
@@ -30,6 +31,13 @@ export async function logOut(): Promise<void> {
 export async function updateDisplayName(full: string) {
 	if (!auth.currentUser) throw new Error('Not authenticated');
 	await updateProfile(auth.currentUser, { displayName: full || null });
+	await auth.currentUser.reload();
+	return auth.currentUser;
+}
+
+export async function updateUserEmail(newEmail: string) {
+	if (!auth.currentUser) throw new Error('Not authenticated');
+	await updateEmail(auth.currentUser, newEmail);
 	await auth.currentUser.reload();
 	return auth.currentUser;
 }

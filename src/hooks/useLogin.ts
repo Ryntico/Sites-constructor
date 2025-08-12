@@ -2,7 +2,7 @@ import { useCallback } from 'react';
 import { useAppDispatch, useAppSelector } from '../store/hooks';
 import { signIn } from '../store/slices/authSlice';
 
-interface LoginFormValues {
+export interface LoginFormValues {
   email: string;
   password: string;
 }
