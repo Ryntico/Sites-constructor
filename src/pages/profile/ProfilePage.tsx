@@ -2,18 +2,21 @@ import React, { useState } from 'react';
 import { Container, Paper } from '@mantine/core';
 import { ProfileView } from './ProfileView.tsx';
 import { ProfileEdit } from './ProfileEdit.tsx';
+import { selectAuth } from "../../store/slices/authSlice";
+import { useAppSelector } from "../../store/hooks.ts";
+
 
 export const ProfilePage = () => {
   const [isEditing, setIsEditing] = useState(false);
+  const {user } = useAppSelector(selectAuth)
 
   const handleEdit = () => setIsEditing(true);
   const handleSave = () => setIsEditing(false);
 
-  // TODO заменить на user из редакса
   const authData = {
-    email: 'bruh@bruh.com',
-    lastName: 'Андрей',
-    firstName: 'Андрееей'
+    email: user?.email,
+    lastName: user?.lastName,
+    firstName: user?.firstName,
   }
 
   return (
