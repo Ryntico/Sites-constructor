@@ -14,16 +14,22 @@ import {
 // import AuthSmoke from "../dev/AuthSmoke.tsx";
 
 const LoginPage = lazy(() =>
-	import('../pages/LoginPage').then((module) => ({ default: module.LoginPage })),
+	import('@pages/LoginPage').then((module) => ({ default: module.LoginPage })),
 );
 
 const SignupPage = lazy(() =>
-	import('../pages/SignupPage').then((module) => ({ default: module.SignupPage })),
+	import('@pages/SignupPage').then((module) => ({ default: module.SignupPage })),
 );
 
 const ProfilePage = lazy(() =>
-	import('../pages/profile/ProfilePage.tsx').then((module) => ({
+	import('@pages/profile/ProfilePage.tsx').then((module) => ({
 		default: module.ProfilePage,
+	})),
+);
+
+const ConstructorPage = lazy(() =>
+	import('@pages/constructor/ConstructorPage').then((module) => ({
+		default: module.ConstructorPage,
 	})),
 );
 
@@ -47,7 +53,7 @@ export const routeConfig: Record<AppRoutes, AppRoutesProps> = {
 	},
 	[AppRoutes.NEW_PROJECT]: {
 		path: getRouteNewProject(),
-		element: <p>NEW_PROJECT</p>,
+		element: <ConstructorPage />,
 		authOnly: true,
 	},
 	[AppRoutes.EXISTING_PROJECT]: {

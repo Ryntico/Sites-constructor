@@ -5,7 +5,7 @@ import { selectAuth } from '@store/slices/authSlice';
 import { useAppSelector } from '@store/hooks';
 
 export function App() {
-    const { user, initialized } = useAppSelector(selectAuth);
+	const { user, initialized } = useAppSelector(selectAuth);
 
 	return (
 		<>

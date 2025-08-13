@@ -9,14 +9,14 @@ interface RequireAuthProps {
 }
 
 export function RequireAuth({ children }: RequireAuthProps) {
-    const { user, initialized } = useAppSelector(selectAuth);
+	const { user, initialized } = useAppSelector(selectAuth);
 	const location = useLocation();
 
-    if (!initialized) {
-        return null;
-    }
+	if (!initialized) {
+		return null;
+	}
 
-    if (!user) {
+	if (!user) {
 		return <Navigate to={getRouteLogin()} state={{ from: location }} replace />;
 	}
 
