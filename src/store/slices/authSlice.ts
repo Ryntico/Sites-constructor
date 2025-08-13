@@ -1,9 +1,9 @@
 import { createSlice, createAsyncThunk, type PayloadAction } from '@reduxjs/toolkit';
-import { auth, db } from '../../services/firebase/app';
-import * as authApi from '../../services/firebase/auth';
+import { auth, db } from '@/services/firebase/app.ts';
+import * as authApi from '@/services/firebase/auth';
 import { doc, getDoc, setDoc, serverTimestamp, Timestamp } from 'firebase/firestore';
 import type { User as FirebaseUser } from 'firebase/auth';
-import { updateUserEmail } from '../../services/firebase/auth';
+import { updateUserEmail } from '@/services/firebase/auth.ts';
 
 export type FirebaseTimestamp = Timestamp;
 
@@ -30,9 +30,10 @@ type AuthState = {
 	user: AuthUser | null;
 	status: 'idle' | 'loading' | 'succeeded' | 'error';
 	error: string | null;
+    initialized: boolean;
 };
 
-const initialState: AuthState = { user: null, status: 'idle', error: null };
+const initialState: AuthState = { user: null, status: 'idle', error: null, initialized: false };
 
 const mapAuthUser = (u: FirebaseUser): AuthUser => ({
 	uid: u.uid,
@@ -128,7 +129,7 @@ export const signOut = createAsyncThunk<void, void, { rejectValue: string }>(
 
 export const updateProfile = createAsyncThunk<
 	AuthUser,
-	{ firstName?: string; lastName?: string; },
+	{ firstName?: string; lastName?: string },
 	{ rejectValue: string }
 >('auth/updateProfile', async (payload, { rejectWithValue }) => {
 	try {
@@ -177,6 +178,7 @@ const authSlice = createSlice({
 	reducers: {
 		setUser(state, action: PayloadAction<AuthUser | null>) {
 			state.user = action.payload;
+            state.initialized = true;
 		},
 		resetError(state) {
 			state.error = null;
