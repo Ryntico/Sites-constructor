@@ -92,7 +92,12 @@ export const signUp = createAsyncThunk<
 			const fbUser = await authApi.signUp(email, password, full);
 
 			await ensureUserDoc(fbUser, { firstName, lastName });
-			return mapAuthUser(fbUser);
+
+			return {
+				...mapAuthUser(fbUser),
+				firstName,
+				lastName,
+			};
 		} catch (e: unknown) {
 			const msg = e instanceof Error ? e.message : String(e);
 			return rejectWithValue(msg);
@@ -108,7 +113,15 @@ export const signIn = createAsyncThunk<
 	try {
 		const fbUser = await authApi.signIn(email, password);
 		await ensureUserDoc(fbUser);
-		return mapAuthUser(fbUser);
+
+		const snap = await getDoc(doc(db, 'users', fbUser.uid));
+		const data = (snap.data() as Partial<UserDoc>) || {};
+
+		return {
+			...mapAuthUser(fbUser),
+			firstName: data.firstName ?? '',
+			lastName: data.lastName ?? '',
+		};
 	} catch (e: unknown) {
 		const msg = e instanceof Error ? e.message : String(e);
 		return rejectWithValue(msg);
