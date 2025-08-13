@@ -1,16 +1,16 @@
-import './App.css'
-import { Header } from './components/header/Header.tsx'
-import { AppRouter } from './router/AppRouter.tsx'
-import { selectAuth } from "./store/slices/authSlice";
-import { useAppSelector } from "./store/hooks";
+import './App.css';
+import { Header } from './components/header/Header.tsx';
+import { AppRouter } from '@/router/AppRouter.tsx';
+import { selectAuth } from '@store/slices/authSlice';
+import { useAppSelector } from '@store/hooks';
 
 export function App() {
-  const {user } = useAppSelector(selectAuth)
+    const { user, initialized } = useAppSelector(selectAuth);
 
-  return (
-    <>
-      {user && <Header/>}
-      <AppRouter />
-    </>
-  )
+	return (
+		<>
+			{initialized && user && <Header />}
+			{initialized && <AppRouter />}
+		</>
+	);
 }

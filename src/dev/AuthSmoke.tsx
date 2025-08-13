@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { doc, getDoc, setDoc, serverTimestamp, Timestamp } from 'firebase/firestore';
-import { db } from '../services/firebase/app';
+import { db } from '@/services/firebase/app';
 
 import {
 	selectAuth,
@@ -9,8 +9,8 @@ import {
 	signOut,
 	updateProfile,
 	fetchUserDoc,
-} from '../store/slices/authSlice';
-import { useAppDispatch, useAppSelector } from '../store/hooks.ts';
+} from '@store/slices/authSlice';
+import { useAppDispatch, useAppSelector } from '@store/hooks.ts';
 
 type DevPing = { at?: Timestamp; uid?: string | null };
 
