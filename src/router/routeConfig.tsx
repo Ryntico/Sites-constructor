@@ -9,7 +9,9 @@ import {
 	getRouteLogin,
 	getRouteNewProject,
 	getRouteProfile,
+	getRouteConstructor,
 } from '../const/router.ts';
+import SmokeConstructorPage from '@/dev/SmokeConstructorPage.tsx';
 
 // import AuthSmoke from "../dev/AuthSmoke.tsx";
 
@@ -59,5 +61,9 @@ export const routeConfig: Record<AppRoutes, AppRoutesProps> = {
 	[AppRoutes.NOT_FOUND]: {
 		path: '*',
 		element: <p>NOT_FOUND</p>,
+	},
+	[AppRoutes.DEV_CONSTRUCTOR]: {
+		path: getRouteConstructor(),
+		element: <SmokeConstructorPage />,
 	},
 };
