@@ -7,6 +7,7 @@ export enum AppRoutes {
 	EXISTING_PROJECT = 'existing_project',
 	// last
 	NOT_FOUND = 'not_found',
+	DEV_CONSTRUCTOR = 'constructor',
 }
 
 export const getRouteMain = () => '/';
@@ -15,3 +16,4 @@ export const getRouteSignup = () => '/signup';
 export const getRouteProfile = () => '/me';
 export const getRouteNewProject = () => '/sites/new';
 export const getRouteExistingProject = (siteId: string) => `/sites/${siteId}`;
+export const getRouteConstructor = () => '/dev/constructor';
