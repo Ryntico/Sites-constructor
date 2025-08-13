@@ -30,10 +30,15 @@ type AuthState = {
 	user: AuthUser | null;
 	status: 'idle' | 'loading' | 'succeeded' | 'error';
 	error: string | null;
-    initialized: boolean;
+	initialized: boolean;
 };
 
-const initialState: AuthState = { user: null, status: 'idle', error: null, initialized: false };
+const initialState: AuthState = {
+	user: null,
+	status: 'idle',
+	error: null,
+	initialized: false,
+};
 
 const mapAuthUser = (u: FirebaseUser): AuthUser => ({
 	uid: u.uid,
@@ -191,7 +196,7 @@ const authSlice = createSlice({
 	reducers: {
 		setUser(state, action: PayloadAction<AuthUser | null>) {
 			state.user = action.payload;
-            state.initialized = true;
+			state.initialized = true;
 		},
 		resetError(state) {
 			state.error = null;
