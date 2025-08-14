@@ -7,6 +7,7 @@ import {
 	insertSubtree,
 	moveNode,
 	removeNode,
+	type SchemaPatch,
 } from './schemaOps';
 import { DropZone } from '../components/DropZones';
 import { EditableNodeWrapper } from '../components/EditableNodeWrapper';
@@ -16,7 +17,7 @@ const TYPE_MOVE = 'application/x-move-node';
 export type EditorRendererProps = {
 	schema: PageSchema;
 	theme: ThemeTokens;
-	onSchemaChange(next: PageSchema): void;
+	onSchemaChange(next: PageSchema, patch?: SchemaPatch): void;
 	resolveTemplate(key: string): NodeSubtree | null;
 	onSelectNode?(id: string | null): void;
 	scrollContainer?: React.RefObject<HTMLElement>;
@@ -33,18 +34,18 @@ export function EditorRenderer({
 	const handleDropTemplate = (parentId: string, index: number, tplKey: string) => {
 		const sub = resolveTemplate(tplKey);
 		if (!sub) return;
-		insertSubtree(schema, sub, parentId, index);
-		onSchemaChange({ ...schema });
+		const { next, patch } = insertSubtree(schema, sub, parentId, index);
+		onSchemaChange(next, patch);
 	};
 
 	const handleDropMove = (parentId: string, index: number, nodeId: string) => {
-		moveNode(schema, nodeId, parentId, index);
-		onSchemaChange({ ...schema });
+		const { next, patch } = moveNode(schema, nodeId, parentId, index);
+		onSchemaChange(next, patch);
 	};
 
 	const handleDelete = (nodeId: string) => {
-		removeNode(schema, nodeId);
-		onSchemaChange({ ...schema });
+		const { next, patch } = removeNode(schema, nodeId);
+		onSchemaChange(next, patch);
 		onSelectNode?.(null);
 	};
 
@@ -85,6 +86,7 @@ function NodeView(props: {
 		isRoot,
 		scrollContainer,
 	} = props;
+
 	const node = schema.nodes[id];
 	if (!node) return null;
 
@@ -103,13 +105,13 @@ function NodeView(props: {
 			nodeId={id}
 			parentId={schema.rootId === id ? id : (findParent(schema, id) ?? id)}
 			index={0}
-			onRemove={(nid, _pid) => onDelete(nid)}
+			onRemove={(nid) => onDelete(nid)}
 			onSelect={(nid) => onSelect?.(nid)}
-			draggable={!isRoot}
+			draggable={false}
 		>
 			<div
 				data-res-id={id}
-				draggable={false}
+				draggable={!isRoot}
 				onDragStart={(e) => {
 					if (isRoot) return;
 					e.dataTransfer.setData(TYPE_MOVE, id);
@@ -176,12 +178,16 @@ function renderPrimitive(node: NodeJson) {
 		case 'box':
 		case 'row':
 			return <div />;
+
 		case 'heading': {
-			const H = `h${node.props?.level ?? 2}` as any;
-			return <H>{node.props?.text ?? 'Heading'}</H>;
+			const level = (node.props?.level ?? 2) as 1 | 2 | 3 | 4 | 5 | 6;
+			const tag = `h${level}` as keyof JSX.IntrinsicElements;
+			return React.createElement(tag, undefined, node.props?.text ?? 'Heading');
 		}
+
 		case 'paragraph':
 			return <p>{node.props?.text ?? 'Text'}</p>;
+
 		case 'image':
 			return (
 				<img
@@ -190,6 +196,7 @@ function renderPrimitive(node: NodeJson) {
 					style={{ maxWidth: '100%' }}
 				/>
 			);
+
 		case 'button': {
 			const isLink = !!node.props?.href;
 			const label = node.props?.text ?? 'Button';
@@ -206,12 +213,16 @@ function renderPrimitive(node: NodeJson) {
 				<button style={common}>{label}</button>
 			);
 		}
+
 		case 'divider':
 			return <hr />;
+
 		case 'list':
 			return <ul />;
+
 		case 'listItem':
 			return <li>{node.props?.text ?? ''}</li>;
+
 		default:
 			return null;
 	}

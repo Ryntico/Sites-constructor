@@ -5,7 +5,7 @@ type Props = {
 	schema: PageSchema;
 	selectedId: string | null;
 	onChange(next: PageSchema): void;
-	theme: ThemeTokens;
+	theme?: ThemeTokens;
 };
 
 type BP = 'base' | 'sm' | 'md' | 'lg';
@@ -14,6 +14,7 @@ export function Inspector({ schema, selectedId, onChange, theme }: Props) {
 	const [bp, setBp] = useState<BP>('base');
 
 	const colorOptions = useMemo<[string, string][]>(() => {
+		if (!theme) return [];
 		return [
 			['colors.page', theme.colors.page],
 			['colors.surface', theme.colors.surface],
@@ -28,6 +29,7 @@ export function Inspector({ schema, selectedId, onChange, theme }: Props) {
 	}, [theme]);
 
 	const spacingOptions = useMemo<[string, string][]>(() => {
+		if (!theme) return [];
 		return Object.keys(theme.spacing).map((k) => [
 			`spacing.${k}`,
 			String(theme.spacing[k]),
@@ -35,6 +37,7 @@ export function Inspector({ schema, selectedId, onChange, theme }: Props) {
 	}, [theme]);
 
 	const radiusOptions = useMemo<[string, string][]>(() => {
+		if (!theme) return [];
 		return Object.keys(theme.radius).map((k) => [
 			`radius.${k}`,
 			String(theme.radius[k]),
@@ -42,6 +45,7 @@ export function Inspector({ schema, selectedId, onChange, theme }: Props) {
 	}, [theme]);
 
 	const shadowOptions = useMemo<[string, string][]>(() => {
+		if (!theme) return [];
 		return Object.keys(theme.shadow).map((k) => [`shadow.${k}`, theme.shadow[k]]);
 	}, [theme]);
 
