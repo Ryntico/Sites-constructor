@@ -1,5 +1,28 @@
 import type { NodeJson, NodeSubtree, PageSchema } from './types';
 
+export type SchemaPatch = {
+	set: Record<string, unknown>;
+	del: string[];
+};
+
+export const EMPTY_PATCH: SchemaPatch = { set: {}, del: [] };
+
+export function mergePatches(a: SchemaPatch, b: SchemaPatch): SchemaPatch {
+	const del = Array.from(new Set([...a.del, ...b.del]));
+	return { set: { ...a.set, ...b.set }, del };
+}
+
+export function hasChanges(p: SchemaPatch): boolean {
+	return Object.keys(p.set).length > 0 || p.del.length > 0;
+}
+
+function pathChildren(parentId: string) {
+	return `schema.nodes.${parentId}.childrenOrder`;
+}
+function pathNode(nodeId: string) {
+	return `schema.nodes.${nodeId}`;
+}
+
 export function genId(prefix = 'n'): string {
 	return `${prefix}_${Math.random().toString(36).slice(2, 8)}`;
 }
@@ -38,12 +61,6 @@ export function getChildren(schema: PageSchema, parentId: string): string[] {
 	return n?.childrenOrder ?? [];
 }
 
-export function setChildren(schema: PageSchema, parentId: string, next: string[]) {
-	const n = schema.nodes[parentId];
-	if (!n) return;
-	n.childrenOrder = next;
-}
-
 export function findParentId(schema: PageSchema, childId: string): string | null {
 	for (const [id, node] of Object.entries(schema.nodes)) {
 		if (node.childrenOrder?.includes(childId)) return id;
@@ -63,47 +80,135 @@ export function collectDescendants(
 	return acc;
 }
 
+export function setChildren(
+	schema: PageSchema,
+	parentId: string,
+	next: string[],
+): { next: PageSchema; patch: SchemaPatch } {
+	const n = schema.nodes[parentId];
+	if (!n) return { next: schema, patch: EMPTY_PATCH };
+
+	const patchedParent: NodeJson = { ...n, childrenOrder: [...next] };
+	const nextSchema: PageSchema = {
+		...schema,
+		nodes: { ...schema.nodes, [parentId]: patchedParent },
+	};
+
+	const patch: SchemaPatch = {
+		set: { [pathChildren(parentId)]: patchedParent.childrenOrder ?? [] },
+		del: [],
+	};
+	return { next: nextSchema, patch };
+}
+
 export function insertSubtree(
 	schema: PageSchema,
 	sub: NodeSubtree,
 	parentId: string,
 	index: number,
-) {
-	Object.assign(schema.nodes, sub.nodes);
+): { next: PageSchema; patch: SchemaPatch } {
+	const parent = schema.nodes[parentId];
+	if (!parent) return { next: schema, patch: EMPTY_PATCH };
+
 	const children = getChildren(schema, parentId);
 	const clamped = Math.max(0, Math.min(index, children.length));
-	children.splice(clamped, 0, sub.rootId);
-	setChildren(schema, parentId, children);
+	const newChildren = [...children];
+	newChildren.splice(clamped, 0, sub.rootId);
+
+	const nextNodes = { ...schema.nodes, ...sub.nodes };
+	const nextSchema: PageSchema = {
+		...schema,
+		nodes: {
+			...nextNodes,
+			[parentId]: { ...parent, childrenOrder: newChildren },
+		},
+	};
+
+	const set: Record<string, unknown> = {
+		[pathChildren(parentId)]: newChildren,
+	};
+	for (const [id, node] of Object.entries(sub.nodes)) {
+		set[pathNode(id)] = node;
+	}
+
+	return { next: nextSchema, patch: { set, del: [] } };
 }
 
-export function removeNode(schema: PageSchema, nodeId: string) {
-	if (schema.rootId === nodeId) return;
+export function removeNode(
+	schema: PageSchema,
+	nodeId: string,
+): { next: PageSchema; patch: SchemaPatch } {
+	if (schema.rootId === nodeId) return { next: schema, patch: EMPTY_PATCH };
+
 	const parentId = findParentId(schema, nodeId);
+	let nextSchema: PageSchema = schema;
+	const patch: SchemaPatch = { set: {}, del: [] };
+
 	if (parentId) {
 		const children = getChildren(schema, parentId).filter((id) => id !== nodeId);
-		setChildren(schema, parentId, children);
+		const { next: withParentUpdated, patch: p2 } = setChildren(
+			schema,
+			parentId,
+			children,
+		);
+		nextSchema = withParentUpdated;
+		Object.assign(patch.set, p2.set);
 	}
-	const all = Array.from(collectDescendants(schema, nodeId));
-	all.forEach((id) => delete schema.nodes[id]);
+
+	const toDelete = Array.from(collectDescendants(nextSchema, nodeId));
+	const nextNodes = { ...nextSchema.nodes };
+	for (const id of toDelete) {
+		delete nextNodes[id];
+		patch.del.push(pathNode(id));
+	}
+	nextSchema = { ...nextSchema, nodes: nextNodes };
+
+	return { next: nextSchema, patch };
 }
 
 export function moveNode(
 	schema: PageSchema,
 	nodeId: string,
 	newParentId: string,
-	index: number,
-) {
-	if (schema.rootId === nodeId) return;
-	const descendants = collectDescendants(schema, nodeId);
-	if (descendants.has(newParentId)) return;
+	targetIndex: number,
+): { next: PageSchema; patch: SchemaPatch } {
+	if (schema.rootId === nodeId) return { next: schema, patch: EMPTY_PATCH };
 
-	const oldParent = findParentId(schema, nodeId);
-	if (oldParent) {
-		const olds = getChildren(schema, oldParent).filter((id) => id !== nodeId);
-		setChildren(schema, oldParent, olds);
+	const descendants = collectDescendants(schema, nodeId);
+	if (descendants.has(newParentId)) return { next: schema, patch: EMPTY_PATCH };
+
+	const oldParentId = findParentId(schema, nodeId);
+	if (!oldParentId) return { next: schema, patch: EMPTY_PATCH };
+
+	let cur = schema;
+	let patch = EMPTY_PATCH;
+
+	const oldChildren = getChildren(cur, oldParentId);
+	const fromIndex = oldChildren.indexOf(nodeId);
+	if (fromIndex < 0) return { next: schema, patch: EMPTY_PATCH };
+
+	const removed = oldChildren.filter((id) => id !== nodeId);
+	const res1 = setChildren(cur, oldParentId, removed);
+	cur = res1.next;
+	patch = mergePatches(patch, res1.patch);
+
+	const sameParent = oldParentId === newParentId;
+	const baseNewChildren = sameParent ? removed : getChildren(cur, newParentId);
+
+	let insertIndex = Math.max(0, Math.min(targetIndex, baseNewChildren.length));
+	if (sameParent && fromIndex < targetIndex) {
+		insertIndex = Math.max(0, Math.min(baseNewChildren.length, targetIndex - 1));
 	}
-	const next = getChildren(schema, newParentId);
-	const clamped = Math.max(0, Math.min(index, next.length));
-	next.splice(clamped, 0, nodeId);
-	setChildren(schema, newParentId, next);
+
+	const inserted = [
+		...baseNewChildren.slice(0, insertIndex),
+		nodeId,
+		...baseNewChildren.slice(insertIndex),
+	];
+
+	const res2 = setChildren(cur, newParentId, inserted);
+	cur = res2.next;
+	patch = mergePatches(patch, res2.patch);
+
+	return { next: cur, patch };
 }
