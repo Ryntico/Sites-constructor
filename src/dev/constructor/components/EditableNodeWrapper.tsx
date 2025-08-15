@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 
 type Props = {
 	nodeId: string;
@@ -7,7 +7,7 @@ type Props = {
 	onRemove(nodeId: string, parentId: string): void;
 	onSelect?(nodeId: string): void;
 	children: React.ReactNode;
-	draggable?: boolean;
+	isSelected?: boolean;
 };
 
 export function EditableNodeWrapper({
@@ -15,39 +15,45 @@ export function EditableNodeWrapper({
 	parentId,
 	onRemove,
 	onSelect,
-	draggable = true,
 	children,
+	isSelected = false,
 }: Props) {
+	const [hovered, setHovered] = useState(false);
+
 	return (
 		<div
 			data-node-id={nodeId}
-			style={{ position: 'relative' }}
+			style={{
+				position: 'relative',
+				borderRadius: 10,
+				boxShadow: isSelected ? '0 0 0 1px rgba(92,124,250,.35)' : 'none',
+				transition: 'box-shadow .12s',
+			}}
+			onMouseEnter={() => setHovered(true)}
+			onMouseLeave={() => setHovered(false)}
 			onClick={(e) => {
 				e.stopPropagation();
 				onSelect?.(nodeId);
 			}}
-			draggable={draggable}
-			onDragStart={(e) => {
-				if (!draggable) return;
-				e.stopPropagation();
-				e.dataTransfer.setData('application/x-move-node', nodeId);
-				e.dataTransfer.effectAllowed = 'move';
-			}}
 		>
 			<div
+				className="node-controls"
 				style={{
 					position: 'absolute',
 					top: 6,
 					right: 6,
 					display: 'flex',
 					gap: 6,
-					opacity: 0,
+					opacity: hovered ? 1 : 0,
+					pointerEvents: hovered ? 'auto' : 'none',
 					transition: 'opacity .15s',
-					zIndex: 2,
+					zIndex: 5,
 				}}
-				className="node-controls"
+				onClick={(e) => e.stopPropagation()}
 			>
 				<button
+					type="button"
+					draggable={false}
 					title="Удалить"
 					onClick={(e) => {
 						e.stopPropagation();
@@ -57,29 +63,18 @@ export function EditableNodeWrapper({
 				>
 					×
 				</button>
-				<span title="Перетащите" style={{ ...iconBtn, cursor: 'grab' }}>
+
+				<span
+					title="Перетащите"
+					draggable={false}
+					onMouseDown={(e) => e.stopPropagation()}
+					style={{ ...iconBtn, cursor: 'grab' }}
+				>
 					↕
 				</span>
 			</div>
 
-			<div
-				onMouseEnter={(e) => {
-					const el =
-						(e.currentTarget.parentElement?.querySelector(
-							'.node-controls',
-						) as HTMLElement) || null;
-					if (el) el.style.opacity = '1';
-				}}
-				onMouseLeave={(e) => {
-					const el =
-						(e.currentTarget.parentElement?.querySelector(
-							'.node-controls',
-						) as HTMLElement) || null;
-					if (el) el.style.opacity = '0';
-				}}
-			>
-				{children}
-			</div>
+			<div>{children}</div>
 		</div>
 	);
 }
