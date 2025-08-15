@@ -3,20 +3,26 @@ import React, { useState } from 'react';
 type Props = {
 	onDrop: (tplKey?: string, moveNodeId?: string) => void;
 	scrollContainer?: React.RefObject<HTMLElement>;
+	visible?: boolean;
+	axis?: 'x' | 'y';
 };
 
 const TYPE_TPL = 'application/x-block-template';
 const TYPE_MOVE = 'application/x-move-node';
 
-export function DropZone({ onDrop, scrollContainer }: Props) {
+export function DropZone({
+	onDrop,
+	scrollContainer,
+	visible = false,
+	axis = 'y',
+}: Props) {
 	const [over, setOver] = useState(false);
 
+	if (!visible) return null;
+
 	const accepts = (dt: DataTransfer): boolean => {
-		const t = dt.types as unknown as string[];
-		const has = (k: string) =>
-			(Array.isArray(t) && t.includes(k)) ||
-			(typeof (dt.types as any).contains === 'function' &&
-				(dt.types as any).contains(k));
+		const arr = Array.from(dt.types || []);
+		const has = (k: string) => arr.includes(k);
 		return has(TYPE_TPL) || has(TYPE_MOVE);
 	};
 
@@ -26,9 +32,10 @@ export function DropZone({ onDrop, scrollContainer }: Props) {
 
 		e.preventDefault();
 
-		const isMove =
-			dt.types.includes?.(TYPE_MOVE) || (dt.types as any).contains?.(TYPE_MOVE);
-		dt.dropEffect = isMove ? 'move' : 'copy';
+		const isMove = Array.from(dt.types || []).includes(TYPE_MOVE);
+		try {
+			dt.dropEffect = isMove ? 'move' : 'copy';
+		} catch {}
 
 		setOver(true);
 
@@ -58,18 +65,38 @@ export function DropZone({ onDrop, scrollContainer }: Props) {
 		else if (moveId) onDrop(undefined, moveId);
 	};
 
+	const base: React.CSSProperties = {
+		border: `2px dashed ${over ? '#5c7cfa' : '#e6e8ef'}`,
+		borderRadius: 8,
+		background: over ? 'rgba(92,124,250,0.08)' : 'transparent',
+		transition: 'background .12s, border-color .12s',
+		zIndex: 3,
+	};
+
+	const style =
+		axis === 'x'
+			? {
+					...base,
+					width: 12,
+					minHeight: 24,
+					alignSelf: 'stretch',
+					margin: '0 8px',
+					flex: '0 0 12px',
+				}
+			: {
+					...base,
+					height: 12,
+					width: '100%',
+					alignSelf: 'stretch',
+					margin: '8px 0',
+				};
+
 	return (
 		<div
 			onDragOver={handleDragOver}
 			onDragLeave={handleDragLeave}
 			onDrop={handleDrop}
-			style={{
-				height: 12,
-				border: `2px dashed ${over ? '#5c7cfa' : '#e6e8ef'}`,
-				borderRadius: 8,
-				background: over ? 'rgba(92,124,250,0.08)' : 'transparent',
-				margin: '8px 0',
-			}}
+			style={style}
 			title="Перетащите сюда"
 		/>
 	);

@@ -219,6 +219,7 @@ export function SmokeConstructor() {
 									}}
 									resolveTemplate={(k) => resolveTemplate(k)}
 									onSelectNode={setSelectedId}
+									selectedId={selectedId}
 									scrollContainer={canvasRef}
 								/>
 							</div>
@@ -236,6 +237,8 @@ export function SmokeConstructor() {
 							display: 'grid',
 							gap: 12,
 							alignContent: 'start',
+							maxHeight: '70vh',
+							overflow: 'auto',
 						}}
 					>
 						<div style={{ display: 'flex', gap: 8 }}>

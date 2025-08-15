@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useRef, useState } from 'react';
 import type { PageSchema, NodeJson, ThemeTokens, NodeSubtree } from './types';
 import { mergeResponsive } from './style';
 import {
@@ -13,6 +13,7 @@ import { DropZone } from '../components/DropZones';
 import { EditableNodeWrapper } from '../components/EditableNodeWrapper';
 
 const TYPE_MOVE = 'application/x-move-node';
+const TYPE_TPL = 'application/x-block-template';
 
 export type EditorRendererProps = {
 	schema: PageSchema;
@@ -21,6 +22,7 @@ export type EditorRendererProps = {
 	resolveTemplate(key: string): NodeSubtree | null;
 	onSelectNode?(id: string | null): void;
 	scrollContainer?: React.RefObject<HTMLElement>;
+	selectedId?: string | null;
 };
 
 export function EditorRenderer({
@@ -30,7 +32,38 @@ export function EditorRenderer({
 	resolveTemplate,
 	onSelectNode,
 	scrollContainer,
+	selectedId = null,
 }: EditorRendererProps) {
+	const [isDragging, setIsDragging] = useState(false);
+	const dragInside = useRef(0);
+
+	const accepts = (types: DOMStringList | string[]) => {
+		const arr = Array.from(types || []);
+		return arr.includes(TYPE_MOVE) || arr.includes(TYPE_TPL);
+	};
+
+	const onRootDragEnter: React.DragEventHandler<HTMLDivElement> = (e) => {
+		if (!accepts(e.dataTransfer.types)) return;
+		dragInside.current += 1;
+		if (!isDragging) setIsDragging(true);
+	};
+
+	const onRootDragOver: React.DragEventHandler<HTMLDivElement> = (e) => {
+		if (!accepts(e.dataTransfer.types)) return;
+		if (!isDragging) setIsDragging(true);
+	};
+
+	const onRootDragLeave: React.DragEventHandler<HTMLDivElement> = (e) => {
+		if (e.currentTarget.contains(e.relatedTarget as Node)) return;
+		dragInside.current = 0;
+		setIsDragging(false);
+	};
+
+	const onRootDrop: React.DragEventHandler<HTMLDivElement> = () => {
+		dragInside.current = 0;
+		setIsDragging(false);
+	};
+
 	const handleDropTemplate = (parentId: string, index: number, tplKey: string) => {
 		const sub = resolveTemplate(tplKey);
 		if (!sub) return;
@@ -50,17 +83,27 @@ export function EditorRenderer({
 	};
 
 	return (
-		<NodeView
-			id={schema.rootId}
-			schema={schema}
-			theme={theme}
-			onDropTemplate={handleDropTemplate}
-			onDropMove={handleDropMove}
-			onDelete={handleDelete}
-			onSelect={onSelectNode}
-			scrollContainer={scrollContainer}
-			isRoot
-		/>
+		<div
+			data-editor-root
+			onDragEnter={onRootDragEnter}
+			onDragOver={onRootDragOver}
+			onDragLeave={onRootDragLeave}
+			onDrop={onRootDrop}
+		>
+			<NodeView
+				id={schema.rootId}
+				schema={schema}
+				theme={theme}
+				onDropTemplate={handleDropTemplate}
+				onDropMove={handleDropMove}
+				onDelete={handleDelete}
+				onSelect={onSelectNode}
+				scrollContainer={scrollContainer}
+				isRoot
+				isDragging={isDragging}
+				selectedId={selectedId}
+			/>
+		</div>
 	);
 }
 
@@ -74,6 +117,8 @@ function NodeView(props: {
 	onSelect?: (id: string) => void;
 	scrollContainer?: React.RefObject<HTMLElement>;
 	isRoot?: boolean;
+	isDragging: boolean;
+	selectedId: string | null;
 }) {
 	const {
 		id,
@@ -85,6 +130,8 @@ function NodeView(props: {
 		onSelect,
 		isRoot,
 		scrollContainer,
+		isDragging,
+		selectedId,
 	} = props;
 
 	const node = schema.nodes[id];
@@ -100,6 +147,19 @@ function NodeView(props: {
 		? mediaCssText.replaceAll('[data-res-id]', `[data-res-id="${id}"]`)
 		: '';
 
+	const axis: 'x' | 'y' = (() => {
+		const disp = (baseStyle as any)?.display;
+		const fd = (baseStyle as any)?.flexDirection as string | undefined;
+		if (disp === 'flex') return fd && fd.startsWith('column') ? 'y' : 'x';
+		return node.type === 'row' ? 'x' : 'y';
+	})();
+
+	const baseDisplay = (baseStyle as any)?.display;
+	const fixedBaseStyle =
+		node.type === 'button' && !baseDisplay
+			? { display: 'inline-block', ...baseStyle }
+			: baseStyle;
+
 	return (
 		<EditableNodeWrapper
 			nodeId={id}
@@ -107,35 +167,45 @@ function NodeView(props: {
 			index={0}
 			onRemove={(nid) => onDelete(nid)}
 			onSelect={(nid) => onSelect?.(nid)}
-			draggable={false}
+			isSelected={selectedId === id}
 		>
 			<div
 				data-res-id={id}
 				draggable={!isRoot}
 				onDragStart={(e) => {
 					if (isRoot) return;
+					e.stopPropagation();
 					e.dataTransfer.setData(TYPE_MOVE, id);
 					e.dataTransfer.effectAllowed = 'move';
 				}}
 				style={{
 					position: 'relative',
 					...(node.type === 'section' ? { width: '100%' } : {}),
-					...baseStyle,
+					...fixedBaseStyle,
+					userSelect: 'none',
 				}}
 			>
 				{scopedCss && <style dangerouslySetInnerHTML={{ __html: scopedCss }} />}
 
-				{renderPrimitive(node)}
-
-				{isParent && (
-					<div>
+				{isParent ? (
+					<div
+						style={{
+							display:
+								axis === 'x'
+									? (baseStyle as any)?.display || 'flex'
+									: (baseStyle as any)?.display,
+						}}
+					>
 						<DropZone
 							onDrop={(tpl, moveId) => {
 								if (tpl) onDropTemplate(id, 0, tpl);
 								if (moveId) onDropMove(id, 0, moveId);
 							}}
 							scrollContainer={scrollContainer}
+							visible={isDragging}
+							axis={axis}
 						/>
+
 						{children.map((cid, idx) => (
 							<React.Fragment key={cid}>
 								<NodeView
@@ -147,6 +217,8 @@ function NodeView(props: {
 									onDelete={onDelete}
 									onSelect={onSelect}
 									scrollContainer={scrollContainer}
+									isDragging={isDragging}
+									selectedId={selectedId}
 								/>
 								<DropZone
 									onDrop={(tpl, moveId) => {
@@ -154,10 +226,14 @@ function NodeView(props: {
 										if (moveId) onDropMove(id, idx + 1, moveId);
 									}}
 									scrollContainer={scrollContainer}
+									visible={isDragging}
+									axis={axis}
 								/>
 							</React.Fragment>
 						))}
 					</div>
+				) : (
+					renderPrimitive(node)
 				)}
 			</div>
 		</EditableNodeWrapper>
@@ -201,16 +277,30 @@ function renderPrimitive(node: NodeJson) {
 			const isLink = !!node.props?.href;
 			const label = node.props?.text ?? 'Button';
 			const common: React.CSSProperties = {
-				textDecoration: 'none',
 				display: 'inline-block',
 				cursor: 'pointer',
+				border: 'none',
+				outline: 'none',
+				background: 'transparent',
+				color: 'inherit',
+				padding: 0,
+				margin: 0,
+				font: 'inherit',
+				lineHeight: 'inherit',
+				width: 'auto',
+				textDecoration: 'none',
+				WebkitAppearance: 'none' as any,
+				MozAppearance: 'none' as any,
+				appearance: 'none' as any,
 			};
 			return isLink ? (
 				<a href={node.props?.href} style={common}>
 					{label}
 				</a>
 			) : (
-				<button style={common}>{label}</button>
+				<button type="button" style={common}>
+					{label}
+				</button>
 			);
 		}
 
