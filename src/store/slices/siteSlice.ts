@@ -23,7 +23,6 @@ const lsKey = (siteId: string, pageId: string) => `cache:site:${siteId}:page:${p
 export const createSiteFromTemplate = createAsyncThunk<
 	{ site: SiteDoc; pages: PageDoc[] },
 	{
-		siteId: string;
 		ownerId: string;
 		name: string;
 		theme: ThemeTokens;
@@ -34,8 +33,8 @@ export const createSiteFromTemplate = createAsyncThunk<
 			route: string;
 		};
 	}
->('sites/createFromTpl', async ({ siteId, ownerId, name, theme, pageTpl }) => {
-	await api.createSite({ id: siteId, ownerId, name, theme });
+>('sites/createFromTpl', async ({ ownerId, name, theme, pageTpl }) => {
+	const site = await api.createSite({ ownerId, name, theme });
 	const page: PageDoc = {
 		id: 'home',
 		route: pageTpl.route || '/',
@@ -43,8 +42,35 @@ export const createSiteFromTemplate = createAsyncThunk<
 		schema: pageTpl.schema,
 		draftVersion: Date.now(),
 	};
-	await api.upsertPage(siteId, page);
-	return { site: { id: siteId, ownerId, name, theme } as SiteDoc, pages: [page] };
+	await api.upsertPage(site.id, page);
+	return { site, pages: [page] };
+});
+
+export const createEmptySite = createAsyncThunk<
+	{ site: SiteDoc; pages: PageDoc[] },
+	{
+		ownerId: string;
+		name: string;
+		firstPageId: string;
+		firstPageTitle: string;
+		firstPageRoute: string;
+		theme: ThemeTokens;
+	}
+>('sites/createEmpty', async (args) => {
+	const site = await api.createSite({
+		ownerId: args.ownerId,
+		name: args.name,
+		theme: args.theme,
+	});
+	const page: PageDoc = {
+		id: args.firstPageId,
+		route: args.firstPageRoute || '/',
+		title: args.firstPageTitle || 'Page',
+		schema: api.makeEmptyPageSchema(),
+		draftVersion: Date.now(),
+	};
+	await api.upsertPage(site.id, page);
+	return { site, pages: [page] };
 });
 
 export const loadSite = createAsyncThunk(
@@ -147,6 +173,21 @@ const slice = createSlice({
 			s.status = 'succeeded';
 		});
 		b.addCase(createSiteFromTemplate.rejected, (s, a) => {
+			s.status = 'error';
+			s.error = a.error.message ?? 'create failed';
+		});
+
+		b.addCase(createEmptySite.pending, (s) => {
+			s.status = 'loading';
+			s.error = null;
+		});
+		b.addCase(createEmptySite.fulfilled, (s, a) => {
+			s.site = a.payload.site;
+			s.pages = {};
+			for (const p of a.payload.pages) s.pages[p.id] = p;
+			s.status = 'succeeded';
+		});
+		b.addCase(createEmptySite.rejected, (s, a) => {
 			s.status = 'error';
 			s.error = a.error.message ?? 'create failed';
 		});

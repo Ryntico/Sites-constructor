@@ -1,4 +1,4 @@
-import React, { useMemo, useRef, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { exportPageToHtml } from './runtime/Renderer';
 import type { NodeSubtree } from './runtime/types';
 import { cloneSubtreeWithIds } from './runtime/schemaOps';
@@ -28,8 +28,9 @@ function openFullPreview(html: string) {
 }
 
 export function SmokeConstructor() {
-	const siteId = 'dev';
-	const pageId = 'home';
+	const [siteId, setSiteId] = useState<string | null>(
+		localStorage.getItem('currentSiteId'),
+	);
 
 	const {
 		loading,
@@ -44,11 +45,25 @@ export function SmokeConstructor() {
 		needsPage,
 		createSiteFromTemplateId,
 		createPageFromTemplateId,
-	} = useSiteBuilder(siteId, pageId);
+		createEmptySiteId,
+		listUserSites,
+	} = useSiteBuilder(siteId ?? '', 'home');
+
 	const { user } = useAppSelector(selectAuth);
 	const [selectedId, setSelectedId] = useState<string | null>(null);
 	const [mode, setMode] = useState<'edit' | 'preview'>('edit');
 	const [rightTab, setRightTab] = useState<'inspector' | 'theme'>('inspector');
+
+	useEffect(() => {
+		if (!user?.uid || siteId) return;
+		listUserSites(user.uid).then((sites) => {
+			if (sites.length) {
+				const id = sites[0].id;
+				setSiteId(id);
+				localStorage.setItem('currentSiteId', id);
+			}
+		});
+	}, [user?.uid, siteId, listUserSites]);
 
 	const exported = useMemo(() => {
 		if (!schema || !theme) return '';
@@ -66,10 +81,26 @@ export function SmokeConstructor() {
 
 	const canvasRef = useRef<HTMLDivElement>(null);
 
-	if (needsSite) {
+	if (!siteId || needsSite) {
 		return (
 			<div style={{ padding: 24 }}>
 				<h3>Сайтов нет</h3>
+				<button
+					style={btn}
+					onClick={async () => {
+						const newId = await createEmptySiteId({
+							ownerId: user?.uid,
+							siteName: 'Мой сайт',
+							firstPageId: 'home',
+							firstPageTitle: 'Home',
+							firstPageRoute: '/',
+						});
+						setSiteId(newId);
+						localStorage.setItem('currentSiteId', newId);
+					}}
+				>
+					Создать сайт
+				</button>
 				<button
 					style={btn}
 					onClick={() =>

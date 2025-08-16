@@ -6,14 +6,14 @@ import {
 	updateTheme,
 	createSiteFromTemplate,
 	createPageFromTemplate,
+	createEmptySite,
 } from '@store/slices/siteSlice';
 import { loadTemplates, selectTemplates } from '@store/slices/templatesSlice';
-import type { PageSchema, ThemeTokens } from '@/types/siteTypes';
+import type { PageSchema, SchemaPatch, ThemeTokens } from '@/types/siteTypes';
 import { useEffect, useMemo, useRef } from 'react';
 import { store } from '@/store';
 import { DEFAULT_THEME } from '@const/defaultTheme.ts';
 import { useDebounce } from '@/hooks/useDebounce';
-import type { SchemaPatch } from '@/dev/constructor/runtime/schemaOps';
 import { hasChanges, mergePatches } from '@/dev/constructor/runtime/schemaOps';
 import * as sitesApi from '@/services/firebase/sites';
 
@@ -30,8 +30,8 @@ export function useSiteBuilder(siteId: string, pageId: string) {
 	}, [templates.status, dispatch]);
 
 	useEffect(() => {
-		if (siteState.status === 'idle') void dispatch(loadSite({ siteId }));
-	}, [siteState.status, siteId, dispatch]);
+		if (siteId) void dispatch(loadSite({ siteId }));
+	}, [siteId, dispatch]);
 
 	const pendingRef = useRef<SchemaPatch>({ set: {}, del: [] });
 
@@ -46,6 +46,19 @@ export function useSiteBuilder(siteId: string, pageId: string) {
 			console.error('patchPageSchema failed', err);
 		});
 	}, 600);
+
+	const listUserSites = async (ownerId: string) => {
+		return await sitesApi.listUserSites(ownerId);
+	};
+
+	const listPagesOf = async (someSiteId?: string) => {
+		const id = someSiteId ?? siteState.site?.id;
+		if (!id) return [];
+		if (!someSiteId || someSiteId === siteState.site?.id) {
+			return Object.values(siteState.pages);
+		}
+		return await sitesApi.listPages(id);
+	};
 
 	const setSchema = (next: PageSchema, patch?: SchemaPatch) => {
 		if (!siteState.site) return;
@@ -78,6 +91,29 @@ export function useSiteBuilder(siteId: string, pageId: string) {
 		return tpl;
 	};
 
+	const createEmptySiteId = async (opts: {
+		ownerId: string | undefined;
+		siteName: string;
+		firstPageId: string;
+		firstPageTitle: string;
+		firstPageRoute?: string;
+		theme?: ThemeTokens;
+	}) => {
+		if (!opts.ownerId) throw new Error('No ownerId');
+		const themeToUse = opts.theme ?? siteState.site?.theme ?? DEFAULT_THEME;
+		const res = await dispatch(
+			createEmptySite({
+				ownerId: opts.ownerId,
+				name: opts.siteName,
+				firstPageId: opts.firstPageId,
+				firstPageTitle: opts.firstPageTitle,
+				firstPageRoute: opts.firstPageRoute ?? '/',
+				theme: themeToUse,
+			}),
+		).unwrap();
+		return res.site.id as string;
+	};
+
 	const createSiteFromTemplateId = async (opts: {
 		ownerId: string | undefined;
 		name: string;
@@ -87,9 +123,8 @@ export function useSiteBuilder(siteId: string, pageId: string) {
 		if (!opts.ownerId) throw new Error('No ownerId');
 		const tpl = await getPageTplById(opts.templateId);
 		const themeToUse = opts.theme ?? siteState.site?.theme ?? DEFAULT_THEME;
-		await dispatch(
+		const res = await dispatch(
 			createSiteFromTemplate({
-				siteId,
 				ownerId: opts.ownerId,
 				name: opts.name,
 				theme: themeToUse,
@@ -101,6 +136,7 @@ export function useSiteBuilder(siteId: string, pageId: string) {
 				},
 			}),
 		).unwrap();
+		return res.site.id as string;
 	};
 
 	const createPageFromTemplateId = async (opts: {
@@ -150,5 +186,9 @@ export function useSiteBuilder(siteId: string, pageId: string) {
 		pagesTemplates: templates.pages,
 		createSiteFromTemplateId,
 		createPageFromTemplateId,
+		createEmptySiteId,
+		listUserSites,
+		listPagesOf,
+		pages: Object.values(siteState.pages),
 	};
 }
