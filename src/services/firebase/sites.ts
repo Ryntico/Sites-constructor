@@ -8,43 +8,68 @@ import {
 	updateDoc,
 	serverTimestamp,
 	deleteField,
+	addDoc,
+	query,
+	where,
 	type DocumentData,
 	type UpdateData,
 } from 'firebase/firestore';
-import type { PageDoc, PageSchema, SiteDoc, ThemeTokens } from '@/types/siteTypes';
+import type {
+	PageDoc,
+	PageSchema,
+	SiteDoc,
+	ThemeTokens,
+	SchemaPatch,
+} from '@/types/siteTypes';
 import { stripUndefinedDeep } from '@/utils/firestoreSanitize.ts';
 import { toPlain } from '@/utils/firestoreSerialize.ts';
-import type { SchemaPatch } from '@/dev/constructor/runtime/schemaOps.ts';
 
 export async function createSite(args: {
-	id: string;
 	ownerId: string;
 	name: string;
 	theme: ThemeTokens;
 }) {
-	const ref = doc(db, 'sites', args.id);
-	const cleanArgs = stripUndefinedDeep({
-		id: args.id,
+	const ref = await addDoc(collection(db, 'sites'), {
 		ownerId: args.ownerId,
 		name: args.name,
-		theme: args.theme,
+		theme: stripUndefinedDeep(args.theme),
+		createAt: serverTimestamp(),
+		updateAt: serverTimestamp(),
 	});
-	await setDoc(ref, {
-		...cleanArgs,
-		createdAt: serverTimestamp(),
-		updatedAt: serverTimestamp(),
-	});
+
+	return { id: ref.id, ownerId: args.ownerId, name: args.name, theme: args.theme };
 }
 
 export async function getSite(siteId: string): Promise<SiteDoc | null> {
 	const ref = doc(db, 'sites', siteId);
 	const snap = await getDoc(ref);
-	return snap.exists() ? (toPlain(snap.data()) as SiteDoc) : null;
+	if (!snap.exists()) return null;
+	const data = toPlain(snap.data()) as Omit<SiteDoc, 'id'>;
+	return { id: snap.id, ...data };
+}
+
+export async function listUserSites(ownerId: string): Promise<SiteDoc[]> {
+	const q = query(collection(db, 'sites'), where('ownerId', '==', ownerId));
+	const snap = await getDocs(q);
+	return snap.docs.map((d) => {
+		const data = toPlain(d.data() as Omit<SiteDoc, 'id'>);
+		return { id: d.id, ...data };
+	});
 }
 
 export async function listPages(siteId: string): Promise<PageDoc[]> {
 	const snap = await getDocs(collection(db, 'sites', siteId, 'pages'));
 	return snap.docs.map((d) => toPlain(d.data()) as PageDoc);
+}
+
+export function makeEmptyPageSchema(): PageSchema {
+	const rootId = 'nd_root';
+	return {
+		rootId,
+		nodes: {
+			[rootId]: { id: rootId, type: 'page', childrenOrder: [] },
+		},
+	};
 }
 
 export async function upsertPage(siteId: string, page: PageDoc) {

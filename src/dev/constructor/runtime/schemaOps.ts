@@ -1,9 +1,5 @@
 import type { NodeJson, NodeSubtree, PageSchema } from './types';
-
-export type SchemaPatch = {
-	set: Record<string, unknown>;
-	del: string[];
-};
+import type { SchemaPatch } from '@/types/siteTypes.ts';
 
 export const EMPTY_PATCH: SchemaPatch = { set: {}, del: [] };
 

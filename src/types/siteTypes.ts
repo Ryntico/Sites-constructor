@@ -128,3 +128,8 @@ export type SiteDoc = {
 	createdAt?: number | null;
 	updatedAt?: number | null;
 };
+
+export type SchemaPatch = {
+	set: Record<string, unknown>;
+	del: string[];
+};
