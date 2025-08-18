@@ -133,3 +133,6 @@ export type SchemaPatch = {
 	set: Record<string, unknown>;
 	del: string[];
 };
+
+export type Side = 'top' | 'right' | 'bottom' | 'left';
+export type Axis = 'x' | 'y';
