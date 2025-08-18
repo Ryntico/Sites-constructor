@@ -8,6 +8,7 @@ type Props = {
 	onSelect?(nodeId: string): void;
 	children: React.ReactNode;
 	isSelected?: boolean;
+	canRemove?: boolean;
 };
 
 export function EditableNodeWrapper({
@@ -17,6 +18,7 @@ export function EditableNodeWrapper({
 	onSelect,
 	children,
 	isSelected = false,
+	canRemove,
 }: Props) {
 	const [hovered, setHovered] = useState(false);
 
@@ -54,6 +56,7 @@ export function EditableNodeWrapper({
 				<button
 					type="button"
 					draggable={false}
+					disabled={!canRemove}
 					title="Удалить"
 					onClick={(e) => {
 						e.stopPropagation();
