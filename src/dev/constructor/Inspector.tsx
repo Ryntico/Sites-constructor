@@ -2,15 +2,15 @@ import React, { useMemo, useState } from 'react';
 import type { PageSchema, ThemeTokens, StyleShortcuts } from './runtime/types';
 
 type Props = {
-	schema: PageSchema;
-	selectedId: string | null;
-	onChange(next: PageSchema): void;
-	theme?: ThemeTokens;
+	schema : PageSchema;
+	selectedId : string | null;
+	onChange(next : PageSchema) : void;
+	theme? : ThemeTokens;
 };
 
 type BP = 'base' | 'sm' | 'md' | 'lg';
 
-export function Inspector({ schema, selectedId, onChange, theme }: Props) {
+export function Inspector({ schema, selectedId, onChange, theme } : Props) {
 	const [bp, setBp] = useState<BP>('base');
 
 	const colorOptions = useMemo<[string, string][]>(() => {
@@ -54,7 +54,7 @@ export function Inspector({ schema, selectedId, onChange, theme }: Props) {
 	if (!selectedId) return <div style={card}>Выберите элемент</div>;
 	if (!node) return <div style={card}>Нет узла</div>;
 
-	const patchProps = (p: any) => {
+	const patchProps = (p : any) => {
 		onChange({
 			...schema,
 			nodes: {
@@ -64,7 +64,7 @@ export function Inspector({ schema, selectedId, onChange, theme }: Props) {
 		});
 	};
 
-	const patchStyle = (patch: Partial<StyleShortcuts>) => {
+	const patchStyle = (patch : Partial<StyleShortcuts>) => {
 		const prev = node.props?.style ?? {};
 		const cur = (prev as any)[bp] ?? {};
 		const nextStyle = { ...prev, [bp]: { ...cur, ...patch } };
@@ -213,6 +213,48 @@ export function Inspector({ schema, selectedId, onChange, theme }: Props) {
 					/>
 				</Grid>
 			</Section>
+
+			{s.display === 'flex' &&
+				<Section>
+					<Grid cols={2}>
+						<SelectRow
+							label="direction"
+							value={s.flexDirection ?? ''}
+							onChange={(v) => patchStyle({ flexDirection: (v || undefined) as any })}
+							options={[
+								['', '—'],
+								['row', 'row'],
+								['row-reverse', 'row-reverse'],
+								['column', 'column'],
+								['column-reverse', 'column-reverse'],
+							]}
+						/>
+						<SelectRow
+							label="items (align-items)"
+							value={s.items ?? ''}
+							onChange={(v) => patchStyle({ items: (v || undefined) as any })}
+							options={[
+								['', '—'],
+								['start', 'start'],
+								['center', 'center'],
+								['end', 'end'],
+							]}
+						/>
+						<SelectRow
+							label="justify (justify-content)"
+							value={s.justify ?? ''}
+							onChange={(v) => patchStyle({ justify: (v || undefined) as any })}
+							options={[
+								['', '—'],
+								['start', 'start'],
+								['center', 'center'],
+								['end', 'end'],
+								['between', 'between'],
+							]}
+						/>
+
+					</Grid>
+				</Section>}
 
 			<Section title="Spacing">
 				<Grid cols={4}>
@@ -395,45 +437,19 @@ export function Inspector({ schema, selectedId, onChange, theme }: Props) {
 				</Grid>
 			</Section>
 
-			<Section title="Flex (если display:flex)">
-				<Grid cols={2}>
-					<SelectRow
-						label="items (align-items)"
-						value={s.items ?? ''}
-						onChange={(v) => patchStyle({ items: (v || undefined) as any })}
-						options={[
-							['', '—'],
-							['start', 'start'],
-							['center', 'center'],
-							['end', 'end'],
-						]}
-					/>
-					<SelectRow
-						label="justify (justify-content)"
-						value={s.justify ?? ''}
-						onChange={(v) => patchStyle({ justify: (v || undefined) as any })}
-						options={[
-							['', '—'],
-							['start', 'start'],
-							['center', 'center'],
-							['end', 'end'],
-							['between', 'between'],
-						]}
-					/>
-				</Grid>
-			</Section>
+
 		</div>
 	);
 }
 
-const card: React.CSSProperties = {
+const card : React.CSSProperties = {
 	border: '1px solid #e6e8ef',
 	borderRadius: 12,
 	padding: 12,
 	background: '#fff',
 };
 
-const input: React.CSSProperties = {
+const input : React.CSSProperties = {
 	width: '100%',
 	border: '1px solid #d0d3dc',
 	borderRadius: 8,
@@ -442,7 +458,7 @@ const input: React.CSSProperties = {
 	fontSize: 13,
 };
 
-const chip: React.CSSProperties = {
+const chip : React.CSSProperties = {
 	padding: '4px 8px',
 	border: '1px solid #d0d3dc',
 	borderRadius: 999,
@@ -451,11 +467,11 @@ const chip: React.CSSProperties = {
 	cursor: 'pointer',
 };
 
-function Label({ children }: { children: React.ReactNode }) {
+function Label({ children } : { children : React.ReactNode }) {
 	return <div style={{ fontSize: 12, margin: '6px 0 4px' }}>{children}</div>;
 }
 
-function Section({ title, children }: { title: string; children: React.ReactNode }) {
+function Section({ title, children } : { title? : string; children : React.ReactNode }) {
 	return (
 		<div style={{ borderTop: '1px solid #eef1f6', paddingTop: 10 }}>
 			<div style={{ fontWeight: 600, marginBottom: 8 }}>{title}</div>
@@ -465,13 +481,13 @@ function Section({ title, children }: { title: string; children: React.ReactNode
 }
 
 function Grid({
-	cols = 2,
-	children,
-	style,
-}: {
-	cols?: number;
-	children: React.ReactNode;
-	style?: React.CSSProperties;
+				  cols = 2,
+				  children,
+				  style,
+			  } : {
+	cols? : number;
+	children : React.ReactNode;
+	style? : React.CSSProperties;
 }) {
 	return (
 		<div
@@ -488,17 +504,17 @@ function Grid({
 }
 
 function SelectRow({
-	label,
-	value,
-	onChange,
-	options,
-	disabled,
-}: {
-	label: string;
-	value: string;
-	onChange: (v: string) => void;
-	options: [string, string][];
-	disabled?: boolean;
+					   label,
+					   value,
+					   onChange,
+					   options,
+					   disabled,
+				   } : {
+	label : string;
+	value : string;
+	onChange : (v : string) => void;
+	options : [string, string][];
+	disabled? : boolean;
 }) {
 	return (
 		<label style={{ display: 'grid', gap: 4, fontSize: 12 }}>
@@ -520,15 +536,15 @@ function SelectRow({
 }
 
 function TextRow({
-	label,
-	value,
-	onChange,
-	placeholder,
-}: {
-	label: string;
-	value: string;
-	onChange: (v: string) => void;
-	placeholder?: string;
+					 label,
+					 value,
+					 onChange,
+					 placeholder,
+				 } : {
+	label : string;
+	value : string;
+	onChange : (v : string) => void;
+	placeholder? : string;
 }) {
 	return (
 		<label style={{ display: 'grid', gap: 4, fontSize: 12 }}>
@@ -544,15 +560,15 @@ function TextRow({
 }
 
 function NumberRow({
-	label,
-	value,
-	onChange,
-	disabled,
-}: {
-	label: string;
-	value: string;
-	onChange: (v: string) => void;
-	disabled?: boolean;
+					   label,
+					   value,
+					   onChange,
+					   disabled,
+				   } : {
+	label : string;
+	value : string;
+	onChange : (v : string) => void;
+	disabled? : boolean;
 }) {
 	return (
 		<label style={{ display: 'grid', gap: 4, fontSize: 12 }}>
@@ -569,13 +585,13 @@ function NumberRow({
 }
 
 function NumRow({
-	label,
-	value,
-	onChange,
-}: {
-	label: string;
-	value: number | undefined;
-	onChange: (v: number | undefined) => void;
+					label,
+					value,
+					onChange,
+				} : {
+	label : string;
+	value : number | undefined;
+	onChange : (v : number | undefined) => void;
 }) {
 	return (
 		<NumberRow
@@ -587,19 +603,19 @@ function NumRow({
 }
 
 function NumOrTokenRow({
-	label,
-	value,
-	onNumChange,
-	tokenValue,
-	onTokenChange,
-	tokenOptions,
-}: {
-	label: string;
-	value: number | string | undefined;
-	onNumChange: (v: number | undefined) => void;
-	tokenValue: string;
-	onTokenChange: (tok: string) => void;
-	tokenOptions: [string, string][];
+						   label,
+						   value,
+						   onNumChange,
+						   tokenValue,
+						   onTokenChange,
+						   tokenOptions,
+					   } : {
+	label : string;
+	value : number | string | undefined;
+	onNumChange : (v : number | undefined) => void;
+	tokenValue : string;
+	onTokenChange : (tok : string) => void;
+	tokenOptions : [string, string][];
 }) {
 	const isTok = typeof value === 'string' && value.startsWith('token:');
 	return (
@@ -626,19 +642,19 @@ function NumOrTokenRow({
 }
 
 function ColorTokenRow({
-	label,
-	value,
-	onText,
-	tokenValue,
-	onTokenChange,
-	options,
-}: {
-	label: string;
-	value: string;
-	onText: (v: string) => void;
-	tokenValue: string;
-	onTokenChange: (tok: string) => void;
-	options: [string, string][];
+						   label,
+						   value,
+						   onText,
+						   tokenValue,
+						   onTokenChange,
+						   options,
+					   } : {
+	label : string;
+	value : string;
+	onText : (v : string) => void;
+	tokenValue : string;
+	onTokenChange : (tok : string) => void;
+	options : [string, string][];
 }) {
 	const isTok = tokenValue !== '';
 	return (
@@ -664,21 +680,21 @@ function ColorTokenRow({
 }
 
 function TokenOnlyRow({
-	label,
-	currentValue,
-	onTokenChange,
-	options,
-	allowManualNumber,
-	manualValue,
-	onManualChange,
-}: {
-	label: string;
-	currentValue: string;
-	onTokenChange: (tok: string) => void;
-	options: [string, string][];
-	allowManualNumber?: boolean;
-	manualValue?: string;
-	onManualChange?: (v: string) => void;
+						  label,
+						  currentValue,
+						  onTokenChange,
+						  options,
+						  allowManualNumber,
+						  manualValue,
+						  onManualChange,
+					  } : {
+	label : string;
+	currentValue : string;
+	onTokenChange : (tok : string) => void;
+	options : [string, string][];
+	allowManualNumber? : boolean;
+	manualValue? : string;
+	onManualChange? : (v : string) => void;
 }) {
 	return (
 		<div>
@@ -711,15 +727,15 @@ function TokenOnlyRow({
 }
 
 function TokenSelect({
-	value,
-	onChange,
-	options,
-	placeholder,
-}: {
-	value: string;
-	onChange: (tok: string) => void;
-	options: [string, string][];
-	placeholder?: string;
+						 value,
+						 onChange,
+						 options,
+						 placeholder,
+					 } : {
+	value : string;
+	onChange : (tok : string) => void;
+	options : [string, string][];
+	placeholder? : string;
 }) {
 	return (
 		<select
@@ -738,7 +754,7 @@ function TokenSelect({
 	);
 }
 
-function toNumStr(v: number | string | undefined): string {
+function toNumStr(v : number | string | undefined) : string {
 	if (typeof v === 'number') return String(v);
 	if (typeof v === 'string') {
 		const n = Number(v);
@@ -747,25 +763,25 @@ function toNumStr(v: number | string | undefined): string {
 	return '';
 }
 
-function toStr(v: number | string | undefined): string {
+function toStr(v : number | string | undefined) : string {
 	return v == null ? '' : String(v);
 }
 
-function strToNumOrUndef(s: string): number | undefined {
+function strToNumOrUndef(s : string) : number | undefined {
 	const n = Number(s);
 	return Number.isFinite(n) ? n : undefined;
 }
 
-function emptyToUndef(s: string): string | undefined {
+function emptyToUndef(s : string) : string | undefined {
 	return s.trim() === '' ? undefined : s;
 }
 
-function tokenOrEmpty(v: any): string {
+function tokenOrEmpty(v : any) : string {
 	return typeof v === 'string' && v.startsWith('token:')
 		? v.replace(/^token:/, '')
 		: '';
 }
 
-function isNumberLike(v: any) {
+function isNumberLike(v : any) {
 	return typeof v === 'number' || (typeof v === 'string' && !isNaN(Number(v)));
 }
