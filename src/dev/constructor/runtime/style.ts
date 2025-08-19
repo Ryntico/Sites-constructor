@@ -85,6 +85,7 @@ export function styleFromShortcuts(
 	if (s.justify)
 		(css as any).justifyContent =
 			s.justify === 'between' ? 'space-between' : mapAlign(s.justify);
+	if (s.flexDirection) css.flexDirection = s.flexDirection;
 
 	return css;
 }

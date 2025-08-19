@@ -18,6 +18,7 @@ export type ThemeTokens = {
 };
 
 export type StyleShortcuts = {
+	flexDirection?: 'row' | 'column' | 'row-reverse' | 'column-reverse' | undefined;
 	display?: 'block' | 'flex' | 'grid';
 	columns?: number;
 	gap?: number;
