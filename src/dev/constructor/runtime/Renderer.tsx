@@ -1,5 +1,5 @@
 import React from 'react';
-import type { PageSchema, NodeJson, ThemeTokens, Action } from './types';
+import type { PageSchema, NodeJson, ThemeTokens, Action } from '@/types/siteTypes';
 import { mergeResponsive, styleObjToCss } from './style';
 
 function actionsAttr(on?: Record<string, Action[]>) {
