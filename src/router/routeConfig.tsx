@@ -12,6 +12,7 @@ import {
 	getRouteConstructor,
 } from '../const/router.ts';
 import SmokeConstructorPage from '@/dev/SmokeConstructorPage.tsx';
+import {UserRole} from "./const/types";
 
 // import AuthSmoke from "../dev/AuthSmoke.tsx";
 
@@ -24,7 +25,7 @@ const SignupPage = lazy(() =>
 );
 
 const ProfilePage = lazy(() =>
-	import('@pages/profile/ProfilePage.tsx').then((module) => ({
+	import('@pages/profile/ProfilePage').then((module) => ({
 		default: module.ProfilePage,
 	})),
 );
@@ -35,18 +36,27 @@ const ConstructorPage = lazy(() =>
 	})),
 );
 
+const MainPage = lazy(() =>
+	import('@pages/main/MainPage.tsx').then((module) => ({
+		default: module.MainPage,
+	})),
+);
+
 export const routeConfig: Record<AppRoutes, AppRoutesProps> = {
 	[AppRoutes.MAIN]: {
 		path: getRouteMain(),
-		element: <p>MAIN</p>,
+		element: <MainPage />,
+		authOnly: true,
 	},
 	[AppRoutes.LOGIN]: {
 		path: getRouteLogin(),
 		element: <LoginPage />,
+		roles: [UserRole.GUEST],
 	},
 	[AppRoutes.SIGNUP]: {
 		path: getRouteSignup(),
 		element: <SignupPage />,
+		roles: [UserRole.GUEST],
 	},
 	[AppRoutes.PROFILE]: {
 		path: getRouteProfile(),
