@@ -9,8 +9,6 @@ import { ThemeEditor } from '../theme/ThemeEditor';
 import { useSiteBuilder } from '@/hooks/useSiteBuilder';
 import { useAppSelector } from '@store/hooks.ts';
 import { selectAuth } from '@store/slices/authSlice.ts';
-import { ImageUploadDemo } from '@/dev/ImageUploadDemo.tsx';
-import { SeedBlockTemplatesButton } from '@/dev/seed/SeedBlockTemplatesButton.tsx';
 
 function download(filename: string, content: string, mime = 'text/html') {
 	const blob = new Blob([content], { type: mime });

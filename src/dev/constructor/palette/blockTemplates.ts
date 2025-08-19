@@ -120,6 +120,7 @@ const boxCard: BlockTemplateDoc = {
 				props: {
 					style: {
 						base: {
+							display: 'flex',
 							p: 16,
 							bg: '#fff',
 							radius: 'token:radius.md',
