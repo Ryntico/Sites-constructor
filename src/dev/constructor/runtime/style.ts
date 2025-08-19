@@ -1,11 +1,11 @@
-import type { ThemeTokens, StyleShortcuts } from './types';
+import type { ThemeTokens, StyleShortcuts } from '@/types/siteTypes';
 
 const isToken = (v: unknown): v is string =>
 	typeof v === 'string' && v.startsWith('token:');
 
 export function resolveToken(theme: ThemeTokens, token: string): any {
 	const path = token.replace(/^token:/, '').split('.');
-	let cur: any = theme as any;
+	let cur: any = theme ;
 	for (const key of path) {
 		if (cur == null) break;
 		cur = cur[key];
@@ -35,23 +35,24 @@ export function styleFromShortcuts(
 	const padd = (k: keyof StyleShortcuts, cssKey: keyof React.CSSProperties) => {
 		const v = s[k];
 		if (v == null) return;
-		(css as any)[cssKey] = pxIfNumber(pick(v));
+		css[cssKey] = pxIfNumber(pick(v));
 	};
 	const marg = (k: keyof StyleShortcuts, cssKey: keyof React.CSSProperties) => {
 		const v = s[k];
 		if (v == null) return;
-		(css as any)[cssKey] = v === 'auto' ? 'auto' : pxIfNumber(pick(v));
+		css[cssKey] = v === 'auto' ? 'auto' : pxIfNumber(pick(v));
 	};
 
 	if (s.display) css.display = s.display;
-	if (s.gap != null) (css as any).gap = pxIfNumber(pick(s.gap));
+	if (s.gap != null) css.gap = pxIfNumber(pick(s.gap));
 	if (s.columns && s.display === 'grid')
-		(css as any).gridTemplateColumns = `repeat(${s.columns}, 1fr)`;
-	if (s.columns && s.display === 'flex') (css as any).gridTemplateColumns = undefined;
+		css.gridTemplateColumns = `repeat(${s.columns}, 1fr)`;
+	if (s.columns && s.display === 'flex') css.gridTemplateColumns = undefined;
 
 	if (s.w != null) css.width = pxIfNumber(pick(s.w));
 	if (s.h != null) css.height = pxIfNumber(pick(s.h));
-	if (s.maxW != null) (css as any).maxWidth = pxIfNumber(pick(s.maxW));
+	if (s.maxW != null) css.maxWidth = pxIfNumber(pick(s.maxW));
+	if (s.maxH != null) css.maxHeight = pxIfNumber(pick(s.maxH));
 
 	padd('p', 'padding');
 	padd('px', 'paddingLeft');
@@ -73,19 +74,56 @@ export function styleFromShortcuts(
 	marg('mb', 'marginBottom');
 	marg('ml', 'marginLeft');
 
-	if (s.bg) (css as any).background = pick(s.bg);
+	if (s.bg) css.background = pick(s.bg);
 	if (s.color) css.color = pick(s.color);
-	if (s.borderColor) (css as any).borderColor = pick(s.borderColor);
+	if (s.borderColor) css.borderColor = pick(s.borderColor);
 
-	if (s.radius != null) (css as any).borderRadius = pxIfNumber(pick(s.radius));
-	if (s.shadow) (css as any).boxShadow = pick(s.shadow);
+	if (s.radius != null) css.borderRadius = pxIfNumber(pick(s.radius));
+	if (s.shadow) css.boxShadow = pick(s.shadow);
 	if (s.textAlign) css.textAlign = s.textAlign;
 
-	if (s.items) (css as any).alignItems = mapAlign(s.items);
-	if (s.justify)
-		(css as any).justifyContent =
-			s.justify === 'between' ? 'space-between' : mapAlign(s.justify);
+	if (s.items){
+		if (s.items === 'stretch' || s.items === 'baseline') css.alignItems = s.items
+		else css.alignItems = mapAlign(s.items);
+	}
+
+	if (s.justify) {
+		if (s.justify === 'between') {
+			css.justifyContent = 'space-between';
+		} else if (s.justify === 'around') {
+			css.justifyContent = 'space-around';
+		} else if (s.justify === 'evenly') {
+			css.justifyContent = 'space-evenly';
+		} else {
+			css.justifyContent = mapAlign(s.justify);
+		}
+	}
+
 	if (s.flexDirection) css.flexDirection = s.flexDirection;
+
+	if (s.wrap) css.flexWrap = s.wrap;
+	
+	if (s.alignSelf) {
+		if (s.alignSelf === 'start') {
+			css.alignSelf = 'flex-start';
+		} else if (s.alignSelf === 'end') {
+			css.alignSelf = 'flex-end';
+		} else {
+			css.alignSelf = s.alignSelf;
+		}
+	}
+
+	if (s.order !== undefined) {
+		css.order = s.order;
+	}
+
+	if (s.flexGrow !== undefined) {
+		css.flexGrow = s.flexGrow;
+	}
+
+	if (s.flexShrink !== undefined) {
+		css.flexShrink = s.flexShrink;
+	}
 
 	return css;
 }

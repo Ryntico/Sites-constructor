@@ -18,21 +18,30 @@ export type ThemeTokens = {
 };
 
 export type StyleShortcuts = {
+	flexDirection?: 'row' | 'column' | 'row-reverse' | 'column-reverse' | undefined;
 	display?: 'block' | 'flex' | 'grid';
+	wrap?: 'nowrap' | 'wrap' | 'wrap-reverse';
 	columns?: number;
 	gap?: number;
+	alignSelf?: 'start' | 'center' | 'end' | 'baseline' | 'stretch';
+	order?: number;
+	flexGrow?: number |string;
+	flexShrink?: number | string;
 	w?: number | string;
 	h?: number | string;
 	maxW?: number | string;
+	maxH?: number | string;
+	minW?: number | string;
+	minH?: number | string;
 	p?: number;
 	px?: number | string;
-	py?: number;
+	py?: number | string;
 	pt?: number;
 	pr?: number;
 	pb?: number;
 	pl?: number;
 	m?: number;
-	mx?: number | string;
+	mx?: number;
 	my?: number;
 	mt?: number;
 	mr?: number;
@@ -44,8 +53,8 @@ export type StyleShortcuts = {
 	radius?: string | number;
 	shadow?: string;
 	textAlign?: 'left' | 'center' | 'right';
-	items?: 'start' | 'center' | 'end';
-	justify?: 'start' | 'center' | 'end' | 'between';
+	items?: 'start' | 'center' | 'end' | 'stretch' | 'baseline';
+	justify?: 'start' | 'center' | 'end' | 'between' | 'around' | 'evenly';
 };
 
 export type Action =
@@ -91,7 +100,10 @@ export type NodeJson = {
 };
 
 export type PageSchema = { rootId: string; nodes: Record<string, NodeJson> };
-export type NodeSubtree = { rootId: string; nodes: Record<string, NodeJson> };
+export type NodeSubtree = {
+	rootId: string;
+	nodes: Record<string, NodeJson>
+};
 
 export type BlockTemplateDoc = {
 	id: string;

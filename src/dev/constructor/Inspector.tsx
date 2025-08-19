@@ -1,5 +1,5 @@
 import React, { useMemo, useState } from 'react';
-import type { PageSchema, ThemeTokens, StyleShortcuts } from './runtime/types';
+import type { PageSchema, ThemeTokens, StyleShortcuts } from '@/types/siteTypes';
 
 type Props = {
 	schema : PageSchema;
@@ -161,7 +161,7 @@ export function Inspector({ schema, selectedId, onChange, theme } : Props) {
 				))}
 			</div>
 
-			<Section title="Layout">
+			<Section title="Настройки блока">
 				<Grid cols={3}>
 					<SelectRow
 						label="display"
@@ -174,49 +174,8 @@ export function Inspector({ schema, selectedId, onChange, theme } : Props) {
 							['grid', 'grid'],
 						]}
 					/>
-					<NumberRow
-						label={s.display === 'grid' ? 'columns' : 'columns (grid)'}
-						value={toNumStr(s.columns)}
-						onChange={(v) => patchStyle({ columns: strToNumOrUndef(v) })}
-						disabled={s.display !== 'grid'}
-					/>
-					<NumOrTokenRow
-						label="gap"
-						value={s.gap}
-						onNumChange={(v) => patchStyle({ gap: v })}
-						tokenValue={tokenOrEmpty(s.gap)}
-						onTokenChange={(tok) =>
-							patchStyle({ gap: tok ? (`token:${tok}` as any) : undefined })
-						}
-						tokenOptions={spacingOptions}
-					/>
-				</Grid>
 
-				<Grid cols={3} style={{ marginTop: 8 }}>
-					<TextRow
-						label="w"
-						value={toStr(s.w)}
-						onChange={(v) => patchStyle({ w: emptyToUndef(v) })}
-						placeholder="число(px) или 100%"
-					/>
-					<TextRow
-						label="h"
-						value={toStr(s.h)}
-						onChange={(v) => patchStyle({ h: emptyToUndef(v) })}
-						placeholder="число(px) или 100%"
-					/>
-					<TextRow
-						label="maxW"
-						value={toStr(s.maxW)}
-						onChange={(v) => patchStyle({ maxW: emptyToUndef(v) })}
-						placeholder="число(px) или 100%"
-					/>
-				</Grid>
-			</Section>
-
-			{s.display === 'flex' &&
-				<Section>
-					<Grid cols={2}>
+					{s.display === 'flex' &&
 						<SelectRow
 							label="direction"
 							value={s.flexDirection ?? ''}
@@ -228,9 +187,32 @@ export function Inspector({ schema, selectedId, onChange, theme } : Props) {
 								['column', 'column'],
 								['column-reverse', 'column-reverse'],
 							]}
-						/>
+						/>}
+					{s.display === 'flex' &&
 						<SelectRow
-							label="items (align-items)"
+							label="flex-wrap"
+							value={s.wrap ?? ''}
+							onChange={(v) => patchStyle({ wrap: (v || undefined) as any })}
+							options={[
+								['', '—'],
+								['nowrap', 'nowrap'],
+								['wrap', 'wrap'],
+								['wrap-reverse', 'wrap-reverse'],
+							]}
+						/>
+					}
+				</Grid>
+			</Section>
+
+			{s.display === 'flex' &&
+				(node.type === 'box' ||
+					node.type === 'row' ||
+					node.type === 'section'
+				) &&
+				<Section>
+					<Grid cols={3}>
+						<SelectRow
+							label="align-items"
 							value={s.items ?? ''}
 							onChange={(v) => patchStyle({ items: (v || undefined) as any })}
 							options={[
@@ -238,10 +220,12 @@ export function Inspector({ schema, selectedId, onChange, theme } : Props) {
 								['start', 'start'],
 								['center', 'center'],
 								['end', 'end'],
+								['baseline', 'baseline'],
+								['stretch', 'stretch'],
 							]}
 						/>
 						<SelectRow
-							label="justify (justify-content)"
+							label="justify-content"
 							value={s.justify ?? ''}
 							onChange={(v) => patchStyle({ justify: (v || undefined) as any })}
 							options={[
@@ -250,16 +234,106 @@ export function Inspector({ schema, selectedId, onChange, theme } : Props) {
 								['center', 'center'],
 								['end', 'end'],
 								['between', 'between'],
+								['around', 'around'],
+								['evenly', 'evenly'],
 							]}
 						/>
 
 					</Grid>
 				</Section>}
 
-			<Section title="Spacing">
-				<Grid cols={4}>
+				<Section title="Свойства флекс элементов">
+					<Grid cols={2}>
+						<SelectRow
+							label="align-self"
+							value={s.alignSelf ?? ''}
+							onChange={(v) => patchStyle({ alignSelf: (v || undefined) as any })}
+							options={[
+								['', '—'],
+								['start', 'start'],
+								['center', 'center'],
+								['end', 'end'],
+								['baseline', 'baseline'],
+								['stretch', 'stretch'],
+							]}
+						/>
+						<NumRow
+							label="order"
+							value={s.order}
+							onChange={(v) => patchStyle({ order: processOrder(v) })}
+						/>
+						<SelectRow
+							label="flex-grow"
+							value={s.flexGrow ?? ''}
+							onChange={(v) => patchStyle({ flexGrow: v })}
+							options={[
+								['', '—'],
+								['1', '1'],
+								['0', '0']
+							]}
+						/>
+						<SelectRow
+							label="flex-shrink"
+							value={s.flexShrink ?? ''}
+							onChange={(v) => patchStyle({ flexShrink: v })}
+							options={[
+								['', '—'],
+								['1', '1'],
+								['0', '0']
+							]}
+						/>
+
+					</Grid>
+				</Section>
+
+
+			<Section title="Размеры (по умолчанию: 100%)">
+				<Grid cols={2} style={{ marginTop: 8 }}>
+					<TextRow
+						label="ширина"
+						value={toStr(s.w)}
+						onChange={(v) => patchStyle({ w: processSizeValue(v) })}
+						placeholder="число(px)"
+					/>
+					<TextRow
+						label="высота"
+						value={toStr(s.h)}
+						onChange={(v) => patchStyle({ h: processSizeValue(v) })}
+						placeholder="число(px)"
+					/>
+					<TextRow
+						label="макс. ширина"
+						value={toStr(s.maxW)}
+						onChange={(v) => patchStyle({ maxW: processSizeValue(v) })}
+						placeholder="число(px)"
+					/>
+					<TextRow
+						label="макс. высота"
+						value={toStr(s.maxH)}
+						onChange={(v) => patchStyle({ maxH: processSizeValue(v) })}
+						placeholder="число(px)"
+					/>
+				</Grid>
+			</Section>
+
+			<Section title="Отступы">
+				{s.display === 'flex' &&
+					<Grid cols={1}>
+						<NumOrTokenRow
+							label="gap (промежутки)"
+							value={s.gap}
+							onNumChange={(v) => patchStyle({ gap: v })}
+							tokenValue={tokenOrEmpty(s.gap)}
+							onTokenChange={(tok) =>
+								patchStyle({ gap: tok ? (`token:${tok}` as any) : undefined })
+							}
+							tokenOptions={spacingOptions}
+						/>
+					</Grid>}
+
+				<Grid cols={1}>
 					<NumOrTokenRow
-						label="p"
+						label="padding"
 						value={s.p}
 						onNumChange={(v) => patchStyle({ p: v })}
 						tokenValue={tokenOrEmpty(s.p)}
@@ -269,7 +343,7 @@ export function Inspector({ schema, selectedId, onChange, theme } : Props) {
 						tokenOptions={spacingOptions}
 					/>
 					<NumOrTokenRow
-						label="px"
+						label="padding-x"
 						value={s.px as any}
 						onNumChange={(v) => patchStyle({ px: v as any })}
 						tokenValue={tokenOrEmpty(s.px)}
@@ -279,7 +353,7 @@ export function Inspector({ schema, selectedId, onChange, theme } : Props) {
 						tokenOptions={spacingOptions}
 					/>
 					<NumOrTokenRow
-						label="py"
+						label="padding-y"
 						value={s.py}
 						onNumChange={(v) => patchStyle({ py: v })}
 						tokenValue={tokenOrEmpty(s.py)}
@@ -288,31 +362,33 @@ export function Inspector({ schema, selectedId, onChange, theme } : Props) {
 						}
 						tokenOptions={spacingOptions}
 					/>
+				</Grid>
+				<Grid cols={2}>
 					<NumRow
-						label="pt"
+						label="padding-top"
 						value={s.pt}
 						onChange={(v) => patchStyle({ pt: v })}
 					/>
 					<NumRow
-						label="pr"
+						label="padding-right"
 						value={s.pr}
 						onChange={(v) => patchStyle({ pr: v })}
 					/>
 					<NumRow
-						label="pb"
+						label="padding-bottom"
 						value={s.pb}
 						onChange={(v) => patchStyle({ pb: v })}
 					/>
 					<NumRow
-						label="pl"
+						label="padding-left"
 						value={s.pl}
 						onChange={(v) => patchStyle({ pl: v })}
 					/>
 				</Grid>
 
-				<Grid cols={4} style={{ marginTop: 8 }}>
+				<Grid cols={1} style={{ marginTop: 8 }}>
 					<NumOrTokenRow
-						label="m"
+						label="margin"
 						value={s.m}
 						onNumChange={(v) => patchStyle({ m: v })}
 						tokenValue={tokenOrEmpty(s.m)}
@@ -321,34 +397,35 @@ export function Inspector({ schema, selectedId, onChange, theme } : Props) {
 						}
 						tokenOptions={spacingOptions}
 					/>
-					<TextRow
-						label="mx"
-						value={toStr(s.mx)}
-						onChange={(v) => patchStyle({ mx: emptyToUndef(v) })}
-						placeholder="число(px) или 'auto'"
+				</Grid>
+				<Grid cols={2}>
+					<NumRow
+						label="margin-x"
+						value={s.mx}
+						onChange={(v) => patchStyle({ mx: v })}
 					/>
 					<NumRow
-						label="my"
+						label="margin-y"
 						value={s.my}
 						onChange={(v) => patchStyle({ my: v })}
 					/>
 					<NumRow
-						label="mt"
+						label="margin-top"
 						value={s.mt}
 						onChange={(v) => patchStyle({ mt: v })}
 					/>
 					<NumRow
-						label="mr"
+						label="margin-right"
 						value={s.mr}
 						onChange={(v) => patchStyle({ mr: v })}
 					/>
 					<NumRow
-						label="mb"
+						label="margin-bottom"
 						value={s.mb}
 						onChange={(v) => patchStyle({ mb: v })}
 					/>
 					<NumRow
-						label="ml"
+						label="margin-left"
 						value={s.ml as number}
 						onChange={(v) => patchStyle({ ml: v as any })}
 					/>
@@ -468,7 +545,7 @@ const chip : React.CSSProperties = {
 };
 
 function Label({ children } : { children : React.ReactNode }) {
-	return <div style={{ fontSize: 12, margin: '6px 0 4px' }}>{children}</div>;
+	return <div style={{ fontSize: 12, margin: '6px 0 4px', color: '#687087' }}>{children}</div>;
 }
 
 function Section({ title, children } : { title? : string; children : React.ReactNode }) {
@@ -511,7 +588,7 @@ function SelectRow({
 					   disabled,
 				   } : {
 	label : string;
-	value : string;
+	value : string | number;
 	onChange : (v : string) => void;
 	options : [string, string][];
 	disabled? : boolean;
@@ -772,9 +849,32 @@ function strToNumOrUndef(s : string) : number | undefined {
 	return Number.isFinite(n) ? n : undefined;
 }
 
+/**
+ * Processes a size value from an input field
+ * - Empty string → undefined
+ * - Numeric string → number
+ * - Other strings (like '100%') → string
+ */
+function processSizeValue(value : string) : number | string | undefined {
+	const trimmed = value.trim();
+	if (trimmed === '') return undefined;
+
+	const num = Number(trimmed);
+	if (!isNaN(num) && trimmed === num.toString()) {
+		return num;
+	}
+
+	return trimmed;
+}
+
 function emptyToUndef(s : string) : string | undefined {
 	return s.trim() === '' ? undefined : s;
 }
+
+const processOrder = (v: number | undefined): number | undefined => {
+	if (v === undefined) return undefined;
+	return Number.isFinite(v) ? v : 0;
+};
 
 function tokenOrEmpty(v : any) : string {
 	return typeof v === 'string' && v.startsWith('token:')
