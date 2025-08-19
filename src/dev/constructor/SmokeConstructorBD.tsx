@@ -9,6 +9,7 @@ import { ThemeEditor } from '../theme/ThemeEditor';
 import { useSiteBuilder } from '@/hooks/useSiteBuilder';
 import { useAppSelector } from '@store/hooks.ts';
 import { selectAuth } from '@store/slices/authSlice.ts';
+import { ImageUploadDemo } from '@/dev/ImageUploadDemo.tsx';
 
 function download(filename: string, content: string, mime = 'text/html') {
 	const blob = new Blob([content], { type: mime });
@@ -323,6 +324,7 @@ export function SmokeConstructor() {
 				<JsonCard title="JSON — Текущая тема" obj={theme ?? {}} />
 				<JsonCard title="JSON — Страница (текущее состояние)" obj={{ schema }} />
 			</div>
+			<ImageUploadDemo ownerId={user?.uid} />
 		</div>
 	);
 }
