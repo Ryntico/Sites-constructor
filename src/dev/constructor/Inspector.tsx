@@ -102,6 +102,28 @@ export function Inspector({ schema, selectedId, onChange, theme } : Props) {
 					/>
 				</>
 			)}
+			{node.type === 'blockquote' && (
+				<>
+					<Label>Текст цитаты</Label>
+					<input
+						style={input}
+						value={p.text ?? ''}
+						onChange={(e) => patchProps({ text: e.target.value })}
+					/>
+					<Label>Текст перед автором</Label>
+					<input
+						style={input}
+						value={p.preAuthor ?? ''}
+						onChange={(e) => patchProps({ preAuthor: e.target.value })}
+					/>
+					<Label>Автор</Label>
+					<input
+						style={input}
+						value={p.cite ?? ''}
+						onChange={(e) => patchProps({ cite: e.target.value })}
+					/>
+				</>
+			)}
 
 			{node.type === 'button' && (
 				<>

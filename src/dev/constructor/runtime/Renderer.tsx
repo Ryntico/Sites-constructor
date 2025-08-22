@@ -133,6 +133,19 @@ function Node({
 					{node.props?.text ?? ''}
 				</li>
 			);
+		case 'blockquote': {
+			return (
+				<blockquote style={base} {...dataAttrs}>
+					{node.props?.text ?? ''}
+					{(node.props?.preAuthor || node.props?.cite) && (
+						<p style={{ fontSize: 12, color: '#888', marginTop: 8 }}>
+							{node.props?.preAuthor}
+							{node.props?.cite && (<cite>{node.props.cite}</cite>)}
+						</p>
+					)}
+				</blockquote>
+			);
+		}
 		default:
 			return <div style={{ color: 'crimson' }}>Unknown node: {node.type}</div>;
 	}
@@ -220,6 +233,18 @@ function renderStaticHtml(schema: PageSchema, theme: ThemeTokens) {
 			}
 			case 'listItem':
 				return `<li style="${style}"${data}>${escapeHtml(node.props?.text ?? '')}</li>`;
+			case 'blockquote': {
+				const text = escapeHtml(node.props?.text ?? '');
+				const author = node.props?.preAuthor ? escapeHtml(node.props.preAuthor) : '';
+				const cite = node.props?.cite ? escapeAttr(node.props.cite) : '';
+				const citeAttr = cite ? ` cite="${cite}"` : '';
+				const footer = (author || cite) ? 
+					`<p style="font-size:12px;color:#888;margin-top:8px">` +
+					(author ? `${author}` : '') +
+					(cite ? `<cite style="margin-left:8px;font-style:italic">(${escapeHtml(cite)})</cite>` : '') +
+					`</p>` : '';
+				return `<blockquote style="${style}"${citeAttr}${data}>${text}${footer}</blockquote>`;
+			}
 			default:
 				return `<div style="color:crimson"${data}>Unknown node: ${escapeHtml(node.type)}</div>`;
 		}
