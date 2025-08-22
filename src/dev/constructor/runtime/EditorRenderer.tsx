@@ -721,7 +721,7 @@ function renderPrimitive(node: NodeJson, baseStyle: React.CSSProperties) {
 
 		case 'input': {
 			const type = node.props?.type ?? 'text';
-			return <input type={type} />;
+			return <input type={type} style={baseStyle}/>;
 		}
 
 		default:
