@@ -78,13 +78,7 @@ export function cloneSubtreeWithIds(sub: NodeSubtree): NodeSubtree {
 
 export function isContainer(node: NodeJson | undefined): boolean {
 	if (!node) return false;
-	return (
-		node.type === 'page' ||
-		node.type === 'section' ||
-		node.type === 'box' ||
-		node.type === 'row' ||
-		node.type === 'list'
-	);
+	return ['page', 'section', 'box', 'row', 'form'].includes(node.type)
 }
 
 export function getChildren(schema: PageSchema, parentId: string): string[] {

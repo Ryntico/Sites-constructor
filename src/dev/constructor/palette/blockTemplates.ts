@@ -1,7 +1,7 @@
-import type { BlockTemplateDoc } from '../runtime/types';
+import type { BlockTemplateDoc } from '@/types/siteTypes';
 
 const h1: BlockTemplateDoc = {
-	key: 'heading_h1',
+	id: 'heading_h1',
 	name: 'Heading (H1)',
 	schema: {
 		rootId: 'h1_root',
@@ -20,7 +20,7 @@ const h1: BlockTemplateDoc = {
 };
 
 const paragraph: BlockTemplateDoc = {
-	key: 'paragraph',
+	id: 'paragraph',
 	name: 'Paragraph',
 	schema: {
 		rootId: 'p_root',
@@ -38,7 +38,7 @@ const paragraph: BlockTemplateDoc = {
 };
 
 const buttonPrimary: BlockTemplateDoc = {
-	key: 'button_primary',
+	id: 'button_primary',
 	name: 'Button (Primary)',
 	schema: {
 		rootId: 'btn_root',
@@ -66,7 +66,7 @@ const buttonPrimary: BlockTemplateDoc = {
 };
 
 const imageCard: BlockTemplateDoc = {
-	key: 'image_card',
+	id: 'image_card',
 	name: 'Image',
 	schema: {
 		rootId: 'img_root',
@@ -85,7 +85,7 @@ const imageCard: BlockTemplateDoc = {
 };
 
 const section: BlockTemplateDoc = {
-	key: 'section',
+	id: 'section',
 	name: 'Section',
 	schema: {
 		rootId: 'sec_root',
@@ -109,7 +109,7 @@ const section: BlockTemplateDoc = {
 };
 
 const boxCard: BlockTemplateDoc = {
-	key: 'box_card',
+	id: 'box_card',
 	name: 'Box (Card)',
 	schema: {
 		rootId: 'bx_root',
@@ -136,7 +136,7 @@ const boxCard: BlockTemplateDoc = {
 };
 
 const row2: BlockTemplateDoc = {
-	key: 'row2',
+	id: 'row2',
 	name: 'Row (2 cols)',
 	schema: {
 		rootId: 'row_root',
@@ -148,6 +148,35 @@ const row2: BlockTemplateDoc = {
 					style: {
 						base: { display: 'flex', gap: 16 },
 						sm: { display: 'block' },
+					},
+				},
+				childrenOrder: [],
+			},
+		},
+	},
+};
+
+const form: BlockTemplateDoc = {
+	id: 'form',
+	name: 'Форма',
+	schema: {
+		rootId: 'form_root',
+		nodes: {
+			form_root: {
+				id: 'form_root',
+				type: 'form',
+				props: {
+					formAction: '',
+					formMethod: 'post',
+					enctype: 'application/x-www-form-urlencoded',
+					style: {
+						base: {
+							display: 'flex',
+							flexDirection: 'column',
+							gap: 12,
+							p: 16,
+							bg: 'token:colors.surface',
+						},
 					},
 				},
 				childrenOrder: [],
@@ -204,4 +233,5 @@ export const BLOCK_TEMPLATES: BlockTemplateDoc[] = [
 	section,
 	boxCard,
 	row2,
+	form,
 ];

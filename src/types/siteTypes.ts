@@ -81,9 +81,13 @@ export type NodeJson = {
 		| 'divider'
 		| 'list'
 		| 'listItem'
+		| 'form'
 		| 'richtext'
 		| 'blockquote';
 	props?: {
+		formAction?: string;
+		formMethod?: 'post' | 'get';
+		enctype?: 'application/x-www-form-urlencoded' | 'multipart/form-data' | 'text/plain';
 		text?: string;
 		level?: 1 | 2 | 3 | 4 | 5 | 6;
 		href?: string;

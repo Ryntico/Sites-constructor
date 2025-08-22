@@ -2,6 +2,7 @@ import React, { useEffect, useMemo, useState } from 'react';
 import { useEditor, EditorContent } from '@tiptap/react';
 import StarterKit from '@tiptap/starter-kit';
 import type { PageSchema, ThemeTokens, StyleShortcuts } from '@/types/siteTypes';
+import { isContainer } from '@/dev/constructor/runtime/schemaOps.ts';
 
 type Props = {
 	schema : PageSchema;
@@ -225,6 +226,48 @@ export function Inspector({ schema, selectedId, onChange, theme } : Props) {
 				))}
 			</div>
 
+			{node.type === 'form' &&
+				<Section title="Настройки формы">
+					<SelectRow
+						label="Метод формы"
+						value={p.formMethod || ''}
+						onChange={(v) => patchProps({ formMethod: v || undefined })}
+						options={[
+							['', '—'],
+							['get', 'GET'],
+							['post', 'POST'],
+						]}
+					/>
+					<SelectRow
+						label="Кодирование данных"
+						value={p.enctype || ''}
+						onChange={(v) => patchProps({ enctype: v || undefined })}
+						options={[
+							['', '—'],
+							['application/x-www-form-urlencoded', 'application/x-www-form-urlencoded'],
+							['multipart/form-data', 'multipart/form-data'],
+							['text/plain', 'text/plain'],
+						]}
+					/>
+					<TextRowWithValidate
+						label="Куда отправляем данные"
+						value={p.formAction || ''}
+						onChange={(v) => patchProps({ formAction: v })}
+						placeholder="https://example.com/api/endpoint"
+						validate={(value) => {
+							if (!value) return;
+							try {
+								new URL(value);
+								return;
+							} catch (e) {
+								return 'Пожалуйста, введите корректный URL (например: https://example.com)';
+							}
+						}}
+					/>
+
+				</Section>
+			}
+
 			<Section title="Настройки блока">
 				<Grid cols={3}>
 					<SelectRow
@@ -268,11 +311,7 @@ export function Inspector({ schema, selectedId, onChange, theme } : Props) {
 				</Grid>
 			</Section>
 
-			{s.display === 'flex' &&
-				(node.type === 'box' ||
-					node.type === 'row' ||
-					node.type === 'section'
-				) &&
+			{s.display === 'flex' && isContainer(node) &&
 				<Section>
 					<Grid cols={3}>
 						<SelectRow
@@ -306,49 +345,49 @@ export function Inspector({ schema, selectedId, onChange, theme } : Props) {
 					</Grid>
 				</Section>}
 
-				<Section title="Свойства флекс элементов">
-					<Grid cols={2}>
-						<SelectRow
-							label="align-self"
-							value={s.alignSelf ?? ''}
-							onChange={(v) => patchStyle({ alignSelf: (v || undefined) as any })}
-							options={[
-								['', '—'],
-								['start', 'start'],
-								['center', 'center'],
-								['end', 'end'],
-								['baseline', 'baseline'],
-								['stretch', 'stretch'],
-							]}
-						/>
-						<NumRow
-							label="order"
-							value={s.order}
-							onChange={(v) => patchStyle({ order: processOrder(v) })}
-						/>
-						<SelectRow
-							label="flex-grow"
-							value={s.flexGrow ?? ''}
-							onChange={(v) => patchStyle({ flexGrow: v })}
-							options={[
-								['', '—'],
-								['1', '1'],
-								['0', '0']
-							]}
-						/>
-						<SelectRow
-							label="flex-shrink"
-							value={s.flexShrink ?? ''}
-							onChange={(v) => patchStyle({ flexShrink: v })}
-							options={[
-								['', '—'],
-								['1', '1'],
-								['0', '0']
-							]}
-						/>
+			<Section title="Свойства флекс элементов">
+				<Grid cols={2}>
+					<SelectRow
+						label="align-self"
+						value={s.alignSelf ?? ''}
+						onChange={(v) => patchStyle({ alignSelf: (v || undefined) as any })}
+						options={[
+							['', '—'],
+							['start', 'start'],
+							['center', 'center'],
+							['end', 'end'],
+							['baseline', 'baseline'],
+							['stretch', 'stretch'],
+						]}
+					/>
+					<NumRow
+						label="order"
+						value={s.order}
+						onChange={(v) => patchStyle({ order: processOrder(v) })}
+					/>
+					<SelectRow
+						label="flex-grow"
+						value={s.flexGrow ?? ''}
+						onChange={(v) => patchStyle({ flexGrow: v })}
+						options={[
+							['', '—'],
+							['1', '1'],
+							['0', '0'],
+						]}
+					/>
+					<SelectRow
+						label="flex-shrink"
+						value={s.flexShrink ?? ''}
+						onChange={(v) => patchStyle({ flexShrink: v })}
+						options={[
+							['', '—'],
+							['1', '1'],
+							['0', '0'],
+						]}
+					/>
 
-					</Grid>
-				</Section>
+				</Grid>
+			</Section>
 
 
 			<Section title="Размеры (по умолчанию: 100%)">
@@ -700,6 +739,85 @@ function TextRow({
 	);
 }
 
+function TextRowWithValidate({
+								 label,
+								 value,
+								 onChange,
+								 placeholder,
+								 error,
+								 validate,
+								 helperText,
+							 }: {
+	label: string;
+	value: string;
+	onChange: (v: string) => void;
+	placeholder?: string;
+	error?: string;
+	validate?: (value: string) => string | undefined;
+	helperText?: string;
+}) {
+	const [localError, setLocalError] = useState<string | undefined>();
+	const [isDirty, setIsDirty] = useState(false);
+
+	const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+		const newValue = e.target.value;
+		onChange(newValue);
+		if (!isDirty) setIsDirty(true);
+		if (validate) {
+			setLocalError(validate(newValue));
+		}
+	};
+
+	const handleBlur = () => {
+		if (!isDirty) setIsDirty(true);
+		if (validate) {
+			setLocalError(validate(value));
+		}
+	};
+
+	const displayError = isDirty && (error || localError);
+
+	return (
+		<label style={{ display: 'grid', gap: 4, fontSize: 12, position: 'relative' }}>
+			<div style={{ display: 'flex', justifyContent: 'space-between' }}>
+				<span style={{ color: '#687087' }}>{label}</span>
+			</div>
+			<input
+				style={{
+					...input,
+					marginBottom: 0,
+					border: displayError ? '#ff4d4f' : input.border,
+					padding: '8px 12px',
+				}}
+				value={value}
+				onChange={handleChange}
+				onBlur={handleBlur}
+				placeholder={placeholder}
+			/>
+			{displayError ? (
+				<div style={{
+					color: '#ff4d4f',
+					fontSize: 11,
+					marginTop: 2,
+					lineHeight: 1.2,
+				}}>
+					{displayError}
+				</div>
+			) : helperText && (
+				<div style={{
+					color: '#687087',
+					fontSize: 11,
+					marginTop: 2,
+					lineHeight: 1.2,
+					fontStyle: 'italic'
+				}}>
+					{helperText}
+				</div>
+			)}
+		</label>
+	);
+}
+
 function NumberRow({
 					   label,
 					   value,
@@ -935,7 +1053,7 @@ function emptyToUndef(s : string) : string | undefined {
 	return s.trim() === '' ? undefined : s;
 }
 
-const processOrder = (v: number | undefined): number | undefined => {
+const processOrder = (v : number | undefined) : number | undefined => {
 	if (v === undefined) return undefined;
 	return Number.isFinite(v) ? v : 0;
 };

@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { exportPageToHtml } from './runtime/Renderer';
-import type { NodeSubtree } from './runtime/types';
+import type { NodeSubtree } from '@/types/siteTypes';
 import { cloneSubtreeWithIds } from './runtime/schemaOps';
 import { EditorRenderer } from './runtime/EditorRenderer';
 import { Inspector } from './Inspector';
