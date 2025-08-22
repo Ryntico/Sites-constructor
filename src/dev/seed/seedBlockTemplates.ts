@@ -62,7 +62,7 @@ export async function seedBlockTemplates(
 	const snap = await getDocs(col);
 	snap.forEach((d) => existing.set(d.id, d.data() as FireBlockTemplateDoc));
 
-	const codeIds = new Set<string>(BLOCK_TEMPLATES.map((t) => t.key));
+	const codeIds = new Set<string>(BLOCK_TEMPLATES.map((t) => t.id));
 
 	let batch = writeBatch(db);
 	let pending = 0;
@@ -87,7 +87,8 @@ export async function seedBlockTemplates(
 	let archived = 0;
 
 	for (const t of BLOCK_TEMPLATES) {
-		const id = t.key;
+		// const id = t.key;
+		const id = t.id;
 		const ref = doc(col, id);
 		const prev = existing.get(id);
 
