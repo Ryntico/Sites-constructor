@@ -16,6 +16,10 @@ type BP = 'base' | 'sm' | 'md' | 'lg';
 export function Inspector({ schema, selectedId, onChange, theme } : Props) {
 	const [bp, setBp] = useState<BP>('base');
 	const node = selectedId ? schema.nodes[selectedId] : null;
+	const parentNode = node
+		? Object.values(schema.nodes).find((n) =>
+			n.childrenOrder?.includes(node.id))
+		: null;
 	const p = (node?.props || {}) as any;
 
 	const patchProps = (patch: any) => {
@@ -28,7 +32,7 @@ export function Inspector({ schema, selectedId, onChange, theme } : Props) {
 			},
 		});
 	};
- 
+
 	const rteEditor = useEditor({
 		extensions: [StarterKit],
 		content: node?.type === 'richtext' ? (p.text ?? '') : '',
@@ -38,7 +42,7 @@ export function Inspector({ schema, selectedId, onChange, theme } : Props) {
 			}
 		},
 	});
- 
+
 	useEffect(() => {
 		if (node?.type === 'richtext' && rteEditor) {
 			const current = rteEditor.getHTML();
@@ -268,48 +272,78 @@ export function Inspector({ schema, selectedId, onChange, theme } : Props) {
 				</Section>
 			}
 
-			<Section title="Настройки блока">
-				<Grid cols={3}>
+			{node.type === 'input' &&
+				<Section title="Настройки поля ввода">
 					<SelectRow
-						label="display"
-						value={s.display ?? ''}
-						onChange={(v) => patchStyle({ display: (v || undefined) as any })}
+						label="Тип"
+						value={p.type || ''}
+						onChange={(v) => patchProps({ type: v || undefined })}
 						options={[
 							['', '—'],
-							['block', 'block'],
-							['flex', 'flex'],
-							['grid', 'grid'],
+							['text', 'text'],
+							['password', 'password'],
+							['email', 'email'],
+							['number', 'number'],
+							['checkbox', 'checkbox'],
+							['radio', 'radio'],
+							['date', 'date'],
+							['time', 'time'],
+							['color', 'color'],
+							['range', 'range'],
+							['file', 'file'],
+							['url', 'url'],
+							['tel', 'tel'],
 						]}
 					/>
+				</Section>
+			}
 
-					{s.display === 'flex' &&
+			{isContainer(node) &&
+				<Section title="Настройки блока">
+					<Grid cols={3}>
 						<SelectRow
-							label="direction"
-							value={s.flexDirection ?? ''}
-							onChange={(v) => patchStyle({ flexDirection: (v || undefined) as any })}
+							label="display"
+							value={s.display ?? ''}
+							onChange={(v) => patchStyle({ display: (v || undefined) as any })}
 							options={[
 								['', '—'],
-								['row', 'row'],
-								['row-reverse', 'row-reverse'],
-								['column', 'column'],
-								['column-reverse', 'column-reverse'],
-							]}
-						/>}
-					{s.display === 'flex' &&
-						<SelectRow
-							label="flex-wrap"
-							value={s.wrap ?? ''}
-							onChange={(v) => patchStyle({ wrap: (v || undefined) as any })}
-							options={[
-								['', '—'],
-								['nowrap', 'nowrap'],
-								['wrap', 'wrap'],
-								['wrap-reverse', 'wrap-reverse'],
+								['block', 'block'],
+								['flex', 'flex'],
+								['inline-flex', 'inline-flex'],
+								['grid', 'grid'],
 							]}
 						/>
-					}
-				</Grid>
-			</Section>
+
+
+						{s.display === 'flex' &&
+							<SelectRow
+								label="direction"
+								value={s.flexDirection ?? ''}
+								onChange={(v) => patchStyle({ flexDirection: (v || undefined) as any })}
+								options={[
+									['', '—'],
+									['row', 'row'],
+									['row-reverse', 'row-reverse'],
+									['column', 'column'],
+									['column-reverse', 'column-reverse'],
+								]}
+							/>}
+						{s.display === 'flex' &&
+							<SelectRow
+								label="flex-wrap"
+								value={s.wrap ?? ''}
+								onChange={(v) => patchStyle({ wrap: (v || undefined) as any })}
+								options={[
+									['', '—'],
+									['nowrap', 'nowrap'],
+									['wrap', 'wrap'],
+									['wrap-reverse', 'wrap-reverse'],
+								]}
+							/>
+						}
+					</Grid>
+				</Section>
+			}
 
 			{s.display === 'flex' && isContainer(node) &&
 				<Section>
@@ -343,52 +377,54 @@ export function Inspector({ schema, selectedId, onChange, theme } : Props) {
 						/>
 
 					</Grid>
-				</Section>}
+				</Section>
+			}
 
-			<Section title="Свойства флекс элементов">
-				<Grid cols={2}>
-					<SelectRow
-						label="align-self"
-						value={s.alignSelf ?? ''}
-						onChange={(v) => patchStyle({ alignSelf: (v || undefined) as any })}
-						options={[
-							['', '—'],
-							['start', 'start'],
-							['center', 'center'],
-							['end', 'end'],
-							['baseline', 'baseline'],
-							['stretch', 'stretch'],
-						]}
-					/>
-					<NumRow
-						label="order"
-						value={s.order}
-						onChange={(v) => patchStyle({ order: processOrder(v) })}
-					/>
-					<SelectRow
-						label="flex-grow"
-						value={s.flexGrow ?? ''}
-						onChange={(v) => patchStyle({ flexGrow: v })}
-						options={[
-							['', '—'],
-							['1', '1'],
-							['0', '0'],
-						]}
-					/>
-					<SelectRow
-						label="flex-shrink"
-						value={s.flexShrink ?? ''}
-						onChange={(v) => patchStyle({ flexShrink: v })}
-						options={[
-							['', '—'],
-							['1', '1'],
-							['0', '0'],
-						]}
-					/>
+			{parentNode?.props?.style?.[bp].display === 'flex' &&
+				<Section title="Свойства флекс элементов">
+					<Grid cols={2}>
+						<SelectRow
+							label="align-self"
+							value={s.alignSelf ?? ''}
+							onChange={(v) => patchStyle({ alignSelf: (v || undefined) as any })}
+							options={[
+								['', '—'],
+								['start', 'start'],
+								['center', 'center'],
+								['end', 'end'],
+								['baseline', 'baseline'],
+								['stretch', 'stretch'],
+							]}
+						/>
+						<NumRow
+							label="order"
+							value={s.order}
+							onChange={(v) => patchStyle({ order: processOrder(v) })}
+						/>
+						<SelectRow
+							label="flex-grow"
+							value={s.flexGrow ?? ''}
+							onChange={(v) => patchStyle({ flexGrow: v })}
+							options={[
+								['', '—'],
+								['1', '1'],
+								['0', '0'],
+							]}
+						/>
+						<SelectRow
+							label="flex-shrink"
+							value={s.flexShrink ?? ''}
+							onChange={(v) => patchStyle({ flexShrink: v })}
+							options={[
+								['', '—'],
+								['1', '1'],
+								['0', '0'],
+							]}
+						/>
 
-				</Grid>
-			</Section>
-
+					</Grid>
+				</Section>
+			}
 
 			<Section title="Размеры (по умолчанию: 100%)">
 				<Grid cols={2} style={{ marginTop: 8 }}>

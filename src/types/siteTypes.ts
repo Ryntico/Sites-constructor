@@ -82,6 +82,7 @@ export type NodeJson = {
 		| 'list'
 		| 'listItem'
 		| 'form'
+		| 'input'
 		| 'richtext'
 		| 'blockquote';
 	props?: {
@@ -93,13 +94,46 @@ export type NodeJson = {
 		href?: string;
 		src?: string;
 		alt?: string;
+		type?:
+			'text'
+			| 'email'
+			| 'password'
+			| 'number'
+			| 'tel'
+			| 'url'
+			| 'search'
+			| 'date'
+			| 'time'
+			| 'datetime-local'
+			| 'month'
+			| 'week'
+			| 'color'
+			| 'range'
+			| 'file'
+			| 'hidden';
+		name?: string;
+		value?: string;
+		placeholder?: string;
+		required?: boolean;
+		disabled?: boolean;
+		readonly?: boolean;
+		min?: number | string;
+		max?: number | string;
+		step?: number | string;
+		minlength?: number;
+		maxlength?: number;
+		pattern?: string;
+		title?: string;
+		size?: number;
+		autocomplete?: string;
+		autofocus?: boolean;
 		style?: {
 			base?: StyleShortcuts;
 			sm?: StyleShortcuts;
 			md?: StyleShortcuts;
 			lg?: StyleShortcuts;
 		};
-		on?: Record<'click', Action[]>;
+		on?: Record<string, Action[]>;
 		variant?: 'ul' | 'ol';
 		preAuthor?: string;
 		cite?: string;
