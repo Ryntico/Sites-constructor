@@ -81,7 +81,7 @@ export type NodeJson = {
 		| 'divider'
 		| 'list'
 		| 'listItem'
-		| 'richtext';
+		| 'richtext'
 		| 'blockquote';
 	props?: {
 		text?: string;
