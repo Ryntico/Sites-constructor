@@ -642,6 +642,22 @@ function renderPrimitive(node: NodeJson) {
 		case 'listItem':
 			return <li>{node.props?.text ?? ''}</li>;
 
+		case 'blockquote': {
+			const blockquoteStyle = { borderLeft: '4px solid #ccc', paddingLeft: 16, margin: 0 }
+			const footerStyle = { fontSize: 12, color: '#888', marginTop: 8 }
+			return (
+				<blockquote style={blockquoteStyle}>
+					{node.props?.text ?? 'Цитата'}
+					{(node.props?.preAuthor || node.props?.cite) && (
+						<p style={footerStyle}>
+							{node.props?.preAuthor}
+							{node.props?.cite && (<cite>{node.props.cite}</cite>)}
+						</p>
+					)}
+				</blockquote>
+			);
+		}
+
 		default:
 			return null;
 	}

@@ -80,7 +80,8 @@ export type NodeJson = {
 		| 'button'
 		| 'divider'
 		| 'list'
-		| 'listItem';
+		| 'listItem'
+		| 'blockquote';
 	props?: {
 		text?: string;
 		level?: 1 | 2 | 3 | 4 | 5 | 6;
@@ -95,6 +96,8 @@ export type NodeJson = {
 		};
 		on?: Record<'click', Action[]>;
 		variant?: 'ul' | 'ol';
+		preAuthor?: string;
+		cite?: string;
 	};
 	childrenOrder?: string[];
 };

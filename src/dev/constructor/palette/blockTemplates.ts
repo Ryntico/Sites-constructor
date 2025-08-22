@@ -156,8 +156,29 @@ const row2: BlockTemplateDoc = {
 	},
 };
 
+const quote: BlockTemplateDoc = {
+	key: 'blockquote',
+	name: 'Quote',
+	schema: {
+		rootId: 'quote_root',
+		nodes: {
+			quote_root: {
+				id: 'quote_root',
+				type: 'blockquote',
+				props: {
+					text: 'Цитата. Перетащите, чтобы добавить на страницу.',
+					preAuthor: 'великий ',
+					cite: 'источник',
+					style: { base: { mb: 12, color: 'token:colors.text.muted', borderColor: 'token:colors.primary.500' } },
+				},
+			},
+		},
+	},
+};
+
 export const BLOCK_TEMPLATES: BlockTemplateDoc[] = [
 	h1,
+	quote,
 	paragraph,
 	buttonPrimary,
 	imageCard,
