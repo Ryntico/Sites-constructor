@@ -593,6 +593,16 @@ function renderPrimitive(node: NodeJson) {
 		case 'paragraph':
 			return <p>{node.props?.text ?? 'Text'}</p>;
 
+		case 'richtext': {
+			const html = node.props?.text ?? '';
+			const hasHtml = /<[a-z][\s\S]*>/i.test(html);
+			return hasHtml ? (
+				<div dangerouslySetInnerHTML={{ __html: html }} />
+			) : (
+				<p>{html || 'Text'}</p>
+			);
+		}
+
 		case 'image':
 			return (
 				<img

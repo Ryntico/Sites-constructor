@@ -67,6 +67,7 @@ export type NodeJson = {
 		| 'box'
 		| 'row'
 		| 'heading'
+		| 'richtext'
 		| 'paragraph'
 		| 'image'
 		| 'button'
