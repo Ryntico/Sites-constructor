@@ -599,6 +599,13 @@ function findParent(schema: PageSchema, childId: string): string | null {
 
 function renderPrimitive(node: NodeJson, baseStyle: React.CSSProperties) {
 	switch (node.type) {
+		case 'form':
+			return <form
+				action={node.props?.formAction}
+				method={node.props?.formMethod}
+				encType={node.props?.enctype}
+			></form>;
+
 		case 'page':
 		case 'section':
 		case 'box':

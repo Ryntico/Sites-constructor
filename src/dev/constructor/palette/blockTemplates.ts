@@ -157,6 +157,35 @@ const row2: BlockTemplateDoc = {
 	},
 };
 
+const form: BlockTemplateDoc = {
+	key: 'form',
+	name: 'Форма',
+	schema: {
+		rootId: 'form_root',
+		nodes: {
+			form_root: {
+				id: 'form_root',
+				type: 'form',
+				props: {
+					formAction: '',
+					formMethod: 'post',
+					enctype: 'application/x-www-form-urlencoded',
+					style: {
+						base: {
+							display: 'flex',
+							flexDirection: 'column',
+							gap: 12,
+							p: 16,
+							bg: 'token:colors.surface',
+						},
+					},
+				},
+				childrenOrder: [],
+			},
+		},
+	},
+};
+
 const richtext: BlockTemplateDoc = {
 	key: 'richtext',
 	name: 'Rich Text',
@@ -211,4 +240,5 @@ export const BLOCK_TEMPLATES: BlockTemplateDoc[] = [
 	section,
 	boxCard,
 	row2,
+	form,
 ];

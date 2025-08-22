@@ -142,6 +142,21 @@ function Node({
 					{node.props?.text ?? ''}
 				</li>
 			);
+		case 'form':
+			return (
+				<form
+					action={node.props?.formAction}
+					method={node.props?.formMethod}
+					encType={node.props?.enctype}
+					style={base}
+					{...dataAttrs}
+				>
+					{kids.map((k) => (
+						<Node key={k.id} node={k} schema={schema} theme={theme} />
+					))}
+				</form>
+			);
+
 		case 'blockquote': {
 			return (
 				<blockquote style={base} {...dataAttrs}>
@@ -249,12 +264,22 @@ function renderStaticHtml(schema: PageSchema, theme: ThemeTokens) {
 			}
 			case 'listItem':
 				return `<li style="${style}"${data}>${escapeHtml(node.props?.text ?? '')}</li>`;
+
+			case 'form': {
+				const action = node.props?.formAction ?? '';
+				const method = node.props?.formMethod ?? 'post';
+				const enctype = node.props?.enctype ?? 'application/x-www-form-urlencoded';
+				return `<form action="${action}" method="${method}" enctype="${enctype}" style="${style}"${data}>${kids
+					.map(walk)
+					.join('')}</form>`;
+			}
+
 			case 'blockquote': {
 				const text = escapeHtml(node.props?.text ?? '');
 				const author = node.props?.preAuthor ? escapeHtml(node.props.preAuthor) : '';
 				const cite = node.props?.cite ? escapeAttr(node.props.cite) : '';
 				const citeAttr = cite ? ` cite="${cite}"` : '';
-				const footer = (author || cite) ? 
+				const footer = (author || cite) ?
 					`<p style="font-size:12px;color:#888;margin-top:8px">` +
 					(author ? `${author}` : '') +
 					(cite ? `<cite style="margin-left:8px;font-style:italic">(${escapeHtml(cite)})</cite>` : '') +
