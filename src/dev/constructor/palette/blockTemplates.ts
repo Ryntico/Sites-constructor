@@ -156,8 +156,27 @@ const row2: BlockTemplateDoc = {
 	},
 };
 
+const richtext: BlockTemplateDoc = {
+	key: 'richtext',
+	name: 'Rich Text',
+	schema: {
+		rootId: 'rt_root',
+		nodes: {
+			rt_root: {
+				id: 'rt_root',
+				type: 'richtext',
+				props: {
+					text: '<p>Отформатируйте текст с помощью списка, цитаты или обычного абзаца.</p>',
+					style: { base: { mb: 12 } },
+				},
+			},
+		},
+	},
+};
+
 export const BLOCK_TEMPLATES: BlockTemplateDoc[] = [
 	h1,
+	richtext,
 	paragraph,
 	buttonPrimary,
 	imageCard,

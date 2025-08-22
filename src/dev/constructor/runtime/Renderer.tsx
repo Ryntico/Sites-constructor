@@ -72,6 +72,15 @@ function Node({
 					{node.props?.text ?? ''}
 				</p>
 			);
+		case 'richtext': {
+			const html = node.props?.text ?? '';
+			const hasHtml = /<[a-z][\s\S]*>/i.test(html);
+			return hasHtml ? (
+				<div style={base} {...dataAttrs} dangerouslySetInnerHTML={{ __html: html }} />
+			) : (
+				<p style={base} {...dataAttrs}>{html}</p>
+			);
+		}
 		case 'image':
 			return (
 				<img
@@ -195,6 +204,13 @@ function renderStaticHtml(schema: PageSchema, theme: ThemeTokens) {
 			}
 			case 'paragraph':
 				return `<p style="${style}"${data}>${escapeHtml(node.props?.text ?? '')}</p>`;
+			case 'richtext': {
+				const html = node.props?.text ?? '';
+				const hasHtml = /<[a-z][\s\S]*>/i.test(html);
+				return hasHtml
+					? `<div style="${style}"${data}>${html}</div>`
+					: `<p style="${style}"${data}>${escapeHtml(html)}</p>`;
+			}
 			case 'image': {
 				const src = escapeAttr(node.props?.src ?? '');
 				const alt = escapeAttr(node.props?.alt ?? '');

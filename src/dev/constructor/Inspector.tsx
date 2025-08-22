@@ -1,4 +1,6 @@
-import React, { useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
+import { useEditor, EditorContent } from '@tiptap/react';
+import StarterKit from '@tiptap/starter-kit';
 import type { PageSchema, ThemeTokens, StyleShortcuts } from '@/types/siteTypes';
 
 type Props = {
@@ -12,6 +14,40 @@ type BP = 'base' | 'sm' | 'md' | 'lg';
 
 export function Inspector({ schema, selectedId, onChange, theme } : Props) {
 	const [bp, setBp] = useState<BP>('base');
+	const node = selectedId ? schema.nodes[selectedId] : null;
+	const p = (node?.props || {}) as any;
+
+	const patchProps = (patch: any) => {
+		if (!node) return;
+		onChange({
+			...schema,
+			nodes: {
+				...schema.nodes,
+				[node.id]: { ...node, props: { ...(node.props || {}), ...patch } },
+			},
+		});
+	};
+ 
+	const rteEditor = useEditor({
+		extensions: [StarterKit],
+		content: node?.type === 'richtext' ? (p.text ?? '') : '',
+		onUpdate: ({ editor }) => {
+			if (node?.type === 'richtext') {
+				patchProps({ text: editor.getHTML() });
+			}
+		},
+	});
+ 
+	useEffect(() => {
+		if (node?.type === 'richtext' && rteEditor) {
+			const current = rteEditor.getHTML();
+			const next = p.text ?? '';
+			if (current !== next) {
+				rteEditor.commands.setContent(next, false);
+			}
+		}
+	// eslint-disable-next-line react-hooks/exhaustive-deps
+	}, [selectedId]);
 
 	const colorOptions = useMemo<[string, string][]>(() => {
 		if (!theme) return [];
@@ -49,20 +85,8 @@ export function Inspector({ schema, selectedId, onChange, theme } : Props) {
 		return Object.keys(theme.shadow).map((k) => [`shadow.${k}`, theme.shadow[k]]);
 	}, [theme]);
 
-	const node = selectedId ? schema.nodes[selectedId] : null;
-
 	if (!selectedId) return <div style={card}>Выберите элемент</div>;
 	if (!node) return <div style={card}>Нет узла</div>;
-
-	const patchProps = (p : any) => {
-		onChange({
-			...schema,
-			nodes: {
-				...schema.nodes,
-				[node.id]: { ...node, props: { ...(node.props || {}), ...p } },
-			},
-		});
-	};
 
 	const patchStyle = (patch : Partial<StyleShortcuts>) => {
 		const prev = node.props?.style ?? {};
@@ -80,7 +104,6 @@ export function Inspector({ schema, selectedId, onChange, theme } : Props) {
 		});
 	};
 
-	const p = node.props || {};
 	const s = (p.style?.[bp] ?? {}) as StyleShortcuts;
 
 	return (
@@ -89,6 +112,25 @@ export function Inspector({ schema, selectedId, onChange, theme } : Props) {
 				<div style={{ fontWeight: 600, marginBottom: 4 }}>Инспектор</div>
 				<div style={{ fontSize: 12, color: '#666' }}>{node.type}</div>
 			</div>
+
+			{node.type === 'richtext' && (
+				<div style={{ marginBottom: 12 }}>
+					<Label>Rich text</Label>
+					{rteEditor && (
+						<>
+							<div style={{ display: 'flex', gap: 6, marginBottom: 6 }}>
+								<button style={chip} onClick={() => rteEditor.chain().focus().toggleBold().run()}>Bold</button>
+								<button style={chip} onClick={() => rteEditor.chain().focus().toggleBulletList().run()}>• list</button>
+								<button style={chip} onClick={() => rteEditor.chain().focus().toggleOrderedList().run()}>1. list</button>
+								<button style={chip} onClick={() => rteEditor.chain().focus().toggleBlockquote().run()}>Quote</button>
+							</div>
+							<div style={{ border: '1px solid #d0d3dc', borderRadius: 8, padding: 8 }}>
+								<EditorContent editor={rteEditor} />
+							</div>
+						</>
+					)}
+				</div>
+			)}
 
 			{(node.type === 'heading' ||
 				node.type === 'paragraph' ||
