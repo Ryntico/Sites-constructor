@@ -585,6 +585,37 @@ function renderPrimitive(node: NodeJson) {
 				encType={node.props?.enctype}
 			></form>;
 
+		case 'richtext': {
+			const html = node.props?.text ?? '';
+			const hasHtml = /<[a-z][\s\S]*>/i.test(html);
+			return hasHtml ? (
+				<div dangerouslySetInnerHTML={{ __html: html }} />
+			) : (
+				<p>{html || 'Text'}</p>
+			);
+		}
+
+		case 'blockquote': {
+			const blockquoteStyle = { borderLeft: '4px solid #ccc', paddingLeft: 16, margin: 0 }
+			const footerStyle = { fontSize: 12, color: '#888', marginTop: 8 }
+			return (
+				<blockquote style={blockquoteStyle}>
+					{node.props?.text ?? 'Цитата'}
+					{(node.props?.preAuthor || node.props?.cite) && (
+						<p style={footerStyle}>
+							{node.props?.preAuthor}
+							{node.props?.cite && (<cite>{node.props.cite}</cite>)}
+						</p>
+					)}
+				</blockquote>
+			);
+		}
+
+		case 'input': {
+			const type = node.props?.type ?? 'text';
+			return <input type={type} />;
+		}
+
 		case 'page':
 		case 'section':
 		case 'box':
@@ -599,16 +630,6 @@ function renderPrimitive(node: NodeJson) {
 
 		case 'paragraph':
 			return <p>{node.props?.text ?? 'Text'}</p>;
-
-		case 'richtext': {
-			const html = node.props?.text ?? '';
-			const hasHtml = /<[a-z][\s\S]*>/i.test(html);
-			return hasHtml ? (
-				<div dangerouslySetInnerHTML={{ __html: html }} />
-			) : (
-				<p>{html || 'Text'}</p>
-			);
-		}
 
 		case 'image':
 			return (
@@ -658,27 +679,6 @@ function renderPrimitive(node: NodeJson) {
 
 		case 'listItem':
 			return <li>{node.props?.text ?? ''}</li>;
-
-		case 'blockquote': {
-			const blockquoteStyle = { borderLeft: '4px solid #ccc', paddingLeft: 16, margin: 0 }
-			const footerStyle = { fontSize: 12, color: '#888', marginTop: 8 }
-			return (
-				<blockquote style={blockquoteStyle}>
-					{node.props?.text ?? 'Цитата'}
-					{(node.props?.preAuthor || node.props?.cite) && (
-						<p style={footerStyle}>
-							{node.props?.preAuthor}
-							{node.props?.cite && (<cite>{node.props.cite}</cite>)}
-						</p>
-					)}
-				</blockquote>
-			);
-		}
-
-		case 'input': {
-			const type = node.props?.type ?? 'text';
-			return <input type={type} />;
-		}
 
 		default:
 			return null;

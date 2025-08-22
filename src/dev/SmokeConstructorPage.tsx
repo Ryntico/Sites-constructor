@@ -1,5 +1,4 @@
-import React from 'react';
-import { SmokeConstructor } from '@/dev/constructor/SmokeConstructor';
+import { SmokeConstructor } from '@/dev/constructor/SmokeConstructorBD';
 export default function SmokeConstructorPage() {
 	return <SmokeConstructor />;
 }

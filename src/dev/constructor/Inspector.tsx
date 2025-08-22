@@ -1,8 +1,7 @@
-import React, { useEffect, useMemo, useState } from 'react';
-import { useEditor, EditorContent } from '@tiptap/react';
-import StarterKit from '@tiptap/starter-kit';
+import React, { useMemo, useState } from 'react';
 import type { PageSchema, ThemeTokens, StyleShortcuts } from '@/types/siteTypes';
 import { isContainer } from '@/dev/constructor/runtime/schemaOps.ts';
+import { RichText } from '@/dev/constructor/components/RichText.tsx';
 
 type Props = {
 	schema : PageSchema;
@@ -32,27 +31,6 @@ export function Inspector({ schema, selectedId, onChange, theme } : Props) {
 			},
 		});
 	};
-
-	const rteEditor = useEditor({
-		extensions: [StarterKit],
-		content: node?.type === 'richtext' ? (p.text ?? '') : '',
-		onUpdate: ({ editor }) => {
-			if (node?.type === 'richtext') {
-				patchProps({ text: editor.getHTML() });
-			}
-		},
-	});
-
-	useEffect(() => {
-		if (node?.type === 'richtext' && rteEditor) {
-			const current = rteEditor.getHTML();
-			const next = p.text ?? '';
-			if (current !== next) {
-				rteEditor.commands.setContent(next, false);
-			}
-		}
-	// eslint-disable-next-line react-hooks/exhaustive-deps
-	}, [selectedId]);
 
 	const colorOptions = useMemo<[string, string][]>(() => {
 		if (!theme) return [];
@@ -119,22 +97,10 @@ export function Inspector({ schema, selectedId, onChange, theme } : Props) {
 			</div>
 
 			{node.type === 'richtext' && (
-				<div style={{ marginBottom: 12 }}>
-					<Label>Rich text</Label>
-					{rteEditor && (
-						<>
-							<div style={{ display: 'flex', gap: 6, marginBottom: 6 }}>
-								<button style={chip} onClick={() => rteEditor.chain().focus().toggleBold().run()}>Bold</button>
-								<button style={chip} onClick={() => rteEditor.chain().focus().toggleBulletList().run()}>• list</button>
-								<button style={chip} onClick={() => rteEditor.chain().focus().toggleOrderedList().run()}>1. list</button>
-								<button style={chip} onClick={() => rteEditor.chain().focus().toggleBlockquote().run()}>Quote</button>
-							</div>
-							<div style={{ border: '1px solid #d0d3dc', borderRadius: 8, padding: 8 }}>
-								<EditorContent editor={rteEditor} />
-							</div>
-						</>
-					)}
-				</div>
+				<RichText
+					value={p.text ?? ''}
+					patchProps={patchProps}
+				/>
 			)}
 
 			{(node.type === 'heading' ||
