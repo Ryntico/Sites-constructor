@@ -186,8 +186,35 @@ const form: BlockTemplateDoc = {
 	},
 };
 
+const input: BlockTemplateDoc = {
+	id: 'input',
+	name: 'Input Field',
+	schema: {
+		rootId: 'input_root',
+		nodes: {
+			input_root: {
+				id: 'input_root',
+				type: 'input',
+				props: {
+					type: 'text',
+					name: 'input-field',
+					placeholder: 'Enter text here...',
+					style: {
+						base: {
+							w: '100%',
+							p: 8,
+							borderColor: 'token:colors.border',
+							radius: 'token:radius.md',
+						},
+					},
+				},
+			},
+		},
+	},
+};
+
 const richtext: BlockTemplateDoc = {
-	key: 'richtext',
+	id: 'richtext',
 	name: 'Rich Text',
 	schema: {
 		rootId: 'rt_root',
@@ -205,7 +232,7 @@ const richtext: BlockTemplateDoc = {
 };
 
 const quote: BlockTemplateDoc = {
-	key: 'blockquote',
+	id: 'blockquote',
 	name: 'Quote',
 	schema: {
 		rootId: 'quote_root',
@@ -241,4 +268,5 @@ export const BLOCK_TEMPLATES: BlockTemplateDoc[] = [
 	boxCard,
 	row2,
 	form,
+	input,
 ];
