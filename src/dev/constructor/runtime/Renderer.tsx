@@ -118,6 +118,31 @@ function Node({
 				</button>
 			);
 		}
+		case 'input': {
+			return (
+				<input
+					type={node.props?.type || 'text'}
+					name={node.props?.name}
+					value={node.props?.value}
+					placeholder={node.props?.placeholder}
+					required={node.props?.required}
+					disabled={node.props?.disabled}
+					readOnly={node.props?.readonly}
+					min={node.props?.min}
+					max={node.props?.max}
+					step={node.props?.step}
+					minLength={node.props?.minlength}
+					maxLength={node.props?.maxlength}
+					pattern={node.props?.pattern}
+					title={node.props?.title}
+					size={node.props?.size}
+					autoComplete={node.props?.autocomplete}
+					autoFocus={node.props?.autofocus}
+					style={base as React.CSSProperties}
+					{...dataAttrs}
+				/>
+			);
+		}
 		case 'divider': {
 			const css = {
 				...base,
@@ -142,13 +167,13 @@ function Node({
 					{node.props?.text ?? ''}
 				</li>
 			);
-		case 'form':
+		case 'form': {
 			return (
 				<form
 					action={node.props?.formAction}
 					method={node.props?.formMethod}
 					encType={node.props?.enctype}
-					style={base}
+					style={{ ...base, display: 'flex', flexDirection: 'column', gap: 8 }}
 					{...dataAttrs}
 				>
 					{kids.map((k) => (
@@ -156,6 +181,7 @@ function Node({
 					))}
 				</form>
 			);
+		}
 
 		case 'blockquote': {
 			return (
@@ -286,6 +312,27 @@ function renderStaticHtml(schema: PageSchema, theme: ThemeTokens) {
 					`</p>` : '';
 				return `<blockquote style="${style}"${citeAttr}${data}>${text}${footer}</blockquote>`;
 			}
+			case 'input': {
+				const type = node.props?.type || 'text';
+				const name = escapeAttr(node.props?.name ?? '');
+				const value = escapeAttr(node.props?.value ?? '');
+				const placeholder = escapeAttr(node.props?.placeholder ?? '');
+				const required = node.props?.required ? 'required' : '';
+				const disabled = node.props?.disabled ? 'disabled' : '';
+				const readonly = node.props?.readonly ? 'readonly' : '';
+				const min = node.props?.min ?? '';
+				const max = node.props?.max ?? '';
+				const step = node.props?.step ?? '';
+				const minlength = node.props?.minlength ?? '';
+				const maxlength = node.props?.maxlength ?? '';
+				const pattern = node.props?.pattern ?? '';
+				const title = escapeAttr(node.props?.title ?? '');
+				const size = node.props?.size ?? '';
+				const autocomplete = node.props?.autocomplete ?? '';
+				const autofocus = node.props?.autofocus ? 'autofocus' : '';
+				return `<input type="${type}" name="${name}" value="${value}" placeholder="${placeholder}" ${required} ${disabled} ${readonly} min="${min}" max="${max}" step="${step}" minlength="${minlength}" maxlength="${maxlength}" pattern="${pattern}" title="${title}" size="${size}" autocomplete="${autocomplete}" ${autofocus} style="${style}"${data} />`;
+			}
+
 			default:
 				return `<div style="color:crimson"${data}>Unknown node: ${escapeHtml(node.type)}</div>`;
 		}

@@ -719,6 +719,11 @@ function renderPrimitive(node: NodeJson, baseStyle: React.CSSProperties) {
 			);
 		}
 
+		case 'input': {
+			const type = node.props?.type ?? 'text';
+			return <input type={type} />;
+		}
+
 		default:
 			return null;
 	}
