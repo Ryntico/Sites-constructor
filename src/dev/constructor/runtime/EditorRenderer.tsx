@@ -562,7 +562,7 @@ function NodeView(props: {
 						})}
 					</div>
 				) : (
-					renderPrimitive(node)
+					renderPrimitive(node, baseStyle)
 				)}
 			</div>
 		</EditableNodeWrapper>
@@ -576,27 +576,33 @@ function findParent(schema: PageSchema, childId: string): string | null {
 	return null;
 }
 
-function renderPrimitive(node: NodeJson) {
+function renderPrimitive(node: NodeJson, baseStyle?: React.CSSProperties) {
 	switch (node.type) {
 		case 'form':
 			return <form
 				action={node.props?.formAction}
 				method={node.props?.formMethod}
 				encType={node.props?.enctype}
+				style={baseStyle}
 			></form>;
 
 		case 'richtext': {
 			const html = node.props?.text ?? '';
 			const hasHtml = /<[a-z][\s\S]*>/i.test(html);
 			return hasHtml ? (
-				<div dangerouslySetInnerHTML={{ __html: html }} />
+				<div style={baseStyle} dangerouslySetInnerHTML={{ __html: html }} />
 			) : (
-				<p>{html || 'Text'}</p>
+				<p style={baseStyle}>{html || 'Rich Text'}</p>
 			);
 		}
 
 		case 'blockquote': {
-			const blockquoteStyle = { borderLeft: '4px solid #ccc', paddingLeft: 16, margin: 0 }
+			const blockquoteStyle = { 
+				borderLeft: '4px solid #ccc', 
+				paddingLeft: 16, 
+				margin: 0,
+				...baseStyle
+			}
 			const footerStyle = { fontSize: 12, color: '#888', marginTop: 8 }
 			return (
 				<blockquote style={blockquoteStyle}>
@@ -613,30 +619,30 @@ function renderPrimitive(node: NodeJson) {
 
 		case 'input': {
 			const type = node.props?.type ?? 'text';
-			return <input type={type} />;
+			return <input type={type} style={baseStyle} />;
 		}
 
 		case 'page':
 		case 'section':
 		case 'box':
 		case 'row':
-			return <div />;
+			return <div style={baseStyle} />;
 
 		case 'heading': {
 			const level = (node.props?.level ?? 2) as 1 | 2 | 3 | 4 | 5 | 6;
 			const tag = `h${level}` as 'h1' | 'h2' | 'h3' | 'h4' | 'h5' | 'h6';
-			return React.createElement(tag, null, node.props?.text ?? 'Heading');
+			return React.createElement(tag, { style: baseStyle }, node.props?.text ?? 'Heading');
 		}
 
 		case 'paragraph':
-			return <p>{node.props?.text ?? 'Text'}</p>;
+			return <p style={baseStyle}>{node.props?.text ?? 'Text'}</p>;
 
 		case 'image':
 			return (
 				<img
 					src={node.props?.src}
 					alt={node.props?.alt ?? ''}
-					style={{ maxWidth: '100%' }}
+					style={{ maxWidth: '100%', ...baseStyle }}
 				/>
 			);
 
@@ -661,24 +667,24 @@ function renderPrimitive(node: NodeJson) {
 				appearance: 'none',
 			};
 			return isLink ? (
-				<a href={node.props?.href} style={common}>
+				<a href={node.props?.href} style={{ ...common, ...baseStyle }}>
 					{label}
 				</a>
 			) : (
-				<button type="button" style={common}>
+				<button type="button" style={{ ...common, ...baseStyle }}>
 					{label}
 				</button>
 			);
 		}
 
 		case 'divider':
-			return <hr />;
+			return <hr style={baseStyle} />;
 
 		case 'list':
-			return <ul />;
+			return <ul style={baseStyle} />;
 
 		case 'listItem':
-			return <li>{node.props?.text ?? ''}</li>;
+			return <li style={baseStyle}>{node.props?.text ?? ''}</li>;
 
 		default:
 			return null;
