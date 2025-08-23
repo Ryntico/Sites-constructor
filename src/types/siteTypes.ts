@@ -67,24 +67,44 @@ export type Action =
 	  }
 	| { type: 'toast'; variant: 'success' | 'error' | 'info'; message: string };
 
+export type InputType =
+	| 'text'
+	| 'email'
+	| 'password'
+	| 'number'
+	| 'tel'
+	| 'url'
+	| 'search'
+	| 'date'
+	| 'time'
+	| 'datetime-local'
+	| 'month'
+	| 'week'
+	| 'color'
+	| 'range'
+	| 'file'
+	| 'hidden';
+
+export type ElementType =
+	| 'page'
+	| 'section'
+	| 'box'
+	| 'row'
+	| 'heading'
+	| 'paragraph'
+	| 'image'
+	| 'button'
+	| 'divider'
+	| 'list'
+	| 'listItem'
+	| 'form'
+	| 'input'
+	| 'richtext'
+	| 'blockquote';
+
 export type NodeJson = {
 	id: string;
-	type:
-		| 'page'
-		| 'section'
-		| 'box'
-		| 'row'
-		| 'heading'
-		| 'paragraph'
-		| 'image'
-		| 'button'
-		| 'divider'
-		| 'list'
-		| 'listItem'
-		| 'form'
-		| 'input'
-		| 'richtext'
-		| 'blockquote';
+	type: ElementType;
 	props?: {
 		formAction?: string;
 		formMethod?: 'post' | 'get';
@@ -94,23 +114,7 @@ export type NodeJson = {
 		href?: string;
 		src?: string;
 		alt?: string;
-		type?:
-			'text'
-			| 'email'
-			| 'password'
-			| 'number'
-			| 'tel'
-			| 'url'
-			| 'search'
-			| 'date'
-			| 'time'
-			| 'datetime-local'
-			| 'month'
-			| 'week'
-			| 'color'
-			| 'range'
-			| 'file'
-			| 'hidden';
+		type?: InputType;
 		name?: string;
 		value?: string;
 		placeholder?: string;

@@ -200,12 +200,7 @@ const input: BlockTemplateDoc = {
 					name: 'input-field',
 					placeholder: 'Enter text here...',
 					style: {
-						base: {
-							w: '100%',
-							p: 8,
-							borderColor: 'token:colors.border',
-							radius: 'token:radius.md',
-						},
+						base: {},
 					},
 				},
 			},
