@@ -37,6 +37,35 @@ export type EditorRendererProps = {
 	selectedId?: string | null;
 };
 
+function dndContainerStyle(
+	baseStyle: React.CSSProperties,
+	axis: Axis,
+	empty: boolean,
+	dragging: boolean,
+): React.CSSProperties {
+	const disp = baseStyle.display;
+	const isFlex = disp === 'flex' || disp === 'inline-flex';
+
+	return {
+		display:
+			axis === 'x' ? (disp ?? 'flex') : (disp ?? (isFlex ? 'flex' : undefined)),
+		flexDirection:
+			baseStyle.flexDirection ??
+			(axis === 'y' && (isFlex || disp == null) ? 'column' : undefined),
+
+		flexWrap: baseStyle.flexWrap,
+		alignItems: baseStyle.alignItems,
+		justifyContent: baseStyle.justifyContent,
+		gap: baseStyle.gap,
+
+		minHeight: empty ? 56 : undefined,
+		padding: empty ? 8 : undefined,
+		borderRadius: empty ? 8 : undefined,
+		border: dragging && empty ? '2px dashed #e6e8ef' : undefined,
+		background: dragging && empty ? 'rgba(92,124,250,0.03)' : undefined,
+	};
+}
+
 export function EditorRenderer({
 	schema,
 	theme,
@@ -67,7 +96,6 @@ export function EditorRenderer({
 
 	const onRootDragLeave: React.DragEventHandler<HTMLDivElement> = (e) => {
 		const rt = e.relatedTarget as Node | null;
-		// уходим внутрь — игнор; при скролле rt часто = null — тоже игнор
 		if (!rt || e.currentTarget.contains(rt)) return;
 		dragInside.current = Math.max(0, dragInside.current - 1);
 		if (dragInside.current === 0) setIsDragging(false);
@@ -78,7 +106,6 @@ export function EditorRenderer({
 		setIsDragging(false);
 	};
 
-	// подстраховка: если d’n’d завершился “вне”
 	useEffect(() => {
 		const end = () => {
 			dragInside.current = 0;
@@ -155,7 +182,6 @@ export function EditorRenderer({
 			onDrop={onRootDrop}
 		>
 			<style>{`
-        /* перенос текста внутри редактора */
         [data-editor-root] h1,
         [data-editor-root] h2,
         [data-editor-root] h3,
@@ -168,7 +194,6 @@ export function EditorRenderer({
           word-break: normal;
           max-width: 100%;
         }
-        /* ключевой фикс: flex-элементы могут сжиматься */
         [data-editor-root] [data-res-id] { min-width: 0; max-width: 100%; }
       `}</style>
 
@@ -236,8 +261,12 @@ function NodeView(props: {
 	const { base: baseStyle, mediaCssText } = mergeResponsive(theme, {
 		style: node.props?.style,
 	});
+
+	const targetSelector = parentLike
+		? `[data-res-id="${id}"]`
+		: `[data-res-id="${id}"] [data-prim="true"]`;
 	const scopedCss = mediaCssText
-		? mediaCssText.replaceAll('[data-res-id]', `[data-res-id="${id}"]`)
+		? mediaCssText.replaceAll('[data-res-id]', targetSelector)
 		: '';
 
 	const axis: Axis = (() => {
@@ -251,17 +280,30 @@ function NodeView(props: {
 		return node.type === 'row' ? 'x' : 'y';
 	})();
 
-	const baseDisplay = baseStyle?.display as React.CSSProperties['display'] | undefined;
-	const fixedBaseStyle =
-		node.type === 'button' && !baseDisplay
-			? { display: 'inline-block', ...baseStyle }
-			: baseStyle;
+	const wrapperStyle: React.CSSProperties = {
+		position: 'relative',
+		userSelect: 'none',
+		...(parentLike
+			? {
+					...(node.type === 'section' ? { width: '100%' } : {}),
+					...baseStyle,
+				}
+			: {
+					display: 'inline-flex',
+					flex: '0 0 auto',
+					minWidth: 0,
+					verticalAlign: 'top',
+				}),
+	};
 
 	const containerEmpty = parentLike && children.length === 0;
 
 	const accepts = (dt: DataTransfer) => {
 		const t = Array.from(dt.types || []);
-		return t.includes(TYPE_TPL) || t.includes(TYPE_MOVE);
+		return (
+			t.includes('application/x-block-template') ||
+			t.includes('application/x-move-node')
+		);
 	};
 
 	return (
@@ -280,37 +322,25 @@ function NodeView(props: {
 				onDragStart={(e) => {
 					if (isRoot) return;
 					e.stopPropagation();
-					e.dataTransfer.setData(TYPE_MOVE, id);
+					e.dataTransfer.setData('application/x-move-node', id);
 					e.dataTransfer.effectAllowed = 'move';
 				}}
-				style={{
-					position: 'relative',
-					...(node.type === 'section' ? { width: '100%' } : {}),
-					...fixedBaseStyle,
-					userSelect: 'none',
+				style={wrapperStyle}
+				onClick={(e) => {
+					e.stopPropagation();
+					onSelect?.(id);
 				}}
 			>
 				{scopedCss && <style dangerouslySetInnerHTML={{ __html: scopedCss }} />}
 
 				{parentLike ? (
 					<div
-						style={{
-							display:
-								axis === 'x'
-									? (baseStyle?.display ?? 'flex')
-									: baseStyle?.display,
-							minHeight: containerEmpty ? 56 : undefined,
-							padding: containerEmpty ? 8 : undefined,
-							borderRadius: containerEmpty ? 8 : undefined,
-							border:
-								isDragging && containerEmpty
-									? '2px dashed #e6e8ef'
-									: undefined,
-							background:
-								isDragging && containerEmpty
-									? 'rgba(92,124,250,0.03)'
-									: undefined,
-						}}
+						style={dndContainerStyle(
+							baseStyle,
+							axis,
+							containerEmpty,
+							isDragging,
+						)}
 						onDragOver={(e) => {
 							if (!containerEmpty || !isDragging) return;
 							if (!accepts(e.dataTransfer)) return;
@@ -318,7 +348,7 @@ function NodeView(props: {
 							try {
 								const isMove = Array.from(
 									e.dataTransfer.types || [],
-								).includes(TYPE_MOVE);
+								).includes('application/x-move-node');
 								e.dataTransfer.dropEffect = isMove ? 'move' : 'copy';
 							} catch {}
 						}}
@@ -326,8 +356,8 @@ function NodeView(props: {
 							if (!containerEmpty || !isDragging) return;
 							e.preventDefault();
 							const dt = e.dataTransfer;
-							const tplKey = dt.getData(TYPE_TPL);
-							const moveId = dt.getData(TYPE_MOVE);
+							const tplKey = dt.getData('application/x-block-template');
+							const moveId = dt.getData('application/x-move-node');
 							handleDropInside(
 								id,
 								tplKey || undefined,
@@ -342,14 +372,12 @@ function NodeView(props: {
 								child?.type === 'paragraph' ||
 								child?.type === 'list' ||
 								child?.type === 'listItem';
-							// контейнеры (box/row/section/page) тоже должны тянуться по ширине
 							const isFill =
 								isTextLike ||
 								(child ? isContainer(child) : false) ||
 								child?.type === 'divider';
 
 							if (axis === 'y') {
-								// вертикальный список
 								return (
 									<div
 										key={cid}
@@ -359,7 +387,6 @@ function NodeView(props: {
 											width: '100%',
 										}}
 									>
-										{/* LEFT по высоте узла */}
 										<DropZone
 											onDrop={(tpl, moveId) =>
 												handleDropAtSide(cid, 'left', tpl, moveId)
@@ -369,8 +396,6 @@ function NodeView(props: {
 											axis="x"
 											matchId={cid}
 										/>
-
-										{/* Колонка с узлом */}
 										<div
 											style={
 												isFill
@@ -436,8 +461,6 @@ function NodeView(props: {
 												matchId={cid}
 											/>
 										</div>
-
-										{/* RIGHT по высоте узла */}
 										<DropZone
 											onDrop={(tpl, moveId) =>
 												handleDropAtSide(
@@ -456,7 +479,6 @@ function NodeView(props: {
 								);
 							}
 
-							// горизонтальный список
 							return (
 								<div
 									key={cid}
@@ -500,7 +522,6 @@ function NodeView(props: {
 											/>
 										)}
 
-										{/* обёртка вокруг узла: тянем для текста/контейнеров */}
 										<div
 											style={
 												isFill
@@ -562,7 +583,7 @@ function NodeView(props: {
 						})}
 					</div>
 				) : (
-					renderPrimitive(node)
+					renderPrimitive(node, baseStyle)
 				)}
 			</div>
 		</EditableNodeWrapper>
@@ -576,92 +597,115 @@ function findParent(schema: PageSchema, childId: string): string | null {
 	return null;
 }
 
-function renderPrimitive(node: NodeJson) {
+function renderPrimitive(node: NodeJson, baseStyle: React.CSSProperties) {
 	switch (node.type) {
 		case 'page':
 		case 'section':
 		case 'box':
 		case 'row':
-			return <div />;
+			return <div data-prim="true" />;
 
 		case 'heading': {
 			const level = (node.props?.level ?? 2) as 1 | 2 | 3 | 4 | 5 | 6;
-			const tag = `h${level}` as 'h1' | 'h2' | 'h3' | 'h4' | 'h5' | 'h6';
-			return React.createElement(tag, null, node.props?.text ?? 'Heading');
+			const Tag = `h${level}` as 'h1' | 'h2' | 'h3' | 'h4' | 'h5' | 'h6';
+			return (
+				<Tag data-prim="true" style={baseStyle}>
+					{node.props?.text ?? 'Heading'}
+				</Tag>
+			);
 		}
 
 		case 'paragraph':
-			return <p>{node.props?.text ?? 'Text'}</p>;
+			return (
+				<p data-prim="true" style={baseStyle}>
+					{node.props?.text ?? 'Text'}
+				</p>
+			);
 
 		case 'richtext': {
 			const html = node.props?.text ?? '';
 			const hasHtml = /<[a-z][\s\S]*>/i.test(html);
 			return hasHtml ? (
-				<div dangerouslySetInnerHTML={{ __html: html }} />
+				<div
+					data-prim="true"
+					style={baseStyle}
+					dangerouslySetInnerHTML={{ __html: html }}
+				/>
 			) : (
-				<p>{html || 'Text'}</p>
+				<p data-prim="true" style={baseStyle}>
+					{html || 'Text'}
+				</p>
 			);
 		}
 
 		case 'image':
 			return (
 				<img
+					data-prim="true"
 					src={node.props?.src}
 					alt={node.props?.alt ?? ''}
-					style={{ maxWidth: '100%' }}
+					style={{ maxWidth: '100%', display: 'block', ...baseStyle }}
 				/>
 			);
 
 		case 'button': {
-			const isLink = !!node.props?.href;
 			const label = node.props?.text ?? 'Button';
-			const common: React.CSSProperties = {
-				display: 'inline-block',
-				cursor: 'pointer',
-				border: 'none',
-				outline: 'none',
-				background: 'transparent',
-				color: 'inherit',
-				padding: 0,
-				margin: 0,
-				font: 'inherit',
-				lineHeight: 'inherit',
-				width: 'auto',
-				textDecoration: 'none',
-				WebkitAppearance: 'none',
-				MozAppearance: 'none',
-				appearance: 'none',
-			};
-			return isLink ? (
-				<a href={node.props?.href} style={common}>
-					{label}
-				</a>
-			) : (
-				<button type="button" style={common}>
+			if (node.props?.href) {
+				return (
+					<a
+						data-prim="true"
+						href={node.props.href}
+						style={{
+							...baseStyle,
+							display: 'inline-block',
+							textDecoration: 'none',
+						}}
+					>
+						{label}
+					</a>
+				);
+			}
+			return (
+				<button
+					data-prim="true"
+					type="button"
+					style={{ ...baseStyle, display: 'inline-block' }}
+				>
 					{label}
 				</button>
 			);
 		}
 
 		case 'divider':
-			return <hr />;
+			return <hr data-prim="true" style={baseStyle} />;
 
 		case 'list':
-			return <ul />;
+			return <ul data-prim="true" style={baseStyle} />;
 
 		case 'listItem':
-			return <li>{node.props?.text ?? ''}</li>;
+			return (
+				<li data-prim="true" style={baseStyle}>
+					{node.props?.text ?? ''}
+				</li>
+			);
 
 		case 'blockquote': {
-			const blockquoteStyle = { borderLeft: '4px solid #ccc', paddingLeft: 16, margin: 0 }
-			const footerStyle = { fontSize: 12, color: '#888', marginTop: 8 }
+			const footerStyle: React.CSSProperties = {
+				fontSize: 12,
+				color: '#888',
+				marginTop: 8,
+			};
 			return (
-				<blockquote style={blockquoteStyle}>
+				<blockquote data-prim="true" style={baseStyle}>
 					{node.props?.text ?? 'Цитата'}
 					{(node.props?.preAuthor || node.props?.cite) && (
 						<p style={footerStyle}>
 							{node.props?.preAuthor}
-							{node.props?.cite && (<cite>{node.props.cite}</cite>)}
+							{node.props?.cite && (
+								<cite style={{ marginLeft: 8, fontStyle: 'italic' }}>
+									{node.props.cite}
+								</cite>
+							)}
 						</p>
 					)}
 				</blockquote>

@@ -266,7 +266,16 @@ function createWrapper(axis: Axis): NodeJson {
 	const id = genId(axis === 'x' ? 'row' : 'box');
 	const type: NodeJson['type'] = axis === 'x' ? 'row' : 'box';
 	const props: NonNullable<NodeJson['props']> = { style: { base: {} } };
-	if (axis === 'x') props.style!.base = { ...props.style!.base, display: 'flex' };
+
+	if (axis === 'x') {
+		props.style!.base = { ...props.style!.base, display: 'flex' };
+	} else {
+		props.style!.base = {
+			...props.style!.base,
+			display: 'flex',
+			flexDirection: 'column',
+		};
+	}
 	return { id, type, props, childrenOrder: [] };
 }
 

@@ -1,4 +1,4 @@
-import type { PageSchema } from '../runtime/types';
+import type { PageSchema } from '@/types/siteTypes.ts';
 
 type PageMock = {
 	route: string;

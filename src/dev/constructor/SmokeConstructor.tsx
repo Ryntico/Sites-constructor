@@ -1,16 +1,18 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
-import { themeMock } from './mocks/theme.mock';
-import { pageMock } from './mocks/page.mock';
 import { exportPageToHtml } from './runtime/Renderer';
-import type { PageSchema, NodeSubtree, ThemeTokens } from './runtime/types';
 import { cloneSubtreeWithIds } from './runtime/schemaOps';
-import { BLOCK_TEMPLATES } from './palette/blockTemplates';
 import { EditorRenderer } from './runtime/EditorRenderer';
 import { Inspector } from './Inspector';
 import { PreviewPane } from '../preview/PreviewPane';
 import { ThemeEditor } from '../theme/ThemeEditor';
+import { useSiteBuilder } from '@/hooks/useSiteBuilder';
+import { useAppSelector } from '@store/hooks.ts';
+import { selectAuth } from '@store/slices/authSlice.ts';
+import { ImageUploadDemo } from '@/dev/ImageUploadDemo.tsx';
+import { SeedBlockTemplatesButton } from '@/dev/seed/SeedBlockTemplatesButton.tsx';
+import type { NodeSubtree } from '@/types/siteTypes.ts';
 
-function download(filename: string, content: string, mime = 'text/html'): void {
+function download(filename: string, content: string, mime = 'text/html') {
 	const blob = new Blob([content], { type: mime });
 	const url = URL.createObjectURL(blob);
 	const a = document.createElement('a');
@@ -20,7 +22,7 @@ function download(filename: string, content: string, mime = 'text/html'): void {
 	URL.revokeObjectURL(url);
 }
 
-function openFullPreview(html: string): void {
+function openFullPreview(html: string) {
 	const blob = new Blob([html], { type: 'text/html' });
 	const url = URL.createObjectURL(blob);
 	window.open(url, '_blank', 'noopener,noreferrer');
@@ -28,64 +30,115 @@ function openFullPreview(html: string): void {
 }
 
 export function SmokeConstructor() {
-	const [theme, setTheme] = useState<ThemeTokens>(() => {
-		const raw = localStorage.getItem('dev:themeTokens');
-		return raw ? JSON.parse(raw) : themeMock;
-	});
-	useEffect(() => {
-		localStorage.setItem('dev:themeTokens', JSON.stringify(theme));
-	}, [theme]);
+	const [siteId, setSiteId] = useState<string | null>(
+		localStorage.getItem('currentSiteId'),
+	);
 
-	const [schema, setSchema] = useState<PageSchema>(() => {
-		const saved = localStorage.getItem('dev:pageSchema');
-		return saved ? JSON.parse(saved) : pageMock.schema;
-	});
+	const {
+		loading,
+		site,
+		page,
+		schema,
+		setSchema,
+		theme,
+		setTheme,
+		blockTemplates,
+		needsSite,
+		needsPage,
+		createSiteFromTemplateId,
+		createPageFromTemplateId,
+		createEmptySiteId,
+		listUserSites,
+	} = useSiteBuilder(siteId ?? '', 'home');
+
+	const { user } = useAppSelector(selectAuth);
 	const [selectedId, setSelectedId] = useState<string | null>(null);
 	const [mode, setMode] = useState<'edit' | 'preview'>('edit');
 	const [rightTab, setRightTab] = useState<'inspector' | 'theme'>('inspector');
 
 	useEffect(() => {
-		localStorage.setItem('dev:pageSchema', JSON.stringify(schema));
-	}, [schema]);
+		if (!user?.uid || siteId) return;
+		listUserSites(user.uid).then((sites) => {
+			if (sites.length) {
+				const id = sites[0].id;
+				setSiteId(id);
+				localStorage.setItem('currentSiteId', id);
+			}
+		});
+	}, [user?.uid, siteId, listUserSites]);
 
-	const exported = useMemo(
-		() =>
-			exportPageToHtml({
-				title: pageMock.title,
-				schema,
-				theme,
-			}),
-		[schema, theme],
-	);
+	const exported = useMemo(() => {
+		if (!schema || !theme) return '';
+		return exportPageToHtml({
+			title: page?.title || site?.name || 'Untitled',
+			schema,
+			theme,
+		});
+	}, [schema, theme, page?.title, site?.name]);
 
-	const resolveTemplate = (key: string): NodeSubtree | null => {
-		const tpl = BLOCK_TEMPLATES.find((t) => t.key === key);
+	const resolveTemplate = (id: string): NodeSubtree | null => {
+		const tpl = blockTemplates.find((t) => t.id === id);
 		return tpl ? cloneSubtreeWithIds(tpl.schema) : null;
 	};
 
-	const resetToMock = () => {
-		setSchema(pageMock.schema);
-		setSelectedId(null);
-	};
-
-	const clearAll = () => {
-		setSchema({
-			rootId: 'page_root',
-			nodes: {
-				page_root: {
-					id: 'page_root',
-					type: 'page',
-					props: { style: { base: { bg: 'token:colors.page', px: 0, py: 0 } } },
-					childrenOrder: [],
-				} as any,
-			},
-		});
-		setSelectedId(null);
-	};
-
-	const resetTheme = () => setTheme(themeMock);
-
 	const canvasRef = useRef<HTMLDivElement>(null);
+
+	if (!siteId || needsSite) {
+		return (
+			<div style={{ padding: 24 }}>
+				<h3>Сайтов нет</h3>
+				<button
+					style={btn}
+					onClick={async () => {
+						const newId = await createEmptySiteId({
+							ownerId: user?.uid,
+							siteName: 'Мой сайт',
+							firstPageId: 'home',
+							firstPageTitle: 'Home',
+							firstPageRoute: '/',
+						});
+						setSiteId(newId);
+						localStorage.setItem('currentSiteId', newId);
+					}}
+				>
+					Создать сайт
+				</button>
+				<button
+					style={btn}
+					onClick={() =>
+						createSiteFromTemplateId({
+							ownerId: user?.uid,
+							name: 'Demo site',
+							templateId: 'base-smoke',
+						})
+					}
+				>
+					Создать сайт из base-smoke
+				</button>
+			</div>
+		);
+	}
+
+	if (needsPage) {
+		return (
+			<div style={{ padding: 24 }}>
+				<h3>Нет страниц</h3>
+				<button
+					style={btn}
+					onClick={() =>
+						createPageFromTemplateId({
+							pageId,
+							templateId: 'base-smoke',
+							title: 'Home',
+							route: '/',
+						})
+					}
+				>
+					Создать страницу из base-smoke
+				</button>
+			</div>
+		);
+	}
 
 	return (
 		<div style={{ display: 'grid', gap: 16, padding: 16 }}>
@@ -111,22 +164,22 @@ export function SmokeConstructor() {
 					<strong>Конструктор (Smoke) — DnD</strong>
 					<div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
 						<button
-							onClick={() => download('page-export.html', exported)}
+							onClick={() =>
+								exported && download('page-export.html', exported)
+							}
 							style={btn}
+							disabled={!exported}
+							title={!exported ? 'Данные ещё грузятся…' : 'Скачать HTML'}
 						>
 							Экспорт HTML
 						</button>
-						<button onClick={() => openFullPreview(exported)} style={btn}>
+						<button
+							onClick={() => exported && openFullPreview(exported)}
+							style={btn}
+							disabled={!exported}
+							title={!exported ? 'Данные ещё грузятся…' : 'Открыть превью'}
+						>
 							Полный предпросмотр
-						</button>
-						<button onClick={resetToMock} style={btn}>
-							Сброс страницы
-						</button>
-						<button onClick={clearAll} style={btn}>
-							Очистить страницу
-						</button>
-						<button onClick={resetTheme} style={btn}>
-							Сброс темы
 						</button>
 					</div>
 				</div>
@@ -140,7 +193,9 @@ export function SmokeConstructor() {
 						alignItems: 'start',
 					}}
 				>
-					<Palette />
+					<Palette
+						items={blockTemplates.map((b) => ({ id: b.id, name: b.name }))}
+					/>
 
 					<div
 						ref={canvasRef}
@@ -174,9 +229,12 @@ export function SmokeConstructor() {
 							>
 								Превью
 							</button>
+							<SeedBlockTemplatesButton />
 						</div>
 
-						{mode === 'edit' ? (
+						{loading || !schema || !theme ? (
+							<div style={{ padding: 12 }}>Загрузка…</div>
+						) : mode === 'edit' ? (
 							<div
 								style={{
 									border: '1px dashed #d7dbea',
@@ -188,13 +246,14 @@ export function SmokeConstructor() {
 								<EditorRenderer
 									schema={schema}
 									theme={theme}
-									onSchemaChange={(next) => {
-										setSchema(next);
+									onSchemaChange={(next, patch) => {
+										setSchema(next, patch);
 										if (next.nodes[selectedId ?? ''] == null)
 											setSelectedId(null);
 									}}
 									resolveTemplate={(k) => resolveTemplate(k)}
 									onSelectNode={setSelectedId}
+									selectedId={selectedId}
 									scrollContainer={canvasRef}
 								/>
 							</div>
@@ -212,6 +271,8 @@ export function SmokeConstructor() {
 							display: 'grid',
 							gap: 12,
 							alignContent: 'start',
+							maxHeight: '70vh',
+							overflow: 'auto',
 						}}
 					>
 						<div style={{ display: 'flex', gap: 8 }}>
@@ -238,16 +299,16 @@ export function SmokeConstructor() {
 
 						{rightTab === 'inspector' ? (
 							<Inspector
-								schema={schema}
+								schema={schema!}
 								selectedId={selectedId}
 								onChange={setSchema}
-								theme={theme}
+								theme={theme!}
 							/>
 						) : (
 							<ThemeEditor
-								theme={theme}
+								theme={theme!}
 								onChange={setTheme}
-								onReset={resetTheme}
+								onReset={() => {}}
 							/>
 						)}
 					</div>
@@ -262,9 +323,10 @@ export function SmokeConstructor() {
 					alignItems: 'start',
 				}}
 			>
-				<JsonCard title="JSON — Текущая тема (текущее состояние)" obj={theme} />
+				<JsonCard title="JSON — Текущая тема" obj={theme ?? {}} />
 				<JsonCard title="JSON — Страница (текущее состояние)" obj={{ schema }} />
 			</div>
+			<ImageUploadDemo ownerId={user?.uid} />
 		</div>
 	);
 }
@@ -316,12 +378,12 @@ function JsonCard({ title, obj }: { title: string; obj: any }) {
 	);
 }
 
-function Palette() {
+function Palette({ items }: { items: { id: string; name: string }[] }) {
 	return (
 		<div style={{ display: 'grid', gap: 10 }}>
 			<div style={{ fontWeight: 600, marginBottom: 2 }}>Элементы</div>
-			{BLOCK_TEMPLATES.map((tpl) => (
-				<PaletteItem key={tpl.key} name={tpl.name} mimeKey={tpl.key} />
+			{items.map((i) => (
+				<PaletteItem key={i.id} name={i.name} mimeKey={i.id} />
 			))}
 		</div>
 	);

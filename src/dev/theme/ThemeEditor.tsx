@@ -1,5 +1,5 @@
 import React from 'react';
-import type { ThemeTokens } from '@/dev/constructor/runtime/types.ts';
+import type { ThemeTokens } from '@/types/siteTypes.ts';
 
 type Props = {
 	theme: ThemeTokens;
