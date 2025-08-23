@@ -1,6 +1,6 @@
-import React, { useMemo, useState } from 'react';
-import type { PageSchema, ThemeTokens } from '@/dev/constructor/runtime/types.ts';
+import { useMemo, useState } from 'react';
 import { RenderTree } from '@/dev/constructor/runtime/Renderer.tsx';
+import type { PageSchema, ThemeTokens } from '@/types/siteTypes.ts';
 
 const PRESETS = [
 	{ key: 'desktop', label: 'Desktop', width: '100%' as const },

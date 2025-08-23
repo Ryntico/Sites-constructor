@@ -25,7 +25,7 @@ export type StyleShortcuts = {
 	gap?: number;
 	alignSelf?: 'start' | 'center' | 'end' | 'baseline' | 'stretch';
 	order?: number;
-	flexGrow?: number |string;
+	flexGrow?: number | string;
 	flexShrink?: number | string;
 	w?: number | string;
 	h?: number | string;
@@ -106,7 +106,7 @@ export type NodeJson = {
 export type PageSchema = { rootId: string; nodes: Record<string, NodeJson> };
 export type NodeSubtree = {
 	rootId: string;
-	nodes: Record<string, NodeJson>
+	nodes: Record<string, NodeJson>;
 };
 
 export type BlockTemplateDoc = {

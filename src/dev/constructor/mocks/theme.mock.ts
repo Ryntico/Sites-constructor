@@ -1,4 +1,4 @@
-import type { ThemeTokens } from '../runtime/types';
+import type { ThemeTokens } from '@/types/siteTypes.ts';
 
 export const themeMock: ThemeTokens = {
 	breakpoints: { sm: 640, md: 960, lg: 1200 },

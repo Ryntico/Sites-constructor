@@ -1,4 +1,4 @@
-import type { BlockTemplateDoc } from '../runtime/types';
+import type { BlockTemplateDoc } from '@/types/siteTypes.ts';
 
 const h1: BlockTemplateDoc = {
 	key: 'heading_h1',
@@ -57,6 +57,7 @@ const buttonPrimary: BlockTemplateDoc = {
 							py: 12,
 							radius: 'token:radius.md',
 							shadow: 'token:shadow.sm',
+							alignSelf: 'start',
 						},
 					},
 				},
@@ -187,7 +188,13 @@ const quote: BlockTemplateDoc = {
 					text: 'Цитата. Перетащите, чтобы добавить на страницу.',
 					preAuthor: 'великий ',
 					cite: 'источник',
-					style: { base: { mb: 12, color: 'token:colors.text.muted', borderColor: 'token:colors.primary.500' } },
+					style: {
+						base: {
+							mb: 12,
+							color: 'token:colors.text.muted',
+							borderColor: 'token:colors.primary.500',
+						},
+					},
 				},
 			},
 		},
