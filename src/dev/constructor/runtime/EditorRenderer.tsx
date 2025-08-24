@@ -720,8 +720,43 @@ function renderPrimitive(node: NodeJson, baseStyle: React.CSSProperties) {
 		}
 
 		case 'input': {
-			const type = node.props?.type ?? 'text';
-			return <input type={type} style={baseStyle}/>;
+			const id = `input-${node.id}`;
+			const input = (
+				<input
+					id={id}
+					type={node.props?.type || 'text'}
+					name={node.props?.name}
+					value={node.props?.value}
+					placeholder={node.props?.placeholder}
+					min={node.props?.min}
+					max={node.props?.max}
+					step={node.props?.step}
+					minLength={node.props?.minlength}
+					maxLength={node.props?.maxlength}
+					pattern={node.props?.pattern}
+					title={node.props?.title}
+					size={node.props?.size}
+					required={node.props?.required}
+					disabled={node.props?.disabled}
+					readOnly={node.props?.readonly}
+					autoComplete={node.props?.autocomplete ? 'on' : 'off'}
+					autoFocus={node.props?.autofocus}
+					style={baseStyle}
+				/>
+			);
+
+
+			return node.props?.label ? (
+				<div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start', gap: '4px' }}>
+					<label
+						htmlFor={id}
+						style={{ fontSize: '14px', color: '#4a5568' }}
+					>
+						{node.props.label}
+					</label>
+					{input}
+				</div>
+			) : input;
 		}
 
 		default:
