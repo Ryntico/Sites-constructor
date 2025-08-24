@@ -745,7 +745,6 @@ function renderPrimitive(node: NodeJson, baseStyle: React.CSSProperties) {
 				/>
 			);
 
-
 			return node.props?.label ? (
 				<div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start', gap: '4px' }}>
 					<label
@@ -757,6 +756,80 @@ function renderPrimitive(node: NodeJson, baseStyle: React.CSSProperties) {
 					{input}
 				</div>
 			) : input;
+		}
+
+		case 'textarea': {
+			const id = `textarea-${node.id}`;
+			const textarea = (
+				<textarea
+					id={id}
+					name={node.props?.name}
+					rows={node.props?.rows}
+					cols={node.props?.cols}
+					placeholder={node.props?.placeholder}
+					disabled={node.props?.disabled}
+					readOnly={node.props?.readonly}
+					required={node.props?.required}
+					maxLength={node.props?.maxlength}
+					minLength={node.props?.minlength}
+					autoFocus={node.props?.autofocus}
+					form={node.props?.formId}
+					wrap={node.props?.wrap}
+					autoComplete={node.props?.autocomplete ? 'on' : 'off'}
+					spellCheck={node.props?.spellcheck}
+					title={node.props?.title}
+					style={baseStyle}
+				>
+					{node.props?.value}
+				</textarea>
+			);
+
+			return node.props?.label ? (
+				<div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start', gap: '4px' }}>
+					<label
+						htmlFor={id}
+						style={{ fontSize: '14px', color: '#4a5568' }}
+					>
+						{node.props.label}
+					</label>
+					{textarea}
+				</div>
+			) : textarea;
+		}
+
+		case 'select': {
+			const id = `select-${node.id}`;
+			const select = (
+				<select
+					id={id}
+					name={node.props?.name}
+					disabled={node.props?.disabled}
+					required={node.props?.required}
+					autoFocus={node.props?.autofocus}
+					multiple={node.props?.multiple}
+					size={node.props?.size}
+					form={node.props?.formId}
+					style={baseStyle}
+				>
+					{node.props?.options?.map((option, index) => (
+						<option key={index} value={option.value}>
+							{option.text}
+						</option>
+					))}
+				</select>
+			);
+
+			return node.props?.label ? (
+				<div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start', gap: '4px' }}>
+					<label
+						htmlFor={id}
+						style={{ fontSize: '14px', color: '#4a5568' }}
+					>
+						{node.props.label}
+					</label>
+					{select}
+				</div>
+			) : select;
 		}
 
 		default:

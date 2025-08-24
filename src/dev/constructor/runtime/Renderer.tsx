@@ -160,6 +160,77 @@ function Node({
 				</div>
 			) : input;
 		}
+		case 'textarea': {
+			const id = `textarea-${node.id}`;
+			const textarea = (
+				<textarea
+					id={id}
+					name={node.props?.name}
+					rows={node.props?.rows}
+					cols={node.props?.cols}
+					placeholder={node.props?.placeholder}
+					disabled={node.props?.disabled}
+					readOnly={node.props?.readonly}
+					required={node.props?.required}
+					maxLength={node.props?.maxlength}
+					minLength={node.props?.minlength}
+					autoFocus={node.props?.autofocus}
+					form={node.props?.formId}
+					wrap={node.props?.wrap}
+					autoComplete={node.props?.autocomplete ? 'on' : 'off'}
+					spellCheck={node.props?.spellcheck}
+					title={node.props?.title}
+					style={base as React.CSSProperties}
+					{...dataAttrs}
+				>
+					{node.props?.value}
+				</textarea>
+			);
+
+			return node.props?.label ? (
+				<div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start', gap: '4px' }}>
+					<label
+						htmlFor={id}
+						style={{ fontSize: '14px', color: '#4a5568' }}
+					>
+						{node.props.label}
+					</label>
+					{textarea}
+				</div>
+			) : textarea;
+		}
+		case 'select': {
+			const id = `select-${node.id}`;
+			const select = (
+				<select
+					id={id}
+					name={node.props?.name}
+					disabled={node.props?.disabled}
+					required={node.props?.required}
+					autoFocus={node.props?.autofocus}
+					multiple={node.props?.multiple}
+					size={node.props?.size}
+					form={node.props?.formId}
+					style={base as React.CSSProperties}
+					{...dataAttrs}
+				>
+					{node.props?.options?.map((option, index) => (
+						<option key={index} value={option.value}>
+							{option.text}
+						</option>
+					))}
+				</select>
+			);
+
+			return node.props?.label ? (
+				<div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start', gap: '4px' }}>
+					<label htmlFor={id} style={{ fontSize: '14px', color: '#4a5568' }}>
+						{node.props.label}
+					</label>
+					{select}
+				</div>
+			) : select;
+		}
 		case 'divider': {
 			const css = {
 				...base,
@@ -355,7 +426,6 @@ function renderStaticHtml(schema: PageSchema, theme: ThemeTokens) {
 					  ${node.props?.autofocus ? 'autofocus' : ''} 
 					  inputmode="${node.props?.inputmode || ''}" 
 					  spellcheck="${node.props?.spellcheck || 'true'}" 
-					  dir="${node.props?.dir || 'auto'}" 
 					  style="${style}"
 					  ${data} 
 					/>`;
@@ -368,6 +438,75 @@ function renderStaticHtml(schema: PageSchema, theme: ThemeTokens) {
 						 ${inputHtml}
 					   </div>`
 					: inputHtml;
+			}
+
+			case 'textarea': {
+				const id = `textarea-${node.id}`;
+				const textareaHtml = `
+					<textarea 
+					  id="${id}"
+					  name="${escapeAttr(node.props?.name || '')}" 
+					  rows="${node.props?.rows || 5}" 
+					  cols="${node.props?.cols || 20}" 
+					  placeholder="${escapeAttr(node.props?.placeholder || '')}" 
+					  ${node.props?.required ? 'required' : ''} 
+					  ${node.props?.disabled ? 'disabled' : ''} 
+					  ${node.props?.readonly ? 'readonly' : ''} 
+					  maxlength="${node.props?.maxlength || ''}" 
+					  minlength="${node.props?.minlength || ''}" 
+					  ${node.props?.autofocus ? 'autofocus' : ''} 
+					  form="${node.props?.formId || ''}" 
+					  wrap="${node.props?.wrap || 'soft'}" 
+					  ${node.props?.autocomplete ? 'autocomplete="on"' : ''}
+					  spellcheck="${node.props?.spellcheck || 'true'}" 
+					  dir="${node.props?.dir || 'auto'}" 
+					  title="${escapeAttr(node.props?.title || '')}" 
+					  style="${style};resize:vertical;min-height:100px"
+					  ${data} 
+					>
+					${escapeHtml(node.props?.value || '')}
+					</textarea>
+				`;
+
+				return node.props?.label
+					? `<div style="display:flex;flex-direction:column;gap:4px">
+						 <label for="${id}" style="font-size:14px;color:#4a5568">
+						   ${escapeHtml(node.props.label)}
+						 </label>
+						 ${textareaHtml}
+					   </div>`
+					: textareaHtml;
+			}
+
+			case 'select': {
+				const id = `select-${node.id}`;
+				const selectHtml = `
+					<select 
+					  id="${id}"
+					  name="${escapeAttr(node.props?.name || '')}" 
+					  ${node.props?.disabled ? 'disabled' : ''} 
+					  ${node.props?.required ? 'required' : ''} 
+					  ${node.props?.autofocus ? 'autofocus' : ''} 
+					  multiple="${node.props?.multiple || 'false'}" 
+					  size="${node.props?.size || ''}" 
+					  form="${node.props?.formId || ''}" 
+					  style="${style}"
+					  ${data} 
+					>
+					${node.props?.options?.map((option, index) => (
+						`<option key="${index}" value="${option.value}">${option.text}</option>`
+					)).join('')}
+					</select>
+				`;
+
+				return node.props?.label
+					? `<div style="display:flex;flex-direction:column;gap:4px">
+						 <label for="${id}" style="font-size:14px;color:#4a5568">
+						   ${escapeHtml(node.props.label)}
+						 </label>
+						 ${selectHtml}
+					   </div>`
+					: selectHtml;
 			}
 
 			default:
