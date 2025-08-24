@@ -81,6 +81,8 @@ export type ElementType =
 	| 'listItem'
 	| 'form'
 	| 'input'
+	| 'textarea'
+	| 'select'
 	| 'richtext'
 	| 'blockquote';
 
@@ -105,6 +107,7 @@ export type NodeJson = {
 		required?: boolean;
 		disabled?: boolean;
 		readonly?: boolean;
+		multiple?: boolean;
 		min?: number;
 		max?: number;
 		step?: number;
@@ -113,11 +116,14 @@ export type NodeJson = {
 		pattern?: string;
 		title?: string;
 		size?: number;
+		rows?: number;
+		cols?: number;
 		autocomplete?: string;
 		autofocus?: boolean;
 		inputmode?: string;
 		spellcheck?: boolean;
 		dir?: string;
+		wrap?: string;
 		style?: {
 			base?: StyleShortcuts;
 			sm?: StyleShortcuts;
@@ -128,6 +134,7 @@ export type NodeJson = {
 		variant?: 'ul' | 'ol';
 		preAuthor?: string;
 		cite?: string;
+		options?: Array<{ value: string; text: string }>;
 	};
 	childrenOrder?: string[];
 };

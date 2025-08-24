@@ -199,7 +199,47 @@ const input: BlockTemplateDoc = {
 					type: 'text',
 					name: '',
 					placeholder: 'Enter text here...',
-					disabled: false,
+					style: {
+						base: {},
+					},
+				},
+			},
+		},
+	},
+};
+
+const textarea: BlockTemplateDoc = {
+	id: 'textarea',
+	name: 'Textarea',
+	schema: {
+		rootId: 'textarea_root',
+		nodes: {
+			textarea_root: {
+				id: 'textarea_root',
+				type: 'textarea',
+				props: {
+					name: '',
+					placeholder: 'Enter text here... (textarea)',
+					style: {
+						base: {},
+					},
+				},
+			},
+		},
+	},
+};
+
+const select: BlockTemplateDoc = {
+	id: 'select',
+	name: 'Select',
+	schema: {
+		rootId: 'select_root',
+		nodes: {
+			select_root: {
+				id: 'select_root',
+				type: 'select',
+				props: {
+					name: '',
 					style: {
 						base: {},
 					},
@@ -265,4 +305,6 @@ export const BLOCK_TEMPLATES: BlockTemplateDoc[] = [
 	row2,
 	form,
 	input,
+	textarea,
+	select
 ];
