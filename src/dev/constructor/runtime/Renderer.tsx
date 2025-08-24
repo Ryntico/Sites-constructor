@@ -119,15 +119,14 @@ function Node({
 			);
 		}
 		case 'input': {
-			return (
+			const id = `input-${node.id}`;
+			const input = (
 				<input
+					id={id}
 					type={node.props?.type || 'text'}
 					name={node.props?.name}
 					value={node.props?.value}
 					placeholder={node.props?.placeholder}
-					required={node.props?.required}
-					disabled={node.props?.disabled}
-					readOnly={node.props?.readonly}
 					min={node.props?.min}
 					max={node.props?.max}
 					step={node.props?.step}
@@ -136,12 +135,30 @@ function Node({
 					pattern={node.props?.pattern}
 					title={node.props?.title}
 					size={node.props?.size}
-					autoComplete={node.props?.autocomplete}
+					required={node.props?.required}
+					disabled={node.props?.disabled}
+					readOnly={node.props?.readonly}
+					autoComplete={node.props?.autocomplete ? 'on' : 'off'}
 					autoFocus={node.props?.autofocus}
+					inputMode={node.props?.inputmode}
+					spellCheck={node.props?.spellcheck}
+					dir={node.props?.dir}
 					style={base as React.CSSProperties}
 					{...dataAttrs}
 				/>
 			);
+
+			return node.props?.label ? (
+				<div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start', gap: '4px' }}>
+					<label
+						htmlFor={id}
+						style={{ fontSize: '14px', color: '#4a5568' }}
+					>
+						{node.props.label}
+					</label>
+					{input}
+				</div>
+			) : input;
 		}
 		case 'divider': {
 			const css = {
@@ -170,6 +187,7 @@ function Node({
 		case 'form': {
 			return (
 				<form
+					{...node.props?.formId && { id: node.props?.formId }}
 					action={node.props?.formAction}
 					method={node.props?.formMethod}
 					encType={node.props?.enctype}
@@ -292,10 +310,11 @@ function renderStaticHtml(schema: PageSchema, theme: ThemeTokens) {
 				return `<li style="${style}"${data}>${escapeHtml(node.props?.text ?? '')}</li>`;
 
 			case 'form': {
+				const formId = node.props?.formId ?? '';
 				const action = node.props?.formAction ?? '';
 				const method = node.props?.formMethod ?? 'post';
 				const enctype = node.props?.enctype ?? 'application/x-www-form-urlencoded';
-				return `<form action="${action}" method="${method}" enctype="${enctype}" style="${style}"${data}>${kids
+				return `<form id="${formId}" action="${action}" method="${method}" enctype="${enctype}" style="${style}"${data}>${kids
 					.map(walk)
 					.join('')}</form>`;
 			}
@@ -313,24 +332,42 @@ function renderStaticHtml(schema: PageSchema, theme: ThemeTokens) {
 				return `<blockquote style="${style}"${citeAttr}${data}>${text}${footer}</blockquote>`;
 			}
 			case 'input': {
-				const type = node.props?.type || 'text';
-				const name = escapeAttr(node.props?.name ?? '');
-				const value = escapeAttr(node.props?.value ?? '');
-				const placeholder = escapeAttr(node.props?.placeholder ?? '');
-				const required = node.props?.required ? 'required' : '';
-				const disabled = node.props?.disabled ? 'disabled' : '';
-				const readonly = node.props?.readonly ? 'readonly' : '';
-				const min = node.props?.min ?? '';
-				const max = node.props?.max ?? '';
-				const step = node.props?.step ?? '';
-				const minlength = node.props?.minlength ?? '';
-				const maxlength = node.props?.maxlength ?? '';
-				const pattern = node.props?.pattern ?? '';
-				const title = escapeAttr(node.props?.title ?? '');
-				const size = node.props?.size ?? '';
-				const autocomplete = node.props?.autocomplete ?? '';
-				const autofocus = node.props?.autofocus ? 'autofocus' : '';
-				return `<input type="${type}" name="${name}" value="${value}" placeholder="${placeholder}" ${required} ${disabled} ${readonly} min="${min}" max="${max}" step="${step}" minlength="${minlength}" maxlength="${maxlength}" pattern="${pattern}" title="${title}" size="${size}" autocomplete="${autocomplete}" ${autofocus} style="${style}"${data} />`;
+				const id = `input-${node.id}`;
+				const inputHtml = `
+					<input 
+					  type="${node.props?.type || 'text'}" 
+					  id="${id}"
+					  name="${escapeAttr(node.props?.name || '')}" 
+					  value="${escapeAttr(node.props?.value || '')}" 
+					  placeholder="${escapeAttr(node.props?.placeholder || '')}" 
+					  ${node.props?.required ? 'required' : ''} 
+					  ${node.props?.disabled ? 'disabled' : ''} 
+					  ${node.props?.readonly ? 'readonly' : ''} 
+					  min="${node.props?.min || ''}" 
+					  max="${node.props?.max || ''}" 
+					  step="${node.props?.step || ''}" 
+					  minlength="${node.props?.minlength || ''}" 
+					  maxlength="${node.props?.maxlength || ''}" 
+					  pattern="${node.props?.pattern || ''}" 
+					  title="${escapeAttr(node.props?.title || '')}" 
+					  size="${node.props?.size || ''}" 
+					  ${node.props?.autocomplete ? 'autocomplete="on"' : ''}
+					  ${node.props?.autofocus ? 'autofocus' : ''} 
+					  inputmode="${node.props?.inputmode || ''}" 
+					  spellcheck="${node.props?.spellcheck || 'true'}" 
+					  dir="${node.props?.dir || 'auto'}" 
+					  style="${style}"
+					  ${data} 
+					/>`;
+
+				return node.props?.label
+					? `<div style="display:flex;flex-direction:column;gap:4px">
+						 <label for="${id}" style="font-size:14px;color:#4a5568">
+						   ${escapeHtml(node.props.label)}
+						 </label>
+						 ${inputHtml}
+					   </div>`
+					: inputHtml;
 			}
 
 			default:

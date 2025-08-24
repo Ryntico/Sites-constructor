@@ -18,12 +18,12 @@ export type ThemeTokens = {
 };
 
 export type StyleShortcuts = {
-	flexDirection?: 'row' | 'column' | 'row-reverse' | 'column-reverse' | undefined;
-	display?: 'block' | 'flex' | 'grid';
-	wrap?: 'nowrap' | 'wrap' | 'wrap-reverse';
+	flexDirection?: string;
+	display?: string;
+	wrap?: string;
 	columns?: number;
-	gap?: number;
-	alignSelf?: 'start' | 'center' | 'end' | 'baseline' | 'stretch';
+	gap?: number | string;
+	alignSelf?: string;
 	order?: number;
 	flexGrow?: number | string;
 	flexShrink?: number | string;
@@ -33,28 +33,28 @@ export type StyleShortcuts = {
 	maxH?: number | string;
 	minW?: number | string;
 	minH?: number | string;
-	p?: number;
+	p?: number | string;
 	px?: number | string;
 	py?: number | string;
 	pt?: number;
 	pr?: number;
 	pb?: number;
 	pl?: number;
-	m?: number;
+	m?: number | string;
 	mx?: number;
 	my?: number;
 	mt?: number;
 	mr?: number;
 	mb?: number;
-	ml?: number | string;
+	ml?: number;
 	bg?: string;
 	color?: string;
 	borderColor?: string;
 	radius?: string | number;
 	shadow?: string;
-	textAlign?: 'left' | 'center' | 'right';
-	items?: 'start' | 'center' | 'end' | 'stretch' | 'baseline';
-	justify?: 'start' | 'center' | 'end' | 'between' | 'around' | 'evenly';
+	textAlign?: string;
+	items?: string;
+	justify?: string;
 };
 
 export type Action =
@@ -66,24 +66,6 @@ export type Action =
 			offset?: number;
 	  }
 	| { type: 'toast'; variant: 'success' | 'error' | 'info'; message: string };
-
-export type InputType =
-	| 'text'
-	| 'email'
-	| 'password'
-	| 'number'
-	| 'tel'
-	| 'url'
-	| 'search'
-	| 'date'
-	| 'time'
-	| 'datetime-local'
-	| 'month'
-	| 'week'
-	| 'color'
-	| 'range'
-	| 'file'
-	| 'hidden';
 
 export type ElementType =
 	| 'page'
@@ -106,24 +88,26 @@ export type NodeJson = {
 	id: string;
 	type: ElementType;
 	props?: {
+		label?: string;
+		formId?: string;
 		formAction?: string;
-		formMethod?: 'post' | 'get';
-		enctype?: 'application/x-www-form-urlencoded' | 'multipart/form-data' | 'text/plain';
+		formMethod?: string;
+		enctype?: string;
 		text?: string;
-		level?: 1 | 2 | 3 | 4 | 5 | 6;
+		level?: number;
 		href?: string;
 		src?: string;
 		alt?: string;
-		type?: InputType;
+		type?: string;
 		name?: string;
 		value?: string;
 		placeholder?: string;
 		required?: boolean;
 		disabled?: boolean;
 		readonly?: boolean;
-		min?: number | string;
-		max?: number | string;
-		step?: number | string;
+		min?: number;
+		max?: number;
+		step?: number;
 		minlength?: number;
 		maxlength?: number;
 		pattern?: string;
@@ -131,6 +115,9 @@ export type NodeJson = {
 		size?: number;
 		autocomplete?: string;
 		autofocus?: boolean;
+		inputmode?: string;
+		spellcheck?: boolean;
+		dir?: string;
 		style?: {
 			base?: StyleShortcuts;
 			sm?: StyleShortcuts;

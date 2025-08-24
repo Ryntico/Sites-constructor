@@ -1,7 +1,7 @@
 import type { BlockTemplateDoc } from '@/types/siteTypes.ts';
 
 const h1: BlockTemplateDoc = {
-	key: 'heading_h1',
+	id: 'heading_h1',
 	name: 'Heading (H1)',
 	schema: {
 		rootId: 'h1_root',
@@ -20,7 +20,7 @@ const h1: BlockTemplateDoc = {
 };
 
 const paragraph: BlockTemplateDoc = {
-	key: 'paragraph',
+	id: 'paragraph',
 	name: 'Paragraph',
 	schema: {
 		rootId: 'p_root',
@@ -38,7 +38,7 @@ const paragraph: BlockTemplateDoc = {
 };
 
 const buttonPrimary: BlockTemplateDoc = {
-	key: 'button_primary',
+	id: 'button_primary',
 	name: 'Button (Primary)',
 	schema: {
 		rootId: 'btn_root',
@@ -67,7 +67,7 @@ const buttonPrimary: BlockTemplateDoc = {
 };
 
 const imageCard: BlockTemplateDoc = {
-	key: 'image_card',
+	id: 'image_card',
 	name: 'Image',
 	schema: {
 		rootId: 'img_root',
@@ -86,7 +86,7 @@ const imageCard: BlockTemplateDoc = {
 };
 
 const section: BlockTemplateDoc = {
-	key: 'section',
+	id: 'section',
 	name: 'Section',
 	schema: {
 		rootId: 'sec_root',
@@ -110,7 +110,7 @@ const section: BlockTemplateDoc = {
 };
 
 const boxCard: BlockTemplateDoc = {
-	key: 'box_card',
+	id: 'box_card',
 	name: 'Box (Card)',
 	schema: {
 		rootId: 'bx_root',
@@ -137,7 +137,7 @@ const boxCard: BlockTemplateDoc = {
 };
 
 const row2: BlockTemplateDoc = {
-	key: 'row2',
+	id: 'row2',
 	name: 'Row (2 cols)',
 	schema: {
 		rootId: 'row_root',
@@ -158,7 +158,7 @@ const row2: BlockTemplateDoc = {
 };
 
 const form: BlockTemplateDoc = {
-	key: 'form',
+	id: 'form',
 	name: 'Форма',
 	schema: {
 		rootId: 'form_root',
@@ -188,7 +188,7 @@ const form: BlockTemplateDoc = {
 
 const input: BlockTemplateDoc = {
 	id: 'input',
-	name: 'Input Field',
+	name: 'Элемент формы',
 	schema: {
 		rootId: 'input_root',
 		nodes: {
@@ -197,8 +197,9 @@ const input: BlockTemplateDoc = {
 				type: 'input',
 				props: {
 					type: 'text',
-					name: 'input-field',
+					name: '',
 					placeholder: 'Enter text here...',
+					disabled: false,
 					style: {
 						base: {},
 					},
