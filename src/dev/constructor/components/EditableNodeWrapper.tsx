@@ -53,6 +53,29 @@ export function EditableNodeWrapper({
 				}}
 				onClick={(e) => e.stopPropagation()}
 			>
+				<span
+					data-drag-handle
+					draggable
+					title="Перетащить"
+					style={handleBtn}
+					onDragStart={(e) => {
+						e.stopPropagation();
+						try {
+							e.dataTransfer.setData('application/x-move-node', nodeId);
+							e.dataTransfer.effectAllowed = 'move';
+						} catch {}
+					}}
+				>
+					<svg width="14" height="14" viewBox="0 0 14 14" aria-hidden="true">
+						<circle cx="4" cy="3" r="1.2" fill="#667085" />
+						<circle cx="4" cy="7" r="1.2" fill="#667085" />
+						<circle cx="4" cy="11" r="1.2" fill="#667085" />
+						<circle cx="9.5" cy="3" r="1.2" fill="#667085" />
+						<circle cx="9.5" cy="7" r="1.2" fill="#667085" />
+						<circle cx="9.5" cy="11" r="1.2" fill="#667085" />
+					</svg>
+				</span>
+
 				<button
 					type="button"
 					draggable={false}
@@ -66,15 +89,6 @@ export function EditableNodeWrapper({
 				>
 					×
 				</button>
-
-				<span
-					title="Перетащите"
-					draggable={false}
-					onMouseDown={(e) => e.stopPropagation()}
-					style={{ ...iconBtn, cursor: 'grab' }}
-				>
-					↕
-				</span>
 			</div>
 
 			<div>{children}</div>
@@ -83,12 +97,26 @@ export function EditableNodeWrapper({
 }
 
 const iconBtn: React.CSSProperties = {
-	fontSize: 12,
-	lineHeight: '18px',
-	width: 22,
-	height: 22,
+	width: 18,
+	height: 18,
 	borderRadius: 6,
 	border: '1px solid #d0d3dc',
 	background: '#fff',
+	color: '#111827',
+	fontSize: 10,
+	lineHeight: '16px',
+	textAlign: 'center',
 	cursor: 'pointer',
+};
+
+const handleBtn: React.CSSProperties = {
+	width: 18,
+	height: 18,
+	borderRadius: 6,
+	border: '1px solid #d0d3dc',
+	background: '#fff',
+	display: 'inline-flex',
+	alignItems: 'center',
+	justifyContent: 'center',
+	cursor: 'grab',
 };
