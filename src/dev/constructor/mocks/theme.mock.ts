@@ -29,4 +29,14 @@ export const themeMock: ThemeTokens = {
 		sizes: { h1: 42, h2: 32, p: 16 },
 		lineHeights: { h1: 1.2, h2: 1.25, p: 1.6 },
 	},
+	components: {
+		blockquote: {
+			bg: 'rgba(99, 102, 241, 0.05)',
+			borderColor: '#3b82f6',
+			borderLeft: '4px solid rgb(59, 130, 246)',
+			p: '16px 20px',
+			radius: 8,
+		},
+	},
+
 };

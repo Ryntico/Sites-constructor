@@ -26,6 +26,7 @@
 		"@mantine/spotlight": "^8.2.4",
 		"@mantine/tiptap": "^8.2.4",
 		"@reduxjs/toolkit": "^2.8.2",
+		"@tiptap/extension-highlight": "^3.3.0",
 		"@tiptap/extension-link": "^3.2.2",
 		"@tiptap/extension-subscript": "^3.2.2",
 		"@tiptap/extension-superscript": "^3.2.2",

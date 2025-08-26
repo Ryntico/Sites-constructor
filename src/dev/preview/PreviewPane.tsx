@@ -80,9 +80,19 @@ function StyleReset({ theme }: { theme: ThemeTokens }) {
       background:${theme.colors.page};
       color:${theme.colors.text.base};
       font-family:${
-			theme.typography?.fontFamily ??
-			'system-ui,-apple-system,Segoe UI,Roboto,Ubuntu,Cantarell,Helvetica Neue,Arial,Noto Sans'
-		}
+					theme.typography?.fontFamily ??
+					'system-ui,-apple-system,Segoe UI,Roboto,Ubuntu,Cantarell,Helvetica Neue,Arial,Noto Sans'
+			}
+    }
+    
+    blockquote {
+      background: ${theme.components?.blockquote?.bg || 'rgba(99, 102, 241, 0.1)'};
+      border-left: ${theme.components?.blockquote?.borderLeft || '4px solid rgb(59, 130, 246)'};
+      border-radius: ${theme.components?.blockquote?.radius || '0'};
+      margin: 1em 0;
+      padding: ${theme.components?.blockquote?.p || '1em 1.5em'};
+      color: ${theme.colors.text.muted};
+      font-style: italic;
     }
   `;
 	return <style dangerouslySetInnerHTML={{ __html: css }} />;

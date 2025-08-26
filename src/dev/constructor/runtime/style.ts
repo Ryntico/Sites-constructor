@@ -77,14 +77,16 @@ export function styleFromShortcuts(
 	if (s.bg) css.background = pick(s.bg);
 	if (s.color) css.color = pick(s.color);
 	if (s.borderColor) css.borderColor = pick(s.borderColor);
+	if (s.borderLeft) css.borderLeft = pick(s.borderLeft);
+	if (s.borderLeftWidth) css.borderLeftWidth = pxIfNumber(pick(s.borderLeftWidth));
 
 	if (s.radius != null) css.borderRadius = pxIfNumber(pick(s.radius));
 	if (s.shadow) css.boxShadow = pick(s.shadow);
-	if (s.textAlign) css.textAlign = s.textAlign;
+	if (s.textAlign) css.textAlign = s.textAlign as 'left' | 'center' | 'right';
 
 	if (s.items){
 		if (s.items === 'stretch' || s.items === 'baseline') css.alignItems = s.items
-		else css.alignItems = mapAlign(s.items);
+		else css.alignItems = mapAlign(s.items as 'start' | 'center' | 'end');
 	}
 
 	if (s.justify) {
@@ -95,13 +97,13 @@ export function styleFromShortcuts(
 		} else if (s.justify === 'evenly') {
 			css.justifyContent = 'space-evenly';
 		} else {
-			css.justifyContent = mapAlign(s.justify);
+			css.justifyContent = mapAlign(s.justify as 'start' | 'center' | 'end');
 		}
 	}
 
-	if (s.flexDirection) css.flexDirection = s.flexDirection;
+	if (s.flexDirection) css.flexDirection = s.flexDirection as 'row' | 'row-reverse' | 'column' | 'column-reverse';
 
-	if (s.wrap) css.flexWrap = s.wrap;
+	if (s.wrap) css.flexWrap = s.wrap as 'nowrap' | 'wrap' | 'wrap-reverse';
 	
 	if (s.alignSelf) {
 		if (s.alignSelf === 'start') {

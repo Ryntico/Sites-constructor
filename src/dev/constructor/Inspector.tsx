@@ -11,10 +11,11 @@ type Props = {
 	theme?: ThemeTokens;
 };
 
-type BP = 'base' | 'sm' | 'md' | 'lg';
+// type BP = 'base' | 'sm' | 'md' | 'lg';
 
 export function Inspector({ schema, selectedId, onChange, theme }: Props) {
-	const [bp, setBp] = useState<BP>('base');
+	// const [bp, setBp] = useState<BP>('base');
+	const bp = 'base';
 	const node = selectedId ? schema.nodes[selectedId] : null;
 	const parentNode = node
 		? Object.values(schema.nodes).find((n) =>
@@ -181,21 +182,21 @@ export function Inspector({ schema, selectedId, onChange, theme }: Props) {
 				</>
 			)}
 
-			<div style={{ display: 'flex', gap: 6, marginTop: 6 }}>
-				{(['base', 'sm', 'md', 'lg'] as BP[]).map((b) => (
-					<button
-						key={b}
-						onClick={() => setBp(b)}
-						style={{
-							...chip,
-							background: bp === b ? '#eef2ff' : '#fff',
-							borderColor: bp === b ? '#c7d2fe' : '#d0d3dc',
-						}}
-					>
-						{b}
-					</button>
-				))}
-			</div>
+			{/*<div style={{ display: 'flex', gap: 6, marginTop: 6 }}>*/}
+			{/*	{(['base', 'sm', 'md', 'lg'] as BP[]).map((b) => (*/}
+			{/*		<button*/}
+			{/*			key={b}*/}
+			{/*			onClick={() => setBp(b)}*/}
+			{/*			style={{*/}
+			{/*				...chip,*/}
+			{/*				background: bp === b ? '#eef2ff' : '#fff',*/}
+			{/*				borderColor: bp === b ? '#c7d2fe' : '#d0d3dc',*/}
+			{/*			}}*/}
+			{/*		>*/}
+			{/*			{b}*/}
+			{/*		</button>*/}
+			{/*	))}*/}
+			{/*</div>*/}
 
 			{node.type === 'form' &&
 				<Section title="Настройки формы">
@@ -966,7 +967,7 @@ export function Inspector({ schema, selectedId, onChange, theme }: Props) {
 				<Grid cols={2}>
 					<NumRow
 						label="margin-x"
-						value={s.mx}
+						value={s.mx as number | undefined}
 						onChange={(v) => patchStyle({ mx: v })}
 					/>
 					<NumRow
@@ -1100,14 +1101,14 @@ const input: React.CSSProperties = {
 	fontSize: 13,
 };
 
-const chip: React.CSSProperties = {
-	padding: '4px 8px',
-	border: '1px solid #d0d3dc',
-	borderRadius: 999,
-	background: '#fff',
-	fontSize: 12,
-	cursor: 'pointer',
-};
+// const chip: React.CSSProperties = {
+// 	padding: '4px 8px',
+// 	border: '1px solid #d0d3dc',
+// 	borderRadius: 999,
+// 	background: '#fff',
+// 	fontSize: 12,
+// 	cursor: 'pointer',
+// };
 
 function Label({ children }: { children: React.ReactNode }) {
 	return <div style={{ fontSize: 12, margin: '6px 0 4px', color: '#687087' }}>{children}</div>;

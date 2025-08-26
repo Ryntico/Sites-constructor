@@ -15,6 +15,9 @@ export type ThemeTokens = {
 		sizes?: Record<string, number>;
 		lineHeights?: Record<string, number>;
 	};
+	components?: {
+		[component: string]: StyleShortcuts;
+	};
 };
 
 export type StyleShortcuts = {
@@ -41,7 +44,7 @@ export type StyleShortcuts = {
 	pb?: number;
 	pl?: number;
 	m?: number | string;
-	mx?: number;
+	mx?: number | string;
 	my?: number;
 	mt?: number;
 	mr?: number;
@@ -51,6 +54,9 @@ export type StyleShortcuts = {
 	color?: string;
 	borderColor?: string;
 	radius?: string | number;
+	borderLeftWidth?: number | string;
+	borderLeft?: string;
+	borderStyle?: string;
 	shadow?: string;
 	textAlign?: string;
 	items?: string;
