@@ -78,7 +78,7 @@ export function cloneSubtreeWithIds(sub: NodeSubtree): NodeSubtree {
 
 export function isContainer(node: NodeJson | undefined): boolean {
 	if (!node) return false;
-	return ['page', 'section', 'box', 'row', 'form'].includes(node.type)
+	return ['page', 'section', 'box', 'row', 'form'].includes(node.type);
 }
 
 export function getChildren(schema: PageSchema, parentId: string): string[] {
@@ -341,6 +341,11 @@ export function moveNodeToSide(
 
 	const parentId = findParentId(schema, refId);
 	if (!parentId) return { next: schema, patch: EMPTY_PATCH };
+
+	const descendants = collectDescendants(schema, movingId);
+	if (descendants.has(refId)) {
+		return { next: schema, patch: EMPTY_PATCH };
+	}
 
 	const desiredAxis: Axis = side === 'left' || side === 'right' ? 'x' : 'y';
 	const parent = schema.nodes[parentId]!;
