@@ -37,4 +37,13 @@ export const DEFAULT_THEME: ThemeTokens = {
 		sizes: { sm: 12, base: 14, md: 16, lg: 20, xl: 28 },
 		lineHeights: { sm: 1.2, base: 1.4, md: 1.6, lg: 1.6, xl: 1.2 },
 	},
+	components: {
+		blockquote: {
+			bg: 'rgba(99, 102, 241, 0.05)',
+			borderColor: '#3b82f6',
+			borderLeft: '4px solid rgb(59, 130, 246)',
+			p: '16px 20px',
+			radius: '8',
+		},
+	},
 };

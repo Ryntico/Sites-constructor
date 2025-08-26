@@ -1,12 +1,15 @@
 import { RichTextEditor, Link } from '@mantine/tiptap'
 import { useEditor } from '@tiptap/react'
+import Highlight from '@tiptap/extension-highlight'
 import StarterKit from '@tiptap/starter-kit'
 import Underline from '@tiptap/extension-underline'
 import TextAlign from '@tiptap/extension-text-align'
 import Superscript from '@tiptap/extension-superscript'
 import SubScript from '@tiptap/extension-subscript'
+import { useState } from 'react'
 
 export function RichText({value, patchProps} : {value: string, patchProps: (patch : any) => void }) {
+	const [, setIsFocused] = useState(false);
 
 	const editor = useEditor({
 		extensions: [
@@ -15,10 +18,14 @@ export function RichText({value, patchProps} : {value: string, patchProps: (patc
 			Link,
 			Superscript,
 			SubScript,
+			Highlight,
 			TextAlign.configure({types: ['heading', 'paragraph']}),
 		],
 		content: value,
 		onUpdate: ({editor}) => patchProps({ text: editor.getHTML() }),
+		onSelectionUpdate: () => {
+			setIsFocused(prev => !prev);
+		},
 	})
 
 	return (
@@ -31,7 +38,6 @@ export function RichText({value, patchProps} : {value: string, patchProps: (patc
 					<RichTextEditor.Strikethrough/>
 					<RichTextEditor.ClearFormatting/>
 					<RichTextEditor.Highlight/>
-					<RichTextEditor.Code/>
 				</RichTextEditor.ControlsGroup>
 
 				<RichTextEditor.ControlsGroup>

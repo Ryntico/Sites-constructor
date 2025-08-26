@@ -232,12 +232,7 @@ function Node({
 			) : select;
 		}
 		case 'divider': {
-			const css = {
-				...base,
-				height: (base as any).height ?? 1,
-				width: (base as any).width ?? '100%',
-			} as React.CSSProperties;
-			return <div style={css} {...dataAttrs} />;
+			return <div style={base} {...dataAttrs} />;
 		}
 		case 'list': {
 			const Tag = (node.props?.variant === 'ol' ? 'ol' : 'ul') as any;
@@ -262,7 +257,7 @@ function Node({
 					action={node.props?.formAction}
 					method={node.props?.formMethod}
 					encType={node.props?.enctype}
-					style={{ ...base, display: 'flex', flexDirection: 'column', gap: 8 }}
+					style={base}
 					{...dataAttrs}
 				>
 					{kids.map((k) => (
@@ -527,6 +522,17 @@ function baseCss(theme: ThemeTokens) {
   body { margin:0; background:${theme.colors.page}; color:${theme.colors.text.base}; font-family:${ff}; }
   img { max-width:100%; display:block; }
   a, button { cursor:pointer; }
+  
+  blockquote {
+      background: ${theme.components?.blockquote?.bg || 'rgba(99, 102, 241, 0.1)'};
+      border-left: ${theme.components?.blockquote?.borderLeftWidth || 4}px solid 
+                  ${theme.components?.blockquote?.borderColor || theme.colors.primary[500]};
+      border-radius: ${theme.components?.blockquote?.radius || '0'};
+      margin: 1em 0;
+      padding: ${theme.components?.blockquote?.p || '1em 1.5em'};
+      color: ${theme.colors.text.muted};
+      font-style: italic;
+    }
   `;
 }
 

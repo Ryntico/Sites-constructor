@@ -314,7 +314,13 @@ function NodeView(props: {
 					...editorPadForContainer,
 					...baseStyle,
 				}
-			: {
+			: node.type === 'divider'
+				? {
+					display: 'block',
+					width: '100%',
+					...baseStyle,
+				}
+				: {
 					display: 'inline-flex',
 					flex: '0 0 auto',
 					minWidth: 0,
@@ -755,7 +761,7 @@ function renderPrimitive(node: NodeJson, baseStyle: React.CSSProperties) {
 		}
 
 		case 'divider':
-			return <hr data-prim="true" style={baseStyle} />;
+			return <div style={baseStyle} />
 
 		case 'list':
 			return <ul data-prim="true" style={baseStyle} />;

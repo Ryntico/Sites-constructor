@@ -99,7 +99,7 @@ const section: BlockTemplateDoc = {
 						base: {
 							py: 'token:spacing.32',
 							px: 'token:spacing.16',
-							bg: 'token:colors.surface',
+							bg: 'transparent',
 						},
 					},
 				},
@@ -123,10 +123,10 @@ const boxCard: BlockTemplateDoc = {
 						base: {
 							display: 'flex',
 							p: 16,
-							bg: '#fff',
-							radius: 'token:radius.md',
-							shadow: 'token:shadow.sm',
-							borderColor: 'token:colors.border',
+							bg: 'transparent',
+							radius: '',
+							shadow: '',
+							borderColor: '',
 						},
 					},
 				},
@@ -147,7 +147,7 @@ const row2: BlockTemplateDoc = {
 				type: 'row',
 				props: {
 					style: {
-						base: { display: 'flex', gap: 16 },
+						base: { display: 'flex', gap: 16, bg: 'transparent' },
 						sm: { display: 'block' },
 					},
 				},
@@ -176,7 +176,7 @@ const form: BlockTemplateDoc = {
 							flexDirection: 'column',
 							gap: 12,
 							p: 16,
-							bg: 'token:colors.surface',
+							bg: 'transparent',
 						},
 					},
 				},
@@ -260,7 +260,7 @@ const richtext: BlockTemplateDoc = {
 				type: 'richtext',
 				props: {
 					text: '<p>Отформатируйте текст с помощью списка, цитаты или обычного абзаца.</p>',
-					style: { base: { mb: 12 } },
+					style: { base: { mb: 12, bg: 'transparent' } },
 				},
 			},
 		},
@@ -284,8 +284,34 @@ const quote: BlockTemplateDoc = {
 						base: {
 							mb: 12,
 							color: 'token:colors.text.muted',
-							borderColor: 'token:colors.primary.500',
+							borderLeft: '4px solid rgb(59, 130, 246)',
+							bg: 'rgba(99, 102, 241, 0.1)',
+							p: '16px 20px',
+							radius: '8',
 						},
+					},
+				},
+			},
+		},
+	},
+};
+
+const divider: BlockTemplateDoc = {
+	id: 'divider',
+	name: 'Divider',
+	schema: {
+		rootId: 'divider_root',
+		nodes: {
+			divider_root: {
+				id: 'divider_root',
+				type: 'divider',
+				props: {
+					style: { 
+						base: { 
+							my: 8,
+							h: 2,
+							bg: 'token:colors.border',
+						} 
 					},
 				},
 			},
@@ -306,5 +332,6 @@ export const BLOCK_TEMPLATES: BlockTemplateDoc[] = [
 	form,
 	input,
 	textarea,
-	select
+	select,
+	divider,
 ];
