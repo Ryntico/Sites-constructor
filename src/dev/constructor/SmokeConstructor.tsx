@@ -10,7 +10,17 @@ import { useAppSelector } from '@store/hooks.ts';
 import { selectAuth } from '@store/slices/authSlice.ts';
 import { ImageUploadDemo } from '@/dev/ImageUploadDemo.tsx';
 import { SeedBlockTemplatesButton } from '@/dev/seed/SeedBlockTemplatesButton.tsx';
-import type { NodeSubtree } from '@/types/siteTypes.ts';
+import type { NodeSubtree, PageSchema, SchemaPatch } from '@/types/siteTypes.ts';
+import {
+	canRedo,
+	canUndo,
+	type HistoryState,
+	loadHistory,
+	pushHistory,
+	redo,
+	saveHistory,
+	undo,
+} from '@/dev/constructor/runtime/history.ts';
 
 function download(filename: string, content: string, mime = 'text/html') {
 	const blob = new Blob([content], { type: mime });
@@ -55,6 +65,79 @@ export function SmokeConstructor() {
 	const [selectedId, setSelectedId] = useState<string | null>(null);
 	const [mode, setMode] = useState<'edit' | 'preview'>('edit');
 	const [rightTab, setRightTab] = useState<'inspector' | 'theme'>('inspector');
+
+	const historyKey = `hist:${siteId ?? 'no-site'}:${page?.id ?? 'no-page'}`;
+
+	const historyRef = useRef<HistoryState>(loadHistory(historyKey));
+	const applyingFromHistoryRef = useRef(false);
+	const [, forceRender] = useState(0);
+	const undoRef = useRef<() => void>(() => {});
+	const redoRef = useRef<() => void>(() => {});
+
+	useEffect(() => {
+		undoRef.current = handleUndo;
+		redoRef.current = handleRedo;
+	});
+
+	useEffect(() => {
+		const onKey = (e: KeyboardEvent) => {
+			const mod = e.metaKey || e.ctrlKey;
+			if (!mod) return;
+
+			const key = e.key.toLowerCase();
+
+			if (key === 'z' && !e.shiftKey) {
+				e.preventDefault();
+				undoRef.current();
+			} else if ((key === 'z' && e.shiftKey) || key === 'y') {
+				e.preventDefault();
+				redoRef.current();
+			}
+		};
+		window.addEventListener('keydown', onKey);
+		return () => window.removeEventListener('keydown', onKey);
+	}, []);
+
+	useEffect(() => {
+		historyRef.current = loadHistory(historyKey);
+		saveHistory(historyKey, historyRef.current);
+		forceRender((x) => x + 1);
+	}, [historyKey]);
+
+	function applySchemaChange(next: PageSchema, patch?: SchemaPatch) {
+		if (!applyingFromHistoryRef.current && schema) {
+			historyRef.current = pushHistory(historyRef.current, schema);
+			saveHistory(historyKey, historyRef.current);
+			forceRender((x) => x + 1);
+		}
+		setSchema(next, patch);
+	}
+
+	function handleUndo() {
+		if (!schema) return;
+		const res = undo(historyRef.current, schema);
+		if (!res.schema) return;
+		historyRef.current = res.state;
+		saveHistory(historyKey, historyRef.current);
+		applyingFromHistoryRef.current = true;
+		setSchema(res.schema);
+		applyingFromHistoryRef.current = false;
+		forceRender((x) => x + 1);
+		if (!res.schema.nodes[selectedId ?? '']) setSelectedId(null);
+	}
+
+	function handleRedo() {
+		if (!schema) return;
+		const res = redo(historyRef.current, schema);
+		if (!res.schema) return;
+		historyRef.current = res.state;
+		saveHistory(historyKey, historyRef.current);
+		applyingFromHistoryRef.current = true;
+		setSchema(res.schema);
+		applyingFromHistoryRef.current = false;
+		forceRender((x) => x + 1);
+		if (!res.schema.nodes[selectedId ?? '']) setSelectedId(null);
+	}
 
 	useEffect(() => {
 		if (!user?.uid || siteId) return;
@@ -127,7 +210,7 @@ export function SmokeConstructor() {
 					style={btn}
 					onClick={() =>
 						createPageFromTemplateId({
-							pageId,
+							pageId: 'home',
 							templateId: 'base-smoke',
 							title: 'Home',
 							route: '/',
@@ -234,13 +317,32 @@ export function SmokeConstructor() {
 								onClick={() => {
 									if (!schema) return;
 									const res = cleanupManualEmptyContainers(schema);
-									setSchema(res.next, res.patch);
+									applySchemaChange(res.next, res.patch);
+									if (selectedId && !res.next.nodes[selectedId]) {
+										setSelectedId(null);
+									}
 								}}
 								title="Удалить все пустые контейнеры, созданные вручную"
 							>
 								Очистить пустые ручные контейнеры
 							</button>
 							<SeedBlockTemplatesButton />
+							<button
+								onClick={handleUndo}
+								style={btnSmall}
+								disabled={!canUndo(historyRef.current)}
+								title="Отменить (Ctrl/Cmd+Z)"
+							>
+								Undo
+							</button>
+							<button
+								onClick={handleRedo}
+								style={btnSmall}
+								disabled={!canRedo(historyRef.current)}
+								title="Повторить (Shift+Ctrl/Cmd+Z / Ctrl+Y)"
+							>
+								Redo
+							</button>
 						</div>
 
 						{loading || !schema || !theme ? (
@@ -258,7 +360,7 @@ export function SmokeConstructor() {
 									schema={schema}
 									theme={theme}
 									onSchemaChange={(next, patch) => {
-										setSchema(next, patch);
+										applySchemaChange(next, patch);
 										if (next.nodes[selectedId ?? ''] == null)
 											setSelectedId(null);
 									}}
