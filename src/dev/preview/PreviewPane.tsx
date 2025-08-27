@@ -55,11 +55,16 @@ export function PreviewPane({
 			>
 				<StyleReset theme={theme} />
 				<div
+					data-preview-root
 					style={{
 						width,
 						margin: '0 auto',
 						minHeight: 480,
 						background: theme.colors.page,
+						color: theme.colors.text.base,
+						fontFamily:
+							theme.typography?.fontFamily ??
+							'system-ui,-apple-system,Segoe UI,Roboto,Ubuntu,Cantarell,Helvetica Neue,Arial,Noto Sans',
 					}}
 				>
 					<RenderTree theme={theme} schema={schema} />
@@ -70,29 +75,23 @@ export function PreviewPane({
 }
 
 function StyleReset({ theme }: { theme: ThemeTokens }) {
+	const scope = '[data-preview-root]';
+
 	const css = `
-    *,*::before,*::after{ box-sizing:border-box }
-    h1,h2,h3,h4,h5,h6,p{ margin:0 0 .5rem 0 }
-    img{ max-width:100%; display:block }
-    a,button{ cursor:pointer }
-    :root { color-scheme: light; }
-    body{
-      background:${theme.colors.page};
-      color:${theme.colors.text.base};
-      font-family:${
-					theme.typography?.fontFamily ??
-					'system-ui,-apple-system,Segoe UI,Roboto,Ubuntu,Cantarell,Helvetica Neue,Arial,Noto Sans'
-			}
-    }
-    
-    blockquote {
+    ${scope} *, ${scope} *::before, ${scope} *::after { box-sizing: border-box; }
+    ${scope} h1, ${scope} h2, ${scope} h3, ${scope} h4, ${scope} h5, ${scope} h6, ${scope} p { margin: 0 0 .5rem 0; }
+    ${scope} img { max-width: 100%; display: block; }
+    ${scope} a, ${scope} button { cursor: pointer; }
+
+    ${scope} blockquote {
       background: ${theme.components?.blockquote?.bg || 'rgba(99, 102, 241, 0.1)'};
       border-left: ${theme.components?.blockquote?.borderLeft || '4px solid rgb(59, 130, 246)'};
-      border-radius: ${theme.components?.blockquote?.radius || '8'}px;
+      border-radius: ${theme.components?.blockquote?.radius || 8}px;
       padding: ${theme.components?.blockquote?.p || '16px 20px'};
-      color: ${theme.components?.blockquote?.color};
+      ${theme.components?.blockquote?.color ? `color: ${theme.components.blockquote.color};` : ''}
       font-style: italic;
     }
   `;
+
 	return <style dangerouslySetInnerHTML={{ __html: css }} />;
 }
