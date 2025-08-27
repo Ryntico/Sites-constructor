@@ -31,7 +31,8 @@ export function saveHistory(key: string, state: HistoryState) {
 }
 
 export function pushHistory(state: HistoryState, current: PageSchema): HistoryState {
-	const nextPast = [...state.past, current];
+	const snap = structuredClone(current);
+	const nextPast = [...state.past, snap];
 	return { past: nextPast.slice(-MAX_STEPS), future: [] };
 }
 
@@ -49,8 +50,8 @@ export function undo(
 	if (state.past.length === 0) return { state };
 	const prev = state.past[state.past.length - 1];
 	const newPast = state.past.slice(0, -1);
-	const newFuture = [current, ...state.future].slice(0, MAX_STEPS);
-	return { state: { past: newPast, future: newFuture }, schema: prev };
+	const newFuture = [structuredClone(current), ...state.future].slice(0, MAX_STEPS);
+	return { state: { past: newPast, future: newFuture }, schema: structuredClone(prev) };
 }
 
 export function redo(
@@ -60,6 +61,9 @@ export function redo(
 	if (state.future.length === 0) return { state };
 	const nextSchema = state.future[0];
 	const newFuture = state.future.slice(1);
-	const newPast = [...state.past, current].slice(-MAX_STEPS);
-	return { state: { past: newPast, future: newFuture }, schema: nextSchema };
+	const newPast = [...state.past, structuredClone(current)].slice(-MAX_STEPS);
+	return {
+		state: { past: newPast, future: newFuture },
+		schema: structuredClone(nextSchema),
+	};
 }

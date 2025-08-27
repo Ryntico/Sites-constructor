@@ -71,6 +71,13 @@ export function SmokeConstructor() {
 	const historyRef = useRef<HistoryState>(loadHistory(historyKey));
 	const applyingFromHistoryRef = useRef(false);
 	const [, forceRender] = useState(0);
+	const undoRef = useRef<() => void>(() => {});
+	const redoRef = useRef<() => void>(() => {});
+
+	useEffect(() => {
+		undoRef.current = handleUndo;
+		redoRef.current = handleRedo;
+	});
 
 	useEffect(() => {
 		const onKey = (e: KeyboardEvent) => {
@@ -81,10 +88,10 @@ export function SmokeConstructor() {
 
 			if (key === 'z' && !e.shiftKey) {
 				e.preventDefault();
-				handleUndo();
+				undoRef.current();
 			} else if ((key === 'z' && e.shiftKey) || key === 'y') {
 				e.preventDefault();
-				handleRedo();
+				redoRef.current();
 			}
 		};
 		window.addEventListener('keydown', onKey);
@@ -203,7 +210,7 @@ export function SmokeConstructor() {
 					style={btn}
 					onClick={() =>
 						createPageFromTemplateId({
-							pageId,
+							pageId: 'home',
 							templateId: 'base-smoke',
 							title: 'Home',
 							route: '/',
