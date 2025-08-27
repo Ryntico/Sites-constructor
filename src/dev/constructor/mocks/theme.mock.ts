@@ -36,6 +36,7 @@ export const themeMock: ThemeTokens = {
 			borderLeft: '4px solid rgb(59, 130, 246)',
 			p: '16px 20px',
 			radius: 8,
+			color: '#808080'
 		},
 	},
 

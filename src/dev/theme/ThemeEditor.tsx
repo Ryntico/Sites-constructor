@@ -220,6 +220,36 @@ export function ThemeEditor({ theme, onChange, onReset }: Props) {
 				</Grid>
 			</Card>
 
+			<Card title="Цитаты (blockquote)">
+				<Grid cols={2}>
+					<ColorRow
+						label="Цвет текста"
+						value={theme.components?.blockquote?.color || theme.colors.text.base}
+						onChange={(v) => set(['components', 'blockquote', 'color'], v)}
+					/>
+					<ColorRow
+						label="Цвет фона (RGBA)"
+						value={theme.components?.blockquote?.bg || 'rgba(99, 102, 241, 0.05)'}
+						onChange={(v) => set(['components', 'blockquote', 'bg'], v)}
+					/>
+					<ColorRow
+						label="Цвет левой границы"
+						value={theme.components?.blockquote?.borderColor || '#3b82f6'}
+						onChange={(v) => set(['components', 'blockquote', 'borderColor'], v)}
+					/>
+					<NumberRow
+						label="Толщина границы (px)"
+						value={parseInt(theme.components?.blockquote?.borderLeft?.match(/\d+/)?.[0] || '4')}
+						onChange={(v) => set(['components', 'blockquote', 'borderLeft'], `${v}px solid ${theme.components?.blockquote?.borderColor || '#3b82f6'}`)}
+					/>
+					<NumberRow
+						label="Скругление углов"
+						value={parseInt(theme.components?.blockquote?.radius as string || '8')}
+						onChange={(v) => set(['components', 'blockquote', 'radius'], v)}
+					/>
+				</Grid>
+			</Card>
+
 			<Card title="Spacing (избранные ключи)">
 				<Grid cols={4}>
 					{SPACING_KEYS.map((k) => (

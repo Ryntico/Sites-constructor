@@ -658,7 +658,7 @@ function NodeView(props: {
 						})}
 					</div>
 				) : (
-					renderPrimitive(node, baseStyle)
+					renderPrimitive(node, baseStyle, theme)
 				)}
 			</div>
 		</EditableNodeWrapper>
@@ -672,7 +672,7 @@ function findParent(schema: PageSchema, childId: string): string | null {
 	return null;
 }
 
-function renderPrimitive(node: NodeJson, baseStyle: React.CSSProperties) {
+function renderPrimitive(node: NodeJson, baseStyle: React.CSSProperties, theme: ThemeTokens) {
 	switch (node.type) {
 		case 'form':
 			return (
@@ -710,11 +710,26 @@ function renderPrimitive(node: NodeJson, baseStyle: React.CSSProperties) {
 			const html = node.props?.text ?? '';
 			const hasHtml = /<[a-z][\s\S]*>/i.test(html);
 			return hasHtml ? (
-				<div
-					data-prim="true"
-					style={baseStyle}
-					dangerouslySetInnerHTML={{ __html: html }}
-				/>
+				<>
+					<style>
+						{
+							`blockquote {
+							  background: ${theme.components?.blockquote?.bg || 'rgba(99, 102, 241, 0.1)'};
+							  border-left: ${theme.components?.blockquote?.borderLeft || '4px solid rgb(59, 130, 246)'};
+							  border-radius: ${theme.components?.blockquote?.radius || '8'}px;
+							  padding: ${theme.components?.blockquote?.p || '16px 20px'};
+							  color: ${theme.components?.blockquote?.color};
+							  font-style: italic;
+							}`
+						}
+					</style>
+					<div
+						data-prim="true"
+						style={baseStyle}
+						dangerouslySetInnerHTML={{ __html: html }}
+					/>
+				</>
+
 			) : (
 				<p data-prim="true" style={baseStyle}>
 					{html || 'Text'}

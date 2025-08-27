@@ -8,9 +8,9 @@ export async function seedTemplatesClient() {
 	const batch = writeBatch(db);
 
 	for (const t of BLOCK_TEMPLATES) {
-		const ref = doc(collection(db, 'block_templates'), t.key);
+		const ref = doc(collection(db, 'block_templates'), t.id);
 		batch.set(ref, {
-			id: t.key,
+			id: t.id,
 			name: t.name,
 			previewImage: t.previewImage ?? null,
 			schema: t.schema,
