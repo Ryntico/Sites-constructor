@@ -106,6 +106,14 @@ export function EditorRenderer({
 		setIsDragging(false);
 	};
 
+	const onEditorClickCapture: React.MouseEventHandler<HTMLDivElement> = (e) => {
+		const t = e.target as HTMLElement;
+		const a = t.closest('a[href]') as HTMLAnchorElement | null;
+		if (a) {
+			e.preventDefault();
+		}
+	};
+
 	useEffect(() => {
 		const end = () => {
 			dragInside.current = 0;
@@ -180,6 +188,7 @@ export function EditorRenderer({
 			onDragOver={onRootDragOver}
 			onDragLeave={onRootDragLeave}
 			onDrop={onRootDrop}
+			onClickCapture={onEditorClickCapture}
 		>
 			<style>{`
         [data-editor-root] h1,
@@ -280,12 +289,22 @@ function NodeView(props: {
 		return node.type === 'row' ? 'x' : 'y';
 	})();
 
+	const EDITOR_PAD = 14;
+	const editorPadForContainer: React.CSSProperties = parentLike
+		? {
+				paddingTop: baseStyle.paddingTop ?? EDITOR_PAD,
+				paddingLeft: baseStyle.paddingLeft ?? EDITOR_PAD,
+				paddingRight: baseStyle.paddingRight ?? 6,
+			}
+		: {};
+
 	const wrapperStyle: React.CSSProperties = {
 		position: 'relative',
 		userSelect: 'none',
 		...(parentLike
 			? {
 					...(node.type === 'section' ? { width: '100%' } : {}),
+					...editorPadForContainer,
 					...baseStyle,
 				}
 			: {
@@ -305,6 +324,47 @@ function NodeView(props: {
 			t.includes('application/x-move-node')
 		);
 	};
+
+	const containerLabel =
+		parentLike &&
+		(() => {
+			const dir = (baseStyle.flexDirection as string | undefined)?.startsWith(
+				'column',
+			)
+				? 'column'
+				: 'row';
+			const text =
+				node.type === 'box'
+					? `box (${dir})`
+					: node.type === 'row'
+						? `row`
+						: node.type === 'section'
+							? 'section'
+							: node.type === 'page'
+								? 'page'
+								: node.type === 'form'
+									? 'form'
+									: node.type;
+			return (
+				<span
+					style={{
+						position: 'absolute',
+						top: 2,
+						left: 2,
+						fontSize: 9,
+						lineHeight: '14px',
+						padding: '0 2px',
+						borderRadius: 999,
+						background: 'rgba(15,23,42,.06)',
+						color: '#4b5563',
+						pointerEvents: 'none',
+						zIndex: 4,
+					}}
+				>
+					{text}
+				</span>
+			);
+		})();
 
 	return (
 		<EditableNodeWrapper
@@ -332,6 +392,8 @@ function NodeView(props: {
 				}}
 			>
 				{scopedCss && <style dangerouslySetInnerHTML={{ __html: scopedCss }} />}
+
+				{parentLike && containerLabel}
 
 				{parentLike ? (
 					<div
@@ -600,11 +662,13 @@ function findParent(schema: PageSchema, childId: string): string | null {
 function renderPrimitive(node: NodeJson, baseStyle: React.CSSProperties) {
 	switch (node.type) {
 		case 'form':
-			return <form
-				action={node.props?.formAction}
-				method={node.props?.formMethod}
-				encType={node.props?.enctype}
-			></form>;
+			return (
+				<form
+					action={node.props?.formAction}
+					method={node.props?.formMethod}
+					encType={node.props?.enctype}
+				></form>
+			);
 
 		case 'page':
 		case 'section':
@@ -746,16 +810,22 @@ function renderPrimitive(node: NodeJson, baseStyle: React.CSSProperties) {
 			);
 
 			return node.props?.label ? (
-				<div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start', gap: '4px' }}>
-					<label
-						htmlFor={id}
-						style={{ fontSize: '14px', color: '#4a5568' }}
-					>
+				<div
+					style={{
+						display: 'flex',
+						flexDirection: 'column',
+						alignItems: 'flex-start',
+						gap: '4px',
+					}}
+				>
+					<label htmlFor={id} style={{ fontSize: '14px', color: '#4a5568' }}>
 						{node.props.label}
 					</label>
 					{input}
 				</div>
-			) : input;
+			) : (
+				input
+			);
 		}
 
 		case 'textarea': {
@@ -785,16 +855,22 @@ function renderPrimitive(node: NodeJson, baseStyle: React.CSSProperties) {
 			);
 
 			return node.props?.label ? (
-				<div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start', gap: '4px' }}>
-					<label
-						htmlFor={id}
-						style={{ fontSize: '14px', color: '#4a5568' }}
-					>
+				<div
+					style={{
+						display: 'flex',
+						flexDirection: 'column',
+						alignItems: 'flex-start',
+						gap: '4px',
+					}}
+				>
+					<label htmlFor={id} style={{ fontSize: '14px', color: '#4a5568' }}>
 						{node.props.label}
 					</label>
 					{textarea}
 				</div>
-			) : textarea;
+			) : (
+				textarea
+			);
 		}
 
 		case 'select': {
@@ -820,16 +896,22 @@ function renderPrimitive(node: NodeJson, baseStyle: React.CSSProperties) {
 			);
 
 			return node.props?.label ? (
-				<div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start', gap: '4px' }}>
-					<label
-						htmlFor={id}
-						style={{ fontSize: '14px', color: '#4a5568' }}
-					>
+				<div
+					style={{
+						display: 'flex',
+						flexDirection: 'column',
+						alignItems: 'flex-start',
+						gap: '4px',
+					}}
+				>
+					<label htmlFor={id} style={{ fontSize: '14px', color: '#4a5568' }}>
 						{node.props.label}
 					</label>
 					{select}
 				</div>
-			) : select;
+			) : (
+				select
+			);
 		}
 
 		default:
