@@ -88,10 +88,9 @@ function StyleReset({ theme }: { theme: ThemeTokens }) {
     blockquote {
       background: ${theme.components?.blockquote?.bg || 'rgba(99, 102, 241, 0.1)'};
       border-left: ${theme.components?.blockquote?.borderLeft || '4px solid rgb(59, 130, 246)'};
-      border-radius: ${theme.components?.blockquote?.radius || '0'};
-      margin: 1em 0;
-      padding: ${theme.components?.blockquote?.p || '1em 1.5em'};
-      color: ${theme.colors.text.muted};
+      border-radius: ${theme.components?.blockquote?.radius || '8'}px;
+      padding: ${theme.components?.blockquote?.p || '16px 20px'};
+      color: ${theme.components?.blockquote?.color};
       font-style: italic;
     }
   `;

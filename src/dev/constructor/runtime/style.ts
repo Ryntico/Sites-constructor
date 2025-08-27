@@ -77,7 +77,10 @@ export function styleFromShortcuts(
 	if (s.bg) css.background = pick(s.bg);
 	if (s.color) css.color = pick(s.color);
 	if (s.borderColor) css.borderColor = pick(s.borderColor);
-	if (s.borderLeft) css.borderLeft = pick(s.borderLeft);
+	if (s.borderLeft) {
+
+		css.borderLeft = pick(s.borderLeft);
+	}
 	if (s.borderLeftWidth) css.borderLeftWidth = pxIfNumber(pick(s.borderLeftWidth));
 
 	if (s.radius != null) css.borderRadius = pxIfNumber(pick(s.radius));

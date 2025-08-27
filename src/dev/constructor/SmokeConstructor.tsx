@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useRef, useState } from 'react';
+import React, { type RefObject, useEffect, useMemo, useRef, useState } from 'react';
 import { exportPageToHtml } from './runtime/Renderer';
 import { cleanupManualEmptyContainers, cloneSubtreeWithIds } from './runtime/schemaOps';
 import { EditorRenderer } from './runtime/EditorRenderer';
@@ -265,7 +265,7 @@ export function SmokeConstructor() {
 									resolveTemplate={(k) => resolveTemplate(k)}
 									onSelectNode={setSelectedId}
 									selectedId={selectedId}
-									scrollContainer={canvasRef}
+									scrollContainer={canvasRef as RefObject<HTMLElement>}
 								/>
 							</div>
 						) : (

@@ -283,11 +283,11 @@ const quote: BlockTemplateDoc = {
 					style: {
 						base: {
 							mb: 12,
-							color: 'token:colors.text.muted',
-							borderLeft: '4px solid rgb(59, 130, 246)',
-							bg: 'rgba(99, 102, 241, 0.1)',
-							p: '16px 20px',
-							radius: '8',
+							color: 'token:components.blockquote.color',
+							borderLeft: 'token:components.blockquote.borderLeft',
+							bg: 'token:components.blockquote.bg',
+							p: 'token:components.blockquote.p',
+							radius: 'token:components.blockquote.radius',
 						},
 					},
 				},
