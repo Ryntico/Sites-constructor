@@ -20,6 +20,8 @@ import {
 	moveNodeToSide,
 	appendSubtree,
 	moveNodeInto,
+	cleanupSchemaBasic,
+	mergePatches,
 } from './schemaOps';
 import { DropZone } from '../components/DropZones';
 import { EditableNodeWrapper } from '../components/EditableNodeWrapper';
@@ -127,12 +129,17 @@ export function EditorRenderer({
 		};
 	}, []);
 
+	const applyAndClean = (next: PageSchema, p: SchemaPatch) => {
+		const cleaned = cleanupSchemaBasic(next);
+		onSchemaChange(cleaned.next, mergePatches(p, cleaned.patch));
+	};
+
 	const handleDropTemplate = (parentId: string, index: number, tplKey: string) => {
 		const sub = resolveTemplate(tplKey);
 		if (!sub) return;
 		const cloned = cloneSubtreeWithIds(sub);
 		const { next, patch } = insertSubtree(schema, cloned, parentId, index);
-		onSchemaChange(next, patch);
+		applyAndClean(next, patch);
 	};
 
 	const handleDropInside = (parentId: string, tplKey?: string, movingId?: string) => {
@@ -141,12 +148,12 @@ export function EditorRenderer({
 			if (!sub) return;
 			const cloned = cloneSubtreeWithIds(sub);
 			const { next, patch } = appendSubtree(schema, cloned, parentId);
-			onSchemaChange(next, patch);
+			applyAndClean(next, patch);
 			return;
 		}
 		if (movingId) {
 			const { next, patch } = moveNodeInto(schema, movingId, parentId);
-			onSchemaChange(next, patch);
+			applyAndClean(next, patch);
 		}
 	};
 
@@ -160,24 +167,24 @@ export function EditorRenderer({
 			const sub = resolveTemplate(tplKey);
 			if (!sub) return;
 			const { next, patch } = insertTemplateAtSide(schema, refId, side, sub);
-			onSchemaChange(next, patch);
+			applyAndClean(next, patch);
 			return;
 		}
 		if (movingId) {
 			const { next, patch } = moveNodeToSide(schema, refId, side, movingId);
-			onSchemaChange(next, patch);
+			applyAndClean(next, patch);
 		}
 	};
 
 	const handleDropMove = (parentId: string, index: number, nodeId: string) => {
 		const { next, patch } = moveNode(schema, nodeId, parentId, index);
-		onSchemaChange(next, patch);
+		applyAndClean(next, patch);
 	};
 
 	const handleDelete = (nodeId: string) => {
 		if (schema.rootId === nodeId) return;
 		const { next, patch } = removeNode(schema, nodeId);
-		onSchemaChange(next, patch);
+		applyAndClean(next, patch);
 		onSelectNode?.(null);
 	};
 

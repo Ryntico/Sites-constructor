@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { exportPageToHtml } from './runtime/Renderer';
-import { cloneSubtreeWithIds } from './runtime/schemaOps';
+import { cleanupManualEmptyContainers, cloneSubtreeWithIds } from './runtime/schemaOps';
 import { EditorRenderer } from './runtime/EditorRenderer';
 import { Inspector } from './Inspector';
 import { PreviewPane } from '../preview/PreviewPane';
@@ -228,6 +228,17 @@ export function SmokeConstructor() {
 								}}
 							>
 								Превью
+							</button>
+							<button
+								style={btnSmall}
+								onClick={() => {
+									if (!schema) return;
+									const res = cleanupManualEmptyContainers(schema);
+									setSchema(res.next, res.patch);
+								}}
+								title="Удалить все пустые контейнеры, созданные вручную"
+							>
+								Очистить пустые ручные контейнеры
 							</button>
 							<SeedBlockTemplatesButton />
 						</div>
