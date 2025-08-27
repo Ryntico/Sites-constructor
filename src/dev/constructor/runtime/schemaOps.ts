@@ -257,7 +257,7 @@ export function containerAxisOf(node: NodeJson): Axis {
 }
 
 function createWrapper(axis: Axis): NodeJson {
-	const id = genId(axis === 'x' ? 'row' : 'box');
+	const id = genId('aw');
 	const type: NodeJson['type'] = axis === 'x' ? 'row' : 'box';
 	const props: NonNullable<NodeJson['props']> = { style: { base: {} } };
 
@@ -410,4 +410,68 @@ export function moveNodeInto(
 ): { next: PageSchema; patch: SchemaPatch } {
 	const children = getChildren(schema, parentId);
 	return moveNode(schema, movingId, parentId, children.length);
+}
+
+export function cleanupSchemaBasic(schema: PageSchema): {
+	next: PageSchema;
+	patch: SchemaPatch;
+} {
+	let next = schema;
+	let patch: SchemaPatch = { set: {}, del: [] };
+
+	for (const [pid, n] of Object.entries(next.nodes)) {
+		const co = n.childrenOrder;
+		if (!co) continue;
+		const filtered = co.filter((cid) => !!next.nodes[cid]);
+		if (filtered.length !== co.length) {
+			const res = setChildren(next, pid, filtered);
+			next = res.next;
+			patch = mergePatches(patch, res.patch);
+		}
+	}
+
+	const reachable = collectDescendants(next, next.rootId);
+	for (const id of Object.keys(next.nodes)) {
+		if (!reachable.has(id)) {
+			delete next.nodes[id];
+			patch.del.push(pathNode(id));
+		}
+	}
+
+	for (const [id, n] of Object.entries({ ...next.nodes })) {
+		if (!isContainer(n)) continue;
+		if (!id.startsWith('aw')) continue;
+		const kids = n.childrenOrder ?? [];
+		if (kids.length === 0 && id !== next.rootId) {
+			const res = removeNode(next, id);
+			next = res.next;
+			patch = mergePatches(patch, res.patch);
+		}
+	}
+
+	return { next, patch };
+}
+
+export function cleanupManualEmptyContainers(schema: PageSchema): {
+	next: PageSchema;
+	patch: SchemaPatch;
+} {
+	let next = schema;
+	let patch: SchemaPatch = { set: {}, del: [] };
+
+	for (const [id, n] of Object.entries({ ...next.nodes })) {
+		if (!isContainer(n)) continue;
+		if (id.startsWith('aw')) continue;
+		if ((n.childrenOrder ?? []).length === 0 && id !== next.rootId) {
+			const res = removeNode(next, id);
+			next = res.next;
+			patch = mergePatches(patch, res.patch);
+		}
+	}
+
+	const fin = cleanupSchemaBasic(next);
+	next = fin.next;
+	patch = mergePatches(patch, fin.patch);
+
+	return { next, patch };
 }
