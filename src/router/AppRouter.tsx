@@ -2,7 +2,7 @@ import { memo, Suspense, useCallback } from 'react';
 import { Route, Routes } from 'react-router-dom';
 import { RequireAuth } from './RequireAuth';
 import { routeConfig } from './routeConfig';
-import { type AppRoutesProps } from './const/types';
+import { type AppRoutesProps, UserRole } from './const/types';
 
 export const AppRouter = memo(() => {
 	const renderWithWrapper = useCallback((route: AppRoutesProps) => {
@@ -13,11 +13,29 @@ export const AppRouter = memo(() => {
 			</Suspense>
 		);
 
+		if (route.roles?.includes(UserRole.GUEST)) {
+			return (
+				<Route
+					key={route.path}
+					path={route.path}
+					element={element}
+				/>
+			);
+		}
+
 		return (
 			<Route
 				key={route.path}
 				path={route.path}
-				element={route.authOnly || !!route?.roles ? <RequireAuth roles={route.roles}>{element}</RequireAuth> : element}
+				element={
+					route.authOnly ? (
+						<RequireAuth roles={route.roles}>
+							{element}
+						</RequireAuth>
+					) : (
+						element
+					)
+				}
 			/>
 		);
 	}, []);
