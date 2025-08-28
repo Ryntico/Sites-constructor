@@ -21,6 +21,7 @@ import {
 	saveHistory,
 	undo,
 } from '@/dev/constructor/runtime/history.ts';
+import CodePreviewModal from '@/dev/constructor/components/CodePreviewModal.tsx';
 
 function download(filename: string, content: string, mime = 'text/html') {
 	const blob = new Blob([content], { type: mime });
@@ -65,6 +66,7 @@ export function SmokeConstructor() {
 	const [selectedId, setSelectedId] = useState<string | null>(null);
 	const [mode, setMode] = useState<'edit' | 'preview'>('edit');
 	const [rightTab, setRightTab] = useState<'inspector' | 'theme'>('inspector');
+	const [showCode, setShowCode] = useState(false);
 
 	const historyKey = `hist:${siteId ?? 'no-site'}:${page?.id ?? 'no-page'}`;
 
@@ -246,6 +248,16 @@ export function SmokeConstructor() {
 				>
 					<strong>Конструктор (Smoke) — DnD</strong>
 					<div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+						<button
+							onClick={() => setShowCode(true)}
+							style={btn}
+							disabled={!exported}
+							title={
+								!exported ? 'Данные ещё грузятся…' : 'Показать HTML-код'
+							}
+						>
+							Посмотреть код
+						</button>
 						<button
 							onClick={() =>
 								exported && download('page-export.html', exported)
@@ -440,6 +452,15 @@ export function SmokeConstructor() {
 				<JsonCard title="JSON — Страница (текущее состояние)" obj={{ schema }} />
 			</div>
 			<ImageUploadDemo ownerId={user?.uid} />
+
+			<CodePreviewModal
+				open={showCode}
+				onClose={() => setShowCode(false)}
+				html={exported || ''}
+				fileName="page-export.html"
+				title="Исходный HTML (экспорт)"
+				autoCloseAfterCopyMs={0}
+			/>
 		</div>
 	);
 }
