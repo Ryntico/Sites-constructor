@@ -83,7 +83,7 @@ export function styleFromShortcuts(
 	}
 	if (s.borderLeftWidth) css.borderLeftWidth = pxIfNumber(pick(s.borderLeftWidth));
 
-	if (s.radius != null) css.borderRadius = pxIfNumber(pick(s.radius));
+	if (s.radius) css.borderRadius = pxIfNumber(pick(s.radius));
 	if (s.shadow) css.boxShadow = pick(s.shadow);
 	if (s.textAlign) css.textAlign = s.textAlign as 'left' | 'center' | 'right';
 

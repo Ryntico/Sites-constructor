@@ -2,7 +2,7 @@ import type { BlockTemplateDoc } from '@/types/siteTypes.ts';
 
 const h1: BlockTemplateDoc = {
 	id: 'heading_h1',
-	name: 'Heading (H1)',
+	name: 'Заголовок',
 	schema: {
 		rootId: 'h1_root',
 		nodes: {
@@ -21,7 +21,7 @@ const h1: BlockTemplateDoc = {
 
 const paragraph: BlockTemplateDoc = {
 	id: 'paragraph',
-	name: 'Paragraph',
+	name: 'Параграф',
 	schema: {
 		rootId: 'p_root',
 		nodes: {
@@ -39,7 +39,7 @@ const paragraph: BlockTemplateDoc = {
 
 const buttonPrimary: BlockTemplateDoc = {
 	id: 'button_primary',
-	name: 'Button (Primary)',
+	name: 'Кнопка',
 	schema: {
 		rootId: 'btn_root',
 		nodes: {
@@ -68,7 +68,7 @@ const buttonPrimary: BlockTemplateDoc = {
 
 const imageCard: BlockTemplateDoc = {
 	id: 'image_card',
-	name: 'Image',
+	name: 'Изображение',
 	schema: {
 		rootId: 'img_root',
 		nodes: {
@@ -87,7 +87,7 @@ const imageCard: BlockTemplateDoc = {
 
 const section: BlockTemplateDoc = {
 	id: 'section',
-	name: 'Section',
+	name: 'Секция',
 	schema: {
 		rootId: 'sec_root',
 		nodes: {
@@ -111,7 +111,7 @@ const section: BlockTemplateDoc = {
 
 const boxCard: BlockTemplateDoc = {
 	id: 'box_card',
-	name: 'Box (Card)',
+	name: 'Контейнер',
 	schema: {
 		rootId: 'bx_root',
 		nodes: {
@@ -138,7 +138,7 @@ const boxCard: BlockTemplateDoc = {
 
 const row2: BlockTemplateDoc = {
 	id: 'row2',
-	name: 'Row (2 cols)',
+	name: 'Ряд',
 	schema: {
 		rootId: 'row_root',
 		nodes: {
@@ -159,7 +159,7 @@ const row2: BlockTemplateDoc = {
 
 const form: BlockTemplateDoc = {
 	id: 'form',
-	name: 'Форма',
+	name: 'Блок формы',
 	schema: {
 		rootId: 'form_root',
 		nodes: {
@@ -188,7 +188,7 @@ const form: BlockTemplateDoc = {
 
 const input: BlockTemplateDoc = {
 	id: 'input',
-	name: 'Элемент формы',
+	name: 'Универсальное поле ввода формы',
 	schema: {
 		rootId: 'input_root',
 		nodes: {
@@ -210,7 +210,7 @@ const input: BlockTemplateDoc = {
 
 const textarea: BlockTemplateDoc = {
 	id: 'textarea',
-	name: 'Textarea',
+	name: 'Текстовая область формы',
 	schema: {
 		rootId: 'textarea_root',
 		nodes: {
@@ -231,7 +231,7 @@ const textarea: BlockTemplateDoc = {
 
 const select: BlockTemplateDoc = {
 	id: 'select',
-	name: 'Select',
+	name: 'Выпадающий список формы',
 	schema: {
 		rootId: 'select_root',
 		nodes: {
@@ -251,7 +251,7 @@ const select: BlockTemplateDoc = {
 
 const richtext: BlockTemplateDoc = {
 	id: 'richtext',
-	name: 'Rich Text',
+	name: 'Текстовый редактор',
 	schema: {
 		rootId: 'rt_root',
 		nodes: {
@@ -269,7 +269,7 @@ const richtext: BlockTemplateDoc = {
 
 const quote: BlockTemplateDoc = {
 	id: 'blockquote',
-	name: 'Quote',
+	name: 'Цитата',
 	schema: {
 		rootId: 'quote_root',
 		nodes: {
@@ -298,7 +298,7 @@ const quote: BlockTemplateDoc = {
 
 const divider: BlockTemplateDoc = {
 	id: 'divider',
-	name: 'Divider',
+	name: 'Разделитель',
 	schema: {
 		rootId: 'divider_root',
 		nodes: {

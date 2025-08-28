@@ -1086,8 +1086,8 @@ export function Inspector({ schema, selectedId, onChange, theme }: Props) {
 }
 
 const card: React.CSSProperties = {
-	border: '1px solid #e6e8ef',
-	borderRadius: 12,
+	// border: '1px solid #e6e8ef',
+	// borderRadius: 12,
 	padding: 12,
 	background: '#fff',
 };
