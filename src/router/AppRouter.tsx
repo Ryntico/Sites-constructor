@@ -3,8 +3,10 @@ import { Route, Routes } from 'react-router-dom';
 import { RequireAuth } from './RequireAuth';
 import { routeConfig } from './routeConfig';
 import { type AppRoutesProps, UserRole } from './const/types';
+import { RequireNotAuth } from '@/router/RequireNotAuth.tsx';
 
 export const AppRouter = memo(() => {
+
 	const renderWithWrapper = useCallback((route: AppRoutesProps) => {
 		const element = (
 			// TODO замени на нормальную загрузку
@@ -18,7 +20,24 @@ export const AppRouter = memo(() => {
 				<Route
 					key={route.path}
 					path={route.path}
-					element={element}
+					element={
+						<RequireNotAuth>
+							{element}
+						</RequireNotAuth>}
+				/>
+			);
+		}
+
+		if (route.roles?.includes(UserRole.USER)) {
+			return (
+				<Route
+					key={route.path}
+					path={route.path}
+					element={
+						<RequireAuth roles={route.roles}>
+							{element}
+						</RequireAuth>
+					}
 				/>
 			);
 		}
@@ -27,15 +46,7 @@ export const AppRouter = memo(() => {
 			<Route
 				key={route.path}
 				path={route.path}
-				element={
-					route.authOnly ? (
-						<RequireAuth roles={route.roles}>
-							{element}
-						</RequireAuth>
-					) : (
-						element
-					)
-				}
+				element={element}
 			/>
 		);
 	}, []);
