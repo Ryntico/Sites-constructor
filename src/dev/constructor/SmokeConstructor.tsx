@@ -3,6 +3,7 @@ import { exportPageToHtml } from './runtime/Renderer';
 import { cleanupManualEmptyContainers, cloneSubtreeWithIds } from './runtime/schemaOps';
 import { EditorRenderer } from './runtime/EditorRenderer';
 import { Inspector } from './Inspector';
+import { Palette } from './palette/Palette';
 import { PreviewPane } from '../preview/PreviewPane';
 import { ThemeEditor } from '../theme/ThemeEditor';
 import { useSiteBuilder } from '@/hooks/useSiteBuilder';
@@ -282,7 +283,7 @@ export function SmokeConstructor() {
 				<div
 					style={{
 						display: 'grid',
-						gridTemplateColumns: '280px 1fr 360px',
+						gridTemplateColumns: 'auto 1fr 360px',
 						gap: 16,
 						padding: 16,
 						alignItems: 'start',
@@ -291,7 +292,6 @@ export function SmokeConstructor() {
 					<Palette
 						items={blockTemplates.map((b) => ({ id: b.id, name: b.name }))}
 					/>
-
 					<div
 						ref={canvasRef}
 						style={{
@@ -299,7 +299,7 @@ export function SmokeConstructor() {
 							borderRadius: 12,
 							padding: 12,
 							background: '#fafbff',
-							maxHeight: '70vh',
+							maxHeight: 'calc(100vh - 160px)',
 							overflow: 'auto',
 							display: 'grid',
 							gap: 12,
@@ -396,7 +396,7 @@ export function SmokeConstructor() {
 							display: 'grid',
 							gap: 12,
 							alignContent: 'start',
-							maxHeight: '70vh',
+							height: 'calc(100vh - 160px)',
 							overflow: 'auto',
 						}}
 					>
@@ -512,39 +512,6 @@ function JsonCard({ title, obj }: { title: string; obj: any }) {
 	);
 }
 
-function Palette({ items }: { items: { id: string; name: string }[] }) {
-	return (
-		<div style={{ display: 'grid', gap: 10 }}>
-			<div style={{ fontWeight: 600, marginBottom: 2 }}>Элементы</div>
-			{items.map((i) => (
-				<PaletteItem key={i.id} name={i.name} mimeKey={i.id} />
-			))}
-		</div>
-	);
-}
 
-function PaletteItem({ name, mimeKey }: { name: string; mimeKey: string }) {
-	return (
-		<div
-			draggable
-			onDragStart={(e) => {
-				e.dataTransfer.setData('application/x-block-template', mimeKey);
-				e.dataTransfer.effectAllowed = 'copy';
-			}}
-			style={{
-				border: '1px solid #e6e8ef',
-				borderRadius: 10,
-				padding: 10,
-				background: '#fff',
-				cursor: 'grab',
-				fontSize: 13,
-				lineHeight: 1.2,
-				minHeight: 44,
-			}}
-			title="Перетащите на полотно"
-		>
-			<div style={{ fontWeight: 500, marginBottom: 4 }}>{name}</div>
-			<div style={{ fontSize: 11, color: '#687087' }}>Перетащите этот элемент</div>
-		</div>
-	);
-}
+
+
