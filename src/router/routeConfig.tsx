@@ -47,6 +47,7 @@ export const routeConfig: Record<AppRoutes, AppRoutesProps> = {
 		path: getRouteMain(),
 		element: <MainPage />,
 		authOnly: true,
+		roles: [UserRole.USER],
 	},
 	[AppRoutes.LOGIN]: {
 		path: getRouteLogin(),
@@ -62,24 +63,29 @@ export const routeConfig: Record<AppRoutes, AppRoutesProps> = {
 		path: getRouteProfile(),
 		element: <ProfilePage />,
 		authOnly: true,
+		roles: [UserRole.USER],
 	},
 	[AppRoutes.NEW_PROJECT]: {
 		path: getRouteNewProject(),
 		element: <ConstructorPage />,
 		authOnly: true,
+		roles: [UserRole.USER],
 	},
 	[AppRoutes.EXISTING_PROJECT]: {
 		path: getRouteExistingProject(':id'),
 		element: <p>EXISTING_PROJECT</p>,
 		authOnly: true,
+		roles: [UserRole.USER],
 	},
 	// last
 	[AppRoutes.NOT_FOUND]: {
 		path: '*',
 		element: <p>NOT_FOUND</p>,
+		roles: [],
 	},
 	[AppRoutes.DEV_CONSTRUCTOR]: {
 		path: getRouteConstructor(),
 		element: <SmokeConstructorPage />,
+		roles: [],
 	},
 };
