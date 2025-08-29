@@ -5,7 +5,7 @@ const TYPE_TPL = 'application/x-block-template';
 const TYPE_MOVE = 'application/x-move-node';
 
 type Props = {
-	onDrop: (tplKey?: string, moveNodeId?: string) => void;
+	onDrop: (tplKey?: string, moveNodeId?: string, opts?: { copy?: boolean }) => void;
 	scrollContainer?: React.RefObject<HTMLElement>;
 	visible?: boolean;
 	axis?: Axis;
@@ -78,7 +78,9 @@ export function DropZone({
 		try {
 			const isMove = Array.from(dt.types || []).includes(TYPE_MOVE);
 			dt.dropEffect = isMove ? 'move' : 'copy';
-		} catch {}
+		} catch {
+			// no ops
+		}
 		setOver(true);
 
 		const el = scrollContainer?.current;
@@ -104,8 +106,9 @@ export function DropZone({
 		const dt = e.dataTransfer;
 		const tplKey = dt.getData(TYPE_TPL);
 		const moveId = dt.getData(TYPE_MOVE);
-		if (tplKey) onDrop(tplKey, undefined);
-		else if (moveId) onDrop(undefined, moveId);
+		const copy = e.altKey || e.ctrlKey || e.metaKey;
+		if (tplKey) onDrop(tplKey, undefined, { copy });
+		else if (moveId) onDrop(undefined, moveId, { copy });
 	};
 
 	const THICK = 14;

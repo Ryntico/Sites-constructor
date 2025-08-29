@@ -22,6 +22,8 @@ import {
 	moveNodeInto,
 	cleanupSchemaBasic,
 	mergePatches,
+	extractSubtree,
+	duplicateNode,
 } from './schemaOps';
 import { DropZone } from '../components/DropZones';
 import { EditableNodeWrapper } from '../components/EditableNodeWrapper';
@@ -188,6 +190,11 @@ export function EditorRenderer({
 		onSelectNode?.(null);
 	};
 
+	const handleDuplicate = (nodeId: string) => {
+		const { next, patch } = duplicateNode(schema, nodeId);
+		onSchemaChange(next, patch);
+	};
+
 	return (
 		<div
 			data-editor-root=""
@@ -220,6 +227,7 @@ export function EditorRenderer({
 				onDropTemplate={handleDropTemplate}
 				onDropMove={handleDropMove}
 				onDelete={handleDelete}
+				onDuplicate={handleDuplicate}
 				onSelect={onSelectNode}
 				scrollContainer={scrollContainer}
 				isRoot
@@ -227,6 +235,7 @@ export function EditorRenderer({
 				selectedId={selectedId}
 				handleDropAtSide={handleDropAtSide}
 				handleDropInside={handleDropInside}
+				applyAndClean={applyAndClean}
 			/>
 		</div>
 	);
@@ -239,6 +248,7 @@ function NodeView(props: {
 	onDropTemplate: (parentId: string, index: number, tplKey: string) => void;
 	onDropMove: (parentId: string, index: number, nodeId: string) => void;
 	onDelete: (nodeId: string) => void;
+	onDuplicate: (nodeId: string) => void;
 	onSelect?: (id: string) => void;
 	scrollContainer?: React.RefObject<HTMLElement>;
 	isRoot?: boolean;
@@ -251,6 +261,7 @@ function NodeView(props: {
 		movingId?: string,
 	) => void;
 	handleDropInside: (parentId: string, tplKey?: string, movingId?: string) => void;
+	applyAndClean: (schema: PageSchema, patch: SchemaPatch) => void;
 }) {
 	const {
 		id,
@@ -266,6 +277,8 @@ function NodeView(props: {
 		selectedId,
 		handleDropAtSide,
 		handleDropInside,
+		applyAndClean,
+		onDuplicate,
 	} = props;
 
 	const node = schema.nodes[id];
@@ -316,16 +329,16 @@ function NodeView(props: {
 				}
 			: node.type === 'divider'
 				? {
-					display: 'block',
-					width: '100%',
-					...baseStyle,
-				}
+						display: 'block',
+						width: '100%',
+						...baseStyle,
+					}
 				: {
-					display: 'inline-flex',
-					flex: '0 0 auto',
-					minWidth: 0,
-					verticalAlign: 'top',
-				}),
+						display: 'inline-flex',
+						flex: '0 0 auto',
+						minWidth: 0,
+						verticalAlign: 'top',
+					}),
 	};
 
 	const containerEmpty = parentLike && children.length === 0;
@@ -388,6 +401,7 @@ function NodeView(props: {
 			onSelect={(nid) => onSelect?.(nid)}
 			isSelected={selectedId === id}
 			canRemove={schema.rootId !== id}
+			onDuplicate={onDuplicate}
 		>
 			<div
 				data-res-id={id}
@@ -425,7 +439,9 @@ function NodeView(props: {
 									e.dataTransfer.types || [],
 								).includes('application/x-move-node');
 								e.dataTransfer.dropEffect = isMove ? 'move' : 'copy';
-							} catch {}
+							} catch {
+								// no ops
+							}
 						}}
 						onDrop={(e) => {
 							if (!containerEmpty || !isDragging) return;
@@ -433,11 +449,24 @@ function NodeView(props: {
 							const dt = e.dataTransfer;
 							const tplKey = dt.getData('application/x-block-template');
 							const moveId = dt.getData('application/x-move-node');
-							handleDropInside(
-								id,
-								tplKey || undefined,
-								moveId || undefined,
-							);
+							const copy = e.altKey || e.ctrlKey || e.metaKey;
+
+							if (tplKey) {
+								handleDropInside(id, tplKey || undefined, undefined);
+							} else if (moveId) {
+								if (copy) {
+									const sub = extractSubtree(schema, moveId);
+									const cloned = cloneSubtreeWithIds(sub);
+									const { next, patch } = appendSubtree(
+										schema,
+										cloned,
+										id,
+									);
+									applyAndClean(next, patch);
+								} else {
+									handleDropInside(id, undefined, moveId);
+								}
+							}
 						}}
 					>
 						{children.map((cid, idx) => {
@@ -463,9 +492,34 @@ function NodeView(props: {
 										}}
 									>
 										<DropZone
-											onDrop={(tpl, moveId) =>
-												handleDropAtSide(cid, 'left', tpl, moveId)
-											}
+											onDrop={(tpl, moveId, opts) => {
+												const copy = !!opts?.copy;
+												if (tpl) {
+													handleDropAtSide(
+														cid,
+														'left',
+														tpl,
+														undefined,
+													);
+												} else if (moveId) {
+													if (copy) {
+														copyNodeAtSide(
+															schema,
+															cid,
+															'left',
+															moveId,
+															applyAndClean,
+														);
+													} else {
+														handleDropAtSide(
+															cid,
+															'left',
+															undefined,
+															moveId,
+														);
+													}
+												}
+											}}
 											scrollContainer={scrollContainer}
 											visible={isDragging}
 											axis="x"
@@ -491,14 +545,34 @@ function NodeView(props: {
 										>
 											{idx === 0 && (
 												<DropZone
-													onDrop={(tpl, moveId) =>
-														handleDropAtSide(
-															cid,
-															'top',
-															tpl,
-															moveId,
-														)
-													}
+													onDrop={(tpl, moveId, opts) => {
+														const copy = !!opts?.copy;
+														if (tpl) {
+															handleDropAtSide(
+																cid,
+																'top',
+																tpl,
+																undefined,
+															);
+														} else if (moveId) {
+															if (copy) {
+																copyNodeAtSide(
+																	schema,
+																	cid,
+																	'top',
+																	moveId,
+																	applyAndClean,
+																);
+															} else {
+																handleDropAtSide(
+																	cid,
+																	'top',
+																	undefined,
+																	moveId,
+																);
+															}
+														}
+													}}
 													scrollContainer={scrollContainer}
 													visible={isDragging}
 													axis="y"
@@ -513,23 +587,45 @@ function NodeView(props: {
 												onDropTemplate={onDropTemplate}
 												onDropMove={onDropMove}
 												onDelete={onDelete}
+												onDuplicate={onDuplicate}
 												onSelect={onSelect}
 												scrollContainer={scrollContainer}
 												isDragging={isDragging}
 												selectedId={selectedId}
 												handleDropAtSide={handleDropAtSide}
 												handleDropInside={handleDropInside}
+												applyAndClean={applyAndClean}
 											/>
 
 											<DropZone
-												onDrop={(tpl, moveId) =>
-													handleDropAtSide(
-														cid,
-														'bottom',
-														tpl,
-														moveId,
-													)
-												}
+												onDrop={(tpl, moveId, opts) => {
+													const copy = !!opts?.copy;
+													if (tpl) {
+														handleDropAtSide(
+															cid,
+															'bottom',
+															tpl,
+															undefined,
+														);
+													} else if (moveId) {
+														if (copy) {
+															copyNodeAtSide(
+																schema,
+																cid,
+																'bottom',
+																moveId,
+																applyAndClean,
+															);
+														} else {
+															handleDropAtSide(
+																cid,
+																'bottom',
+																undefined,
+																moveId,
+															);
+														}
+													}
+												}}
 												scrollContainer={scrollContainer}
 												visible={isDragging}
 												axis="y"
@@ -537,14 +633,34 @@ function NodeView(props: {
 											/>
 										</div>
 										<DropZone
-											onDrop={(tpl, moveId) =>
-												handleDropAtSide(
-													cid,
-													'right',
-													tpl,
-													moveId,
-												)
-											}
+											onDrop={(tpl, moveId, opts) => {
+												const copy = !!opts?.copy;
+												if (tpl) {
+													handleDropAtSide(
+														cid,
+														'right',
+														tpl,
+														undefined,
+													);
+												} else if (moveId) {
+													if (copy) {
+														copyNodeAtSide(
+															schema,
+															cid,
+															'right',
+															moveId,
+															applyAndClean,
+														);
+													} else {
+														handleDropAtSide(
+															cid,
+															'right',
+															undefined,
+															moveId,
+														);
+													}
+												}
+											}}
 											scrollContainer={scrollContainer}
 											visible={isDragging}
 											axis="x"
@@ -564,9 +680,34 @@ function NodeView(props: {
 									}}
 								>
 									<DropZone
-										onDrop={(tpl, moveId) =>
-											handleDropAtSide(cid, 'top', tpl, moveId)
-										}
+										onDrop={(tpl, moveId, opts) => {
+											const copy = !!opts?.copy;
+											if (tpl) {
+												handleDropAtSide(
+													cid,
+													'top',
+													tpl,
+													undefined,
+												);
+											} else if (moveId) {
+												if (copy) {
+													copyNodeAtSide(
+														schema,
+														cid,
+														'top',
+														moveId,
+														applyAndClean,
+													);
+												} else {
+													handleDropAtSide(
+														cid,
+														'top',
+														undefined,
+														moveId,
+													);
+												}
+											}
+										}}
 										scrollContainer={scrollContainer}
 										visible={isDragging}
 										axis="y"
@@ -582,14 +723,34 @@ function NodeView(props: {
 									>
 										{idx === 0 && (
 											<DropZone
-												onDrop={(tpl, moveId) =>
-													handleDropAtSide(
-														cid,
-														'left',
-														tpl,
-														moveId,
-													)
-												}
+												onDrop={(tpl, moveId, opts) => {
+													const copy = !!opts?.copy;
+													if (tpl) {
+														handleDropAtSide(
+															cid,
+															'left',
+															tpl,
+															undefined,
+														);
+													} else if (moveId) {
+														if (copy) {
+															copyNodeAtSide(
+																schema,
+																cid,
+																'left',
+																moveId,
+																applyAndClean,
+															);
+														} else {
+															handleDropAtSide(
+																cid,
+																'left',
+																undefined,
+																moveId,
+															);
+														}
+													}
+												}}
 												scrollContainer={scrollContainer}
 												visible={isDragging}
 												axis="x"
@@ -619,24 +780,46 @@ function NodeView(props: {
 												onDropTemplate={onDropTemplate}
 												onDropMove={onDropMove}
 												onDelete={onDelete}
+												onDuplicate={onDuplicate}
 												onSelect={onSelect}
 												scrollContainer={scrollContainer}
 												isDragging={isDragging}
 												selectedId={selectedId}
 												handleDropAtSide={handleDropAtSide}
 												handleDropInside={handleDropInside}
+												applyAndClean={applyAndClean}
 											/>
 										</div>
 
 										<DropZone
-											onDrop={(tpl, moveId) =>
-												handleDropAtSide(
-													cid,
-													'right',
-													tpl,
-													moveId,
-												)
-											}
+											onDrop={(tpl, moveId, opts) => {
+												const copy = !!opts?.copy;
+												if (tpl) {
+													handleDropAtSide(
+														cid,
+														'right',
+														tpl,
+														undefined,
+													);
+												} else if (moveId) {
+													if (copy) {
+														copyNodeAtSide(
+															schema,
+															cid,
+															'right',
+															moveId,
+															applyAndClean,
+														);
+													} else {
+														handleDropAtSide(
+															cid,
+															'right',
+															undefined,
+															moveId,
+														);
+													}
+												}
+											}}
 											scrollContainer={scrollContainer}
 											visible={isDragging}
 											axis="x"
@@ -645,9 +828,34 @@ function NodeView(props: {
 									</div>
 
 									<DropZone
-										onDrop={(tpl, moveId) =>
-											handleDropAtSide(cid, 'bottom', tpl, moveId)
-										}
+										onDrop={(tpl, moveId, opts) => {
+											const copy = !!opts?.copy;
+											if (tpl) {
+												handleDropAtSide(
+													cid,
+													'bottom',
+													tpl,
+													undefined,
+												);
+											} else if (moveId) {
+												if (copy) {
+													copyNodeAtSide(
+														schema,
+														cid,
+														'bottom',
+														moveId,
+														applyAndClean,
+													);
+												} else {
+													handleDropAtSide(
+														cid,
+														'bottom',
+														undefined,
+														moveId,
+													);
+												}
+											}
+										}}
 										scrollContainer={scrollContainer}
 										visible={isDragging}
 										axis="y"
@@ -672,7 +880,24 @@ function findParent(schema: PageSchema, childId: string): string | null {
 	return null;
 }
 
-function renderPrimitive(node: NodeJson, baseStyle: React.CSSProperties, theme: ThemeTokens) {
+function copyNodeAtSide(
+	schema: PageSchema,
+	refId: string,
+	side: Side,
+	moveId: string,
+	applyAndClean: (schema: PageSchema, patch: SchemaPatch) => void,
+) {
+	const sub = extractSubtree(schema, moveId);
+	const cloned = cloneSubtreeWithIds(sub);
+	const { next, patch } = insertTemplateAtSide(schema, refId, side, cloned);
+	applyAndClean(next, patch);
+}
+
+function renderPrimitive(
+	node: NodeJson,
+	baseStyle: React.CSSProperties,
+	theme: ThemeTokens,
+) {
 	switch (node.type) {
 		case 'form':
 			return (
@@ -712,16 +937,14 @@ function renderPrimitive(node: NodeJson, baseStyle: React.CSSProperties, theme: 
 			return hasHtml ? (
 				<>
 					<style>
-						{
-							`blockquote {
+						{`blockquote {
 							  background: ${theme.components?.blockquote?.bg || 'rgba(99, 102, 241, 0.1)'};
 							  border-left: ${theme.components?.blockquote?.borderLeft || '4px solid rgb(59, 130, 246)'};
 							  border-radius: ${theme.components?.blockquote?.radius || '8'}px;
 							  padding: ${theme.components?.blockquote?.p || '16px 20px'};
 							  color: ${theme.components?.blockquote?.color};
 							  font-style: italic;
-							}`
-						}
+							}`}
 					</style>
 					<div
 						data-prim="true"
@@ -729,7 +952,6 @@ function renderPrimitive(node: NodeJson, baseStyle: React.CSSProperties, theme: 
 						dangerouslySetInnerHTML={{ __html: html }}
 					/>
 				</>
-
 			) : (
 				<p data-prim="true" style={baseStyle}>
 					{html || 'Text'}
@@ -776,7 +998,7 @@ function renderPrimitive(node: NodeJson, baseStyle: React.CSSProperties, theme: 
 		}
 
 		case 'divider':
-			return <div style={baseStyle} />
+			return <div style={baseStyle} />;
 
 		case 'list':
 			return <ul data-prim="true" style={baseStyle} />;
