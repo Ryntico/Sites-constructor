@@ -1,27 +1,33 @@
 import React, { useMemo, useState } from 'react';
-import type { PageSchema, ThemeTokens, StyleShortcuts, NodeJson } from '@/types/siteTypes';
+import type {
+	PageSchema,
+	ThemeTokens,
+	StyleShortcuts,
+	NodeJson,
+} from '@/types/siteTypes';
 import { isContainer } from '@/dev/constructor/runtime/schemaOps.ts';
 import { RichText } from '@/dev/constructor/components/RichText.tsx';
 import { SelectOptionsEditor } from '@/dev/constructor/components/SelectOptionsEditor.tsx';
+import { ImageUploader } from './components/ImageUploader';
 
 type Props = {
 	schema: PageSchema;
 	selectedId: string | null;
 	onChange(next: PageSchema): void;
 	theme?: ThemeTokens;
+	ownerId?: string;
 };
 
 // type BP = 'base' | 'sm' | 'md' | 'lg';
 
-export function Inspector({ schema, selectedId, onChange, theme }: Props) {
+export function Inspector({ schema, selectedId, onChange, theme, ownerId }: Props) {
 	// const [bp, setBp] = useState<BP>('base');
 	const bp = 'base';
 	const node = selectedId ? schema.nodes[selectedId] : null;
 	const parentNode = node
-		? Object.values(schema.nodes).find((n) =>
-			n.childrenOrder?.includes(node.id))
+		? Object.values(schema.nodes).find((n) => n.childrenOrder?.includes(node.id))
 		: null;
-	const p = (node?.props || {});
+	const p = node?.props || {};
 
 	const patchProps = (patch: Partial<NodeJson['props']>) => {
 		if (!node) return;
@@ -75,7 +81,7 @@ export function Inspector({ schema, selectedId, onChange, theme }: Props) {
 
 	const patchStyle = (patch: Partial<StyleShortcuts>) => {
 		const prev = node.props?.style ?? {};
-		const cur = (prev)[bp] ?? {};
+		const cur = prev[bp] ?? {};
 		const nextStyle = { ...prev, [bp]: { ...cur, ...patch } };
 		onChange({
 			...schema,
@@ -99,10 +105,7 @@ export function Inspector({ schema, selectedId, onChange, theme }: Props) {
 			</div>
 
 			{node.type === 'richtext' && (
-				<RichText
-					value={p.text ?? ''}
-					patchProps={patchProps}
-				/>
+				<RichText value={p.text ?? ''} patchProps={patchProps} />
 			)}
 
 			{(node.type === 'heading' ||
@@ -179,6 +182,29 @@ export function Inspector({ schema, selectedId, onChange, theme }: Props) {
 						value={p.alt ?? ''}
 						onChange={(e) => patchProps({ alt: e.target.value })}
 					/>
+					<div style={{ display: 'grid', gap: 6 }}>
+						<div style={{ fontSize: 12, color: '#687087' }}>
+							Загрузить изображение
+						</div>
+						<ImageUploader
+							ownerId={ownerId}
+							onUploaded={(url) => {
+								const next: Partial<NodeJson['props']> = { src: url };
+								if (!p.alt) {
+									try {
+										const u = new URL(url);
+										const name = decodeURIComponent(
+											u.pathname.split('/').pop() || '',
+										).split('?')[0];
+										if (name) next.alt = name;
+									} catch {
+										// no-op
+									}
+								}
+								patchProps(next);
+							}}
+						/>
+					</div>
 				</>
 			)}
 
@@ -198,7 +224,7 @@ export function Inspector({ schema, selectedId, onChange, theme }: Props) {
 			{/*	))}*/}
 			{/*</div>*/}
 
-			{node.type === 'form' &&
+			{node.type === 'form' && (
 				<Section title="Настройки формы">
 					<TextRowWithValidate
 						label="ID формы"
@@ -227,7 +253,10 @@ export function Inspector({ schema, selectedId, onChange, theme }: Props) {
 						onChange={(v) => patchProps({ enctype: v || undefined })}
 						options={[
 							['', '—'],
-							['application/x-www-form-urlencoded', 'application/x-www-form-urlencoded'],
+							[
+								'application/x-www-form-urlencoded',
+								'application/x-www-form-urlencoded',
+							],
 							['multipart/form-data', 'multipart/form-data'],
 							['text/plain', 'text/plain'],
 						]}
@@ -247,11 +276,10 @@ export function Inspector({ schema, selectedId, onChange, theme }: Props) {
 							}
 						}}
 					/>
-
 				</Section>
-			}
+			)}
 
-			{node.type === 'textarea' &&
+			{node.type === 'textarea' && (
 				<Section title="Атрибуты текстовой области">
 					<TextRowWithValidate
 						label="name"
@@ -259,10 +287,12 @@ export function Inspector({ schema, selectedId, onChange, theme }: Props) {
 						onChange={(v) => patchProps({ name: v })}
 						title="Имя поля, которое будет отправлено на сервер с формой"
 						required={true}
-						validate={(value) => !value ? 'Поле обязательно для заполнения' : undefined}
+						validate={(value) =>
+							!value ? 'Поле обязательно для заполнения' : undefined
+						}
 					/>
 
-					{parentNode?.type !== 'form' &&
+					{parentNode?.type !== 'form' && (
 						<TextRowWithValidate
 							label="form"
 							required
@@ -270,7 +300,7 @@ export function Inspector({ schema, selectedId, onChange, theme }: Props) {
 							onChange={(v) => patchProps({ formId: v })}
 							title="ID формы, к которой относится это поле"
 						/>
-					}
+					)}
 
 					<TextRowWithValidate
 						label="label"
@@ -321,39 +351,56 @@ export function Inspector({ schema, selectedId, onChange, theme }: Props) {
 						title="Минимальное количество символов, которое нужно ввести"
 					/>
 
-					<div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginTop: 8 }}>
+					<div
+						style={{
+							display: 'flex',
+							gap: 8,
+							flexWrap: 'wrap',
+							marginTop: 8,
+						}}
+					>
 						<CheckboxRow
 							label="Отключено (disabled)"
 							checked={!!p.disabled}
-							onChange={(checked) => patchProps({ disabled: checked || undefined })}
+							onChange={(checked) =>
+								patchProps({ disabled: checked || undefined })
+							}
 							title="Отключает поле, делая его недоступным для ввода"
 						/>
 
 						<CheckboxRow
 							label="Только для чтения (readonly)"
 							checked={!!p.readonly}
-							onChange={(checked) => patchProps({ readonly: checked || undefined })}
+							onChange={(checked) =>
+								patchProps({ readonly: checked || undefined })
+							}
 							title="Запрещает редактирование, но позволяет выделять и копировать текст"
 						/>
 
 						<CheckboxRow
 							label="Обязательное поле (required)"
 							checked={!!p.required}
-							onChange={(checked) => patchProps({ required: checked || undefined })}
+							onChange={(checked) =>
+								patchProps({ required: checked || undefined })
+							}
 							title="Поле должно быть заполнено перед отправкой формы"
 						/>
 
 						<CheckboxRow
 							label="Автофокус (autofocus)"
 							checked={!!p.autofocus}
-							onChange={(checked) => patchProps({ autofocus: checked || undefined })}
+							onChange={(checked) =>
+								patchProps({ autofocus: checked || undefined })
+							}
 							title="Автоматически устанавливает фокус на это поле при загрузке страницы"
 						/>
 
 						<CheckboxRow
 							label="Проверка орфографии (spellcheck)"
 							checked={!!p.spellcheck}
-							onChange={(checked) => patchProps({ spellcheck: checked || undefined })}
+							onChange={(checked) =>
+								patchProps({ spellcheck: checked || undefined })
+							}
 							title="Включает или отключает проверку орфографии для этого поля"
 						/>
 					</div>
@@ -381,9 +428,9 @@ export function Inspector({ schema, selectedId, onChange, theme }: Props) {
 						title="Управление автозаполнением браузера"
 					/>
 				</Section>
-			}
+			)}
 
-			{node.type === 'select' &&
+			{node.type === 'select' && (
 				<Section title="Настройки Select">
 					<TextRowWithValidate
 						label="name"
@@ -400,7 +447,7 @@ export function Inspector({ schema, selectedId, onChange, theme }: Props) {
 						title="Уникальный идентификатор поля для обработки формы на сервере и доступа к данным через JavaScript. Обязателен для отправки данных."
 						required
 					/>
-					{parentNode?.type !== 'form' &&
+					{parentNode?.type !== 'form' && (
 						<TextRowWithValidate
 							label="form"
 							required
@@ -408,7 +455,7 @@ export function Inspector({ schema, selectedId, onChange, theme }: Props) {
 							onChange={(v) => patchProps({ formId: v })}
 							title="ID формы, к которой относится это поле"
 						/>
-					}
+					)}
 					<TextRowWithValidate
 						label="label"
 						value={p.label ?? ''}
@@ -424,35 +471,47 @@ export function Inspector({ schema, selectedId, onChange, theme }: Props) {
 						/>
 					</Section>
 
-					<div style={{ display: 'flex', padding: 8, flexWrap: 'wrap', gap: 8 }}>
+					<div
+						style={{ display: 'flex', padding: 8, flexWrap: 'wrap', gap: 8 }}
+					>
 						<CheckboxRow
 							label="disabled"
 							checked={!!p.disabled}
-							onChange={(checked) => patchProps({ disabled: checked || undefined })}
+							onChange={(checked) =>
+								patchProps({ disabled: checked || undefined })
+							}
 							title="Отключает поле ввода, делая его недоступным для взаимодействия"
 						/>
 						<CheckboxRow
 							label="readonly"
 							checked={!!p.readonly}
-							onChange={(checked) => patchProps({ readonly: checked || undefined })}
+							onChange={(checked) =>
+								patchProps({ readonly: checked || undefined })
+							}
 							title="Запрещает редактирование значения поля, но позволяет его выделять и копировать"
 						/>
 						<CheckboxRow
 							label="autofocus"
 							checked={!!p.autofocus}
-							onChange={(checked) => patchProps({ autofocus: checked || undefined })}
+							onChange={(checked) =>
+								patchProps({ autofocus: checked || undefined })
+							}
 							title="Автоматически устанавливает фокус на это поле при загрузке страницы"
 						/>
 						<CheckboxRow
 							label="required"
 							checked={!!p.required}
-							onChange={(checked) => patchProps({ required: checked || undefined })}
+							onChange={(checked) =>
+								patchProps({ required: checked || undefined })
+							}
 							title="Поле обязательно для заполнения"
 						/>
 						<CheckboxRow
 							label="multiple"
 							checked={!!p.multiple}
-							onChange={(checked) => patchProps({ multiple: checked || undefined })}
+							onChange={(checked) =>
+								patchProps({ multiple: checked || undefined })
+							}
 							title="Множественный выбор"
 						/>
 					</div>
@@ -464,9 +523,9 @@ export function Inspector({ schema, selectedId, onChange, theme }: Props) {
 						title="Количество видимых опций в выпадающем списке"
 					/>
 				</Section>
-			}
+			)}
 
-			{node.type === 'input' &&
+			{node.type === 'input' && (
 				<Section title="Атрибуты поля input">
 					<SelectRow
 						label="Тип"
@@ -496,9 +555,11 @@ export function Inspector({ schema, selectedId, onChange, theme }: Props) {
 						label="name"
 						value={p.name || ''}
 						onChange={(v) => patchProps({ name: v })}
-						title={p.type === 'radio'
-							? 'Уникальное имя для группы переключателей. Должно быть одинаковым для всех переключателей в группе.'
-							: 'Уникальный идентификатор поля для обработки формы на сервере и доступа к данным через JavaScript. Обязателен для отправки данных.'}
+						title={
+							p.type === 'radio'
+								? 'Уникальное имя для группы переключателей. Должно быть одинаковым для всех переключателей в группе.'
+								: 'Уникальный идентификатор поля для обработки формы на сервере и доступа к данным через JavaScript. Обязателен для отправки данных.'
+						}
 						required={true}
 						validate={(value) => {
 							if (value && /^[a-zA-Z][a-zA-Z0-9_-]*$/.test(value)) return;
@@ -506,7 +567,7 @@ export function Inspector({ schema, selectedId, onChange, theme }: Props) {
 							return 'Пожалуйста, введите корректное имя латиницей';
 						}}
 					/>
-					{parentNode?.type !== 'form' &&
+					{parentNode?.type !== 'form' && (
 						<TextRowWithValidate
 							label="form"
 							required
@@ -514,14 +575,14 @@ export function Inspector({ schema, selectedId, onChange, theme }: Props) {
 							onChange={(v) => patchProps({ formId: v })}
 							title="ID формы, к которой должно принадлежать поле (если оно находится вне тега form)"
 						/>
-					}
-					{p.type === 'submit' &&
+					)}
+					{p.type === 'submit' && (
 						<TextRowWithValidate
 							label="текст кнопки"
 							value={p.value || ''}
 							onChange={(v) => patchProps({ value: v })}
 						/>
-					}
+					)}
 					<TextRowWithValidate
 						label="label"
 						value={p.label || ''}
@@ -540,30 +601,38 @@ export function Inspector({ schema, selectedId, onChange, theme }: Props) {
 						onChange={(v) => patchProps({ title: v })}
 						title="Всплывающая подсказка, которая появляется при наведении на поле ввода"
 					/>
-					<div style={{ display: 'flex', padding: 8, gap: 8, flexWrap: 'wrap' }}>
+					<div
+						style={{ display: 'flex', padding: 8, gap: 8, flexWrap: 'wrap' }}
+					>
 						<CheckboxRow
 							label="disabled"
 							checked={!!p.disabled}
-							onChange={(checked) => patchProps({ disabled: checked || undefined })}
+							onChange={(checked) =>
+								patchProps({ disabled: checked || undefined })
+							}
 							title="Отключает поле ввода, делая его недоступным для взаимодействия"
 						/>
 						<CheckboxRow
 							label="readonly"
 							checked={!!p.readonly}
-							onChange={(checked) => patchProps({ readonly: checked || undefined })}
+							onChange={(checked) =>
+								patchProps({ readonly: checked || undefined })
+							}
 							title="Запрещает редактирование значения поля, но позволяет его выделять и копировать"
 						/>
 						<CheckboxRow
 							label="autofocus"
 							checked={!!p.autofocus}
-							onChange={(checked) => patchProps({ autofocus: checked || undefined })}
+							onChange={(checked) =>
+								patchProps({ autofocus: checked || undefined })
+							}
 							title="Автоматически устанавливает фокус на это поле при загрузке страницы"
 						/>
 					</div>
 				</Section>
-			}
+			)}
 
-			{p.type === 'number' &&
+			{p.type === 'number' && (
 				<Section title="Атрибуты числового поля">
 					<NumRow
 						label="Минимальное значение (min)"
@@ -608,9 +677,9 @@ export function Inspector({ schema, selectedId, onChange, theme }: Props) {
 						title="Управление режимом ввода браузера"
 					/>
 				</Section>
-			}
+			)}
 
-			{p.type === 'range' &&
+			{p.type === 'range' && (
 				<Section title="Настройки ползунка">
 					<NumRow
 						label="Минимальное значение (min)"
@@ -633,9 +702,11 @@ export function Inspector({ schema, selectedId, onChange, theme }: Props) {
 						title="Шаг изменения значения при перемещении ползунка"
 					/>
 				</Section>
-			}
+			)}
 
-			{['text', 'password', 'search', 'email', 'tel', 'url'].includes(p.type as string) &&
+			{['text', 'password', 'search', 'email', 'tel', 'url'].includes(
+				p.type as string,
+			) && (
 				<Section title="Атрибуты текстового поля input">
 					<TextRowWithValidate
 						label="Шаблон (pattern)"
@@ -700,7 +771,16 @@ export function Inspector({ schema, selectedId, onChange, theme }: Props) {
 					<SelectRow
 						label="Проверка орфографии (spellcheck)"
 						value={p.spellcheck?.toString() || 'default'}
-						onChange={(v) => patchProps({ spellcheck: v === 'true' ? true : v === 'false' ? false : undefined })}
+						onChange={(v) =>
+							patchProps({
+								spellcheck:
+									v === 'true'
+										? true
+										: v === 'false'
+											? false
+											: undefined,
+							})
+						}
 						options={[
 							['default', 'По умолчанию'],
 							['true', 'Включить'],
@@ -721,15 +801,15 @@ export function Inspector({ schema, selectedId, onChange, theme }: Props) {
 						title="Направление текста в поле ввода"
 					/>
 				</Section>
-			}
+			)}
 
-			{isContainer(node) &&
+			{isContainer(node) && (
 				<Section title="Настройки блока">
 					<Grid cols={3}>
 						<SelectRow
 							label="display"
 							value={s.display ?? ''}
-							onChange={(v) => patchStyle({ display: (v || undefined) })}
+							onChange={(v) => patchStyle({ display: v || undefined })}
 							options={[
 								['', '—'],
 								['block', 'block'],
@@ -739,12 +819,13 @@ export function Inspector({ schema, selectedId, onChange, theme }: Props) {
 							]}
 						/>
 
-
-						{s.display === 'flex' &&
+						{s.display === 'flex' && (
 							<SelectRow
 								label="direction"
 								value={s.flexDirection ?? ''}
-								onChange={(v) => patchStyle({ flexDirection: (v || undefined) })}
+								onChange={(v) =>
+									patchStyle({ flexDirection: v || undefined })
+								}
 								options={[
 									['', '—'],
 									['row', 'row'],
@@ -752,12 +833,13 @@ export function Inspector({ schema, selectedId, onChange, theme }: Props) {
 									['column', 'column'],
 									['column-reverse', 'column-reverse'],
 								]}
-							/>}
-						{s.display === 'flex' &&
+							/>
+						)}
+						{s.display === 'flex' && (
 							<SelectRow
 								label="flex-wrap"
 								value={s.wrap ?? ''}
-								onChange={(v) => patchStyle({ wrap: (v || undefined) })}
+								onChange={(v) => patchStyle({ wrap: v || undefined })}
 								options={[
 									['', '—'],
 									['nowrap', 'nowrap'],
@@ -765,18 +847,18 @@ export function Inspector({ schema, selectedId, onChange, theme }: Props) {
 									['wrap-reverse', 'wrap-reverse'],
 								]}
 							/>
-						}
+						)}
 					</Grid>
 				</Section>
-			}
+			)}
 
-			{s.display === 'flex' && isContainer(node) &&
+			{s.display === 'flex' && isContainer(node) && (
 				<Section>
 					<Grid cols={3}>
 						<SelectRow
 							label="align-items"
 							value={s.items ?? ''}
-							onChange={(v) => patchStyle({ items: (v || undefined) })}
+							onChange={(v) => patchStyle({ items: v || undefined })}
 							options={[
 								['', '—'],
 								['start', 'start'],
@@ -789,9 +871,7 @@ export function Inspector({ schema, selectedId, onChange, theme }: Props) {
 						<SelectRow
 							label="justify-content"
 							value={s.justify ?? ''}
-							onChange={(v) =>
-								patchStyle({ justify: (v || undefined) })
-							}
+							onChange={(v) => patchStyle({ justify: v || undefined })}
 							options={[
 								['', '—'],
 								['start', 'start'],
@@ -802,12 +882,11 @@ export function Inspector({ schema, selectedId, onChange, theme }: Props) {
 								['evenly', 'evenly'],
 							]}
 						/>
-
 					</Grid>
 				</Section>
-			}
+			)}
 
-			{parentNode?.props?.style?.[bp]?.display === 'flex' &&
+			{parentNode?.props?.style?.[bp]?.display === 'flex' && (
 				<Section title="Свойства флекс элементов">
 					<Grid cols={2}>
 						<SelectRow
@@ -848,10 +927,9 @@ export function Inspector({ schema, selectedId, onChange, theme }: Props) {
 								['0', '0'],
 							]}
 						/>
-
 					</Grid>
 				</Section>
-			}
+			)}
 
 			<Section title="Размеры (по умолчанию: 100%)">
 				<Grid cols={2} style={{ marginTop: 8 }}>
@@ -883,7 +961,7 @@ export function Inspector({ schema, selectedId, onChange, theme }: Props) {
 			</Section>
 
 			<Section title="Отступы">
-				{s.display === 'flex' &&
+				{s.display === 'flex' && (
 					<Grid cols={1}>
 						<NumOrTokenRow
 							label="gap (промежутки)"
@@ -891,11 +969,12 @@ export function Inspector({ schema, selectedId, onChange, theme }: Props) {
 							onNumChange={(v) => patchStyle({ gap: v })}
 							tokenValue={tokenOrEmpty(s.gap)}
 							onTokenChange={(tok) =>
-								patchStyle({ gap: tok ? (`token:${tok}`) : undefined })
+								patchStyle({ gap: tok ? `token:${tok}` : undefined })
 							}
 							tokenOptions={spacingOptions}
 						/>
-					</Grid>}
+					</Grid>
+				)}
 
 				<Grid cols={1}>
 					<NumOrTokenRow
@@ -904,7 +983,7 @@ export function Inspector({ schema, selectedId, onChange, theme }: Props) {
 						onNumChange={(v) => patchStyle({ p: v })}
 						tokenValue={tokenOrEmpty(s.p)}
 						onTokenChange={(t) =>
-							patchStyle({ p: t ? (`token:${t}`) : undefined })
+							patchStyle({ p: t ? `token:${t}` : undefined })
 						}
 						tokenOptions={spacingOptions}
 					/>
@@ -914,7 +993,7 @@ export function Inspector({ schema, selectedId, onChange, theme }: Props) {
 						onNumChange={(v) => patchStyle({ px: v })}
 						tokenValue={tokenOrEmpty(s.px)}
 						onTokenChange={(t) =>
-							patchStyle({ px: t ? (`token:${t}`) : undefined })
+							patchStyle({ px: t ? `token:${t}` : undefined })
 						}
 						tokenOptions={spacingOptions}
 					/>
@@ -924,7 +1003,7 @@ export function Inspector({ schema, selectedId, onChange, theme }: Props) {
 						onNumChange={(v) => patchStyle({ py: v })}
 						tokenValue={tokenOrEmpty(s.py)}
 						onTokenChange={(t) =>
-							patchStyle({ py: t ? (`token:${t}`) : undefined })
+							patchStyle({ py: t ? `token:${t}` : undefined })
 						}
 						tokenOptions={spacingOptions}
 					/>
@@ -959,7 +1038,7 @@ export function Inspector({ schema, selectedId, onChange, theme }: Props) {
 						onNumChange={(v) => patchStyle({ m: v })}
 						tokenValue={tokenOrEmpty(s.m)}
 						onTokenChange={(t) =>
-							patchStyle({ m: t ? (`token:${t}`) : undefined })
+							patchStyle({ m: t ? `token:${t}` : undefined })
 						}
 						tokenOptions={spacingOptions}
 					/>
@@ -1006,7 +1085,7 @@ export function Inspector({ schema, selectedId, onChange, theme }: Props) {
 						onText={(v) => patchStyle({ bg: emptyToUndef(v) })}
 						tokenValue={tokenOrEmpty(s.bg)}
 						onTokenChange={(tok) =>
-							patchStyle({ bg: tok ? (`token:${tok}`) : undefined })
+							patchStyle({ bg: tok ? `token:${tok}` : undefined })
 						}
 						options={colorOptions}
 					/>
@@ -1017,7 +1096,7 @@ export function Inspector({ schema, selectedId, onChange, theme }: Props) {
 						tokenValue={tokenOrEmpty(s.color)}
 						onTokenChange={(tok) =>
 							patchStyle({
-								color: tok ? (`token:${tok}`) : undefined,
+								color: tok ? `token:${tok}` : undefined,
 							})
 						}
 						options={colorOptions}
@@ -1029,7 +1108,7 @@ export function Inspector({ schema, selectedId, onChange, theme }: Props) {
 						tokenValue={tokenOrEmpty(s.borderColor)}
 						onTokenChange={(tok) =>
 							patchStyle({
-								borderColor: tok ? (`token:${tok}`) : undefined,
+								borderColor: tok ? `token:${tok}` : undefined,
 							})
 						}
 						options={colorOptions}
@@ -1044,7 +1123,7 @@ export function Inspector({ schema, selectedId, onChange, theme }: Props) {
 						currentValue={tokenOrEmpty(s.radius)}
 						onTokenChange={(tok) =>
 							patchStyle({
-								radius: tok ? (`token:${tok}`) : undefined,
+								radius: tok ? `token:${tok}` : undefined,
 							})
 						}
 						options={radiusOptions}
@@ -1059,7 +1138,7 @@ export function Inspector({ schema, selectedId, onChange, theme }: Props) {
 						currentValue={tokenOrEmpty(s.shadow)}
 						onTokenChange={(tok) =>
 							patchStyle({
-								shadow: tok ? (`token:${tok}`) : undefined,
+								shadow: tok ? `token:${tok}` : undefined,
 							})
 						}
 						options={shadowOptions}
@@ -1067,9 +1146,7 @@ export function Inspector({ schema, selectedId, onChange, theme }: Props) {
 					<SelectRow
 						label="выравнивание текста"
 						value={s.textAlign ?? ''}
-						onChange={(v) =>
-							patchStyle({ textAlign: (v || undefined) })
-						}
+						onChange={(v) => patchStyle({ textAlign: v || undefined })}
 						options={[
 							['', '—'],
 							['left', 'left'],
@@ -1079,8 +1156,6 @@ export function Inspector({ schema, selectedId, onChange, theme }: Props) {
 					/>
 				</Grid>
 			</Section>
-
-
 		</div>
 	);
 }
@@ -1111,7 +1186,11 @@ const input: React.CSSProperties = {
 // };
 
 function Label({ children }: { children: React.ReactNode }) {
-	return <div style={{ fontSize: 12, margin: '6px 0 4px', color: '#687087' }}>{children}</div>;
+	return (
+		<div style={{ fontSize: 12, margin: '6px 0 4px', color: '#687087' }}>
+			{children}
+		</div>
+	);
 }
 
 function Section({ title, children }: { title?: string; children: React.ReactNode }) {
@@ -1124,10 +1203,10 @@ function Section({ title, children }: { title?: string; children: React.ReactNod
 }
 
 function Grid({
-				  cols = 2,
-				  children,
-				  style,
-			  }: {
+	cols = 2,
+	children,
+	style,
+}: {
 	cols?: number;
 	children: React.ReactNode;
 	style?: React.CSSProperties;
@@ -1147,13 +1226,13 @@ function Grid({
 }
 
 function SelectRow({
-					   label,
-					   value,
-					   onChange,
-					   options,
-					   disabled,
-					   title,
-				   }: {
+	label,
+	value,
+	onChange,
+	options,
+	disabled,
+	title,
+}: {
 	label: string;
 	value: string | number;
 	onChange: (v: string) => void;
@@ -1182,12 +1261,12 @@ function SelectRow({
 }
 
 function TextRow({
-					 label,
-					 value,
-					 onChange,
-					 placeholder,
-					 title,
-				 }: {
+	label,
+	value,
+	onChange,
+	placeholder,
+	title,
+}: {
 	label: string;
 	value: string;
 	onChange: (v: string) => void;
@@ -1211,16 +1290,16 @@ function TextRow({
 }
 
 function TextRowWithValidate({
-								 label,
-								 value,
-								 onChange,
-								 placeholder,
-								 error,
-								 validate,
-								 helperText,
-								 title,
-								 required,
-							 }: {
+	label,
+	value,
+	onChange,
+	placeholder,
+	error,
+	validate,
+	helperText,
+	title,
+	required,
+}: {
 	label: string;
 	value: string;
 	onChange: (v: string) => void;
@@ -1233,7 +1312,6 @@ function TextRowWithValidate({
 }) {
 	const [localError, setLocalError] = useState<string | undefined>();
 	const [isDirty, setIsDirty] = useState(false);
-
 
 	const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
 		const newValue = e.target.value;
@@ -1258,7 +1336,13 @@ function TextRowWithValidate({
 			<div style={{ display: 'flex', justifyContent: 'space-between' }}>
 				<span style={{ color: '#687087' }}>
 					{label}
-					{required && <span style={{ color: '#ff4d4f', marginLeft: 4, fontWeight: 1000 }}>*</span>}
+					{required && (
+						<span
+							style={{ color: '#ff4d4f', marginLeft: 4, fontWeight: 1000 }}
+						>
+							*
+						</span>
+					)}
 				</span>
 			</div>
 			<input
@@ -1272,40 +1356,46 @@ function TextRowWithValidate({
 				onChange={handleChange}
 				onBlur={handleBlur}
 				placeholder={placeholder}
-				{...required && { required }}
+				{...(required && { required })}
 				title={title}
 			/>
 			{displayError ? (
-				<div style={{
-					color: '#ff4d4f',
-					fontSize: 11,
-					marginTop: 2,
-					lineHeight: 1.2,
-				}}>
+				<div
+					style={{
+						color: '#ff4d4f',
+						fontSize: 11,
+						marginTop: 2,
+						lineHeight: 1.2,
+					}}
+				>
 					{displayError}
 				</div>
-			) : helperText && (
-				<div style={{
-					color: '#687087',
-					fontSize: 11,
-					marginTop: 2,
-					lineHeight: 1.2,
-					fontStyle: 'italic',
-				}}>
-					{helperText}
-				</div>
+			) : (
+				helperText && (
+					<div
+						style={{
+							color: '#687087',
+							fontSize: 11,
+							marginTop: 2,
+							lineHeight: 1.2,
+							fontStyle: 'italic',
+						}}
+					>
+						{helperText}
+					</div>
+				)
 			)}
 		</label>
 	);
 }
 
 function NumberRow({
-					   label,
-					   value,
-					   onChange,
-					   disabled,
-					   title,
-				   }: {
+	label,
+	value,
+	onChange,
+	disabled,
+	title,
+}: {
 	label: string;
 	value: string;
 	onChange: (v: string) => void;
@@ -1328,11 +1418,11 @@ function NumberRow({
 }
 
 function NumRow({
-					label,
-					value,
-					onChange,
-					title,
-				}: {
+	label,
+	value,
+	onChange,
+	title,
+}: {
 	label: string;
 	value: number | undefined;
 	onChange: (v: number | undefined) => void;
@@ -1349,13 +1439,13 @@ function NumRow({
 }
 
 function NumOrTokenRow({
-						   label,
-						   value,
-						   onNumChange,
-						   tokenValue,
-						   onTokenChange,
-						   tokenOptions,
-					   }: {
+	label,
+	value,
+	onNumChange,
+	tokenValue,
+	onTokenChange,
+	tokenOptions,
+}: {
 	label: string;
 	value: number | string | undefined;
 	onNumChange: (v: number | undefined) => void;
@@ -1388,13 +1478,13 @@ function NumOrTokenRow({
 }
 
 function ColorTokenRow({
-						   label,
-						   value,
-						   onText,
-						   tokenValue,
-						   onTokenChange,
-						   options,
-					   }: {
+	label,
+	value,
+	onText,
+	tokenValue,
+	onTokenChange,
+	options,
+}: {
 	label: string;
 	value: string;
 	onText: (v: string) => void;
@@ -1425,14 +1515,14 @@ function ColorTokenRow({
 }
 
 function TokenOnlyRow({
-						  label,
-						  currentValue,
-						  onTokenChange,
-						  options,
-						  allowManualNumber,
-						  manualValue,
-						  onManualChange,
-					  }: {
+	label,
+	currentValue,
+	onTokenChange,
+	options,
+	allowManualNumber,
+	manualValue,
+	onManualChange,
+}: {
 	label: string;
 	currentValue: string;
 	onTokenChange: (tok: string) => void;
@@ -1472,11 +1562,11 @@ function TokenOnlyRow({
 }
 
 function TokenSelect({
-						 value,
-						 onChange,
-						 options,
-						 placeholder,
-					 }: {
+	value,
+	onChange,
+	options,
+	placeholder,
+}: {
 	value: string;
 	onChange: (tok: string) => void;
 	options: [string, string][];
@@ -1555,25 +1645,27 @@ function isNumberLike(v: unknown) {
 }
 
 function CheckboxRow({
-						 label,
-						 checked,
-						 onChange,
-						 title,
-					 }: {
+	label,
+	checked,
+	onChange,
+	title,
+}: {
 	label: string;
 	checked: boolean;
 	onChange: (checked: boolean) => void;
 	title?: string;
 }) {
 	return (
-		<label style={{
-			display: 'flex',
-			alignItems: 'center',
-			gap: 4,
-			fontSize: 14,
-			color: '#4a4a4a',
-			cursor: 'pointer',
-		}}>
+		<label
+			style={{
+				display: 'flex',
+				alignItems: 'center',
+				gap: 4,
+				fontSize: 14,
+				color: '#4a4a4a',
+				cursor: 'pointer',
+			}}
+		>
 			<input
 				type="checkbox"
 				checked={checked}

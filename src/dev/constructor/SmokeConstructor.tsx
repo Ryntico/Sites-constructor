@@ -9,7 +9,6 @@ import { ThemeEditor } from '../theme/ThemeEditor';
 import { useSiteBuilder } from '@/hooks/useSiteBuilder';
 import { useAppSelector } from '@store/hooks.ts';
 import { selectAuth } from '@store/slices/authSlice.ts';
-import { ImageUploadDemo } from '@/dev/ImageUploadDemo.tsx';
 import { SeedBlockTemplatesButton } from '@/dev/seed/SeedBlockTemplatesButton.tsx';
 import type { NodeSubtree, PageSchema, SchemaPatch } from '@/types/siteTypes.ts';
 import {
@@ -428,6 +427,7 @@ export function SmokeConstructor() {
 								selectedId={selectedId}
 								onChange={setSchema}
 								theme={theme!}
+								ownerId={user?.uid}
 							/>
 						) : (
 							<ThemeEditor
@@ -451,7 +451,6 @@ export function SmokeConstructor() {
 				<JsonCard title="JSON — Текущая тема" obj={theme ?? {}} />
 				<JsonCard title="JSON — Страница (текущее состояние)" obj={{ schema }} />
 			</div>
-			<ImageUploadDemo ownerId={user?.uid} />
 
 			<CodePreviewModal
 				open={showCode}
@@ -511,7 +510,3 @@ function JsonCard({ title, obj }: { title: string; obj: any }) {
 		</div>
 	);
 }
-
-
-
-
