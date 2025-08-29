@@ -30,16 +30,72 @@ import { EditableNodeWrapper } from '../components/EditableNodeWrapper';
 
 const TYPE_MOVE = 'application/x-move-node';
 const TYPE_TPL = 'application/x-block-template';
+const TYPE_COPY_INTENT = 'application/x-copy-intent';
 
-export type EditorRendererProps = {
-	schema: PageSchema;
-	theme: ThemeTokens;
-	onSchemaChange(next: PageSchema, patch?: SchemaPatch): void;
-	resolveTemplate(key: string): NodeSubtree | null;
-	onSelectNode?(id: string | null): void;
-	scrollContainer?: React.RefObject<HTMLElement>;
-	selectedId?: string | null;
-};
+const IS_MAC =
+	typeof navigator !== 'undefined' &&
+	(/Mac|iPhone|iPad|iPod/i.test(navigator.platform) ||
+		/Mac|iPhone|iPad|iPod/i.test(navigator.userAgent));
+
+function typesToArray(types: DataTransfer['types']): string[] {
+	const maybeIterable = types as unknown as { [Symbol.iterator]?: unknown };
+	if (typeof maybeIterable[Symbol.iterator] === 'function') {
+		return Array.from(types as unknown as Iterable<string>);
+	}
+	const list = types as unknown as { length: number; item(i: number): string | null };
+	const out: string[] = [];
+	for (let i = 0; i < list.length; i++) {
+		const v = list.item(i);
+		if (v) out.push(v);
+	}
+	return out;
+}
+
+function isCopyKeyLike(
+	k: { altKey: boolean; metaKey: boolean; ctrlKey: boolean },
+	isMac: boolean,
+): boolean {
+	return isMac ? k.metaKey || k.altKey : k.ctrlKey || k.altKey;
+}
+
+function useCopyKey(isMac: boolean): React.RefObject<boolean> {
+	const ref = useRef(false);
+
+	useEffect(() => {
+		const fromKey = (e: KeyboardEvent) => {
+			ref.current = isCopyKeyLike(e, isMac);
+		};
+		const fromDragOver = (e: DragEvent) => {
+			ref.current = isCopyKeyLike(e, isMac);
+		};
+		const reset = () => {
+			ref.current = false;
+		};
+		const onVis = () => {
+			if (document.visibilityState !== 'visible') reset();
+		};
+
+		window.addEventListener('keydown', fromKey, true);
+		window.addEventListener('keyup', fromKey, true);
+		window.addEventListener('dragover', fromDragOver, true);
+		window.addEventListener('dragend', reset, true);
+		window.addEventListener('drop', reset, true);
+		window.addEventListener('blur', reset, true);
+		document.addEventListener('visibilitychange', onVis, true);
+
+		return () => {
+			window.removeEventListener('keydown', fromKey, true);
+			window.removeEventListener('keyup', fromKey, true);
+			window.removeEventListener('dragover', fromDragOver, true);
+			window.removeEventListener('dragend', reset, true);
+			window.removeEventListener('drop', reset, true);
+			window.removeEventListener('blur', reset, true);
+			document.removeEventListener('visibilitychange', onVis, true);
+		};
+	}, [isMac]);
+
+	return ref;
+}
 
 function dndContainerStyle(
 	baseStyle: React.CSSProperties,
@@ -70,6 +126,16 @@ function dndContainerStyle(
 	};
 }
 
+export type EditorRendererProps = {
+	schema: PageSchema;
+	theme: ThemeTokens;
+	onSchemaChange(next: PageSchema, patch?: SchemaPatch): void;
+	resolveTemplate(key: string): NodeSubtree | null;
+	onSelectNode?(id: string | null): void;
+	scrollContainer?: React.RefObject<HTMLElement>;
+	selectedId?: string | null;
+};
+
 export function EditorRenderer({
 	schema,
 	theme,
@@ -81,9 +147,10 @@ export function EditorRenderer({
 }: EditorRendererProps) {
 	const [isDragging, setIsDragging] = useState(false);
 	const dragInside = useRef(0);
+	const copyKeyRef = useCopyKey(IS_MAC);
 
-	const accepts = (types: DOMStringList | readonly string[]): boolean => {
-		const arr = Array.from(types as unknown as Iterable<string>);
+	const accepts = (types: DataTransfer['types']): boolean => {
+		const arr = typesToArray(types);
 		return arr.includes(TYPE_MOVE) || arr.includes(TYPE_TPL);
 	};
 
@@ -113,9 +180,7 @@ export function EditorRenderer({
 	const onEditorClickCapture: React.MouseEventHandler<HTMLDivElement> = (e) => {
 		const t = e.target as HTMLElement;
 		const a = t.closest('a[href]') as HTMLAnchorElement | null;
-		if (a) {
-			e.preventDefault();
-		}
+		if (a) e.preventDefault();
 	};
 
 	useEffect(() => {
@@ -236,6 +301,8 @@ export function EditorRenderer({
 				handleDropAtSide={handleDropAtSide}
 				handleDropInside={handleDropInside}
 				applyAndClean={applyAndClean}
+				isMac={IS_MAC}
+				copyKeyRef={copyKeyRef}
 			/>
 		</div>
 	);
@@ -262,6 +329,8 @@ function NodeView(props: {
 	) => void;
 	handleDropInside: (parentId: string, tplKey?: string, movingId?: string) => void;
 	applyAndClean: (schema: PageSchema, patch: SchemaPatch) => void;
+	isMac: boolean;
+	copyKeyRef: React.RefObject<boolean>;
 }) {
 	const {
 		id,
@@ -270,6 +339,7 @@ function NodeView(props: {
 		onDropTemplate,
 		onDropMove,
 		onDelete,
+		onDuplicate,
 		onSelect,
 		isRoot,
 		scrollContainer,
@@ -278,7 +348,8 @@ function NodeView(props: {
 		handleDropAtSide,
 		handleDropInside,
 		applyAndClean,
-		onDuplicate,
+		isMac,
+		copyKeyRef,
 	} = props;
 
 	const node = schema.nodes[id];
@@ -344,11 +415,8 @@ function NodeView(props: {
 	const containerEmpty = parentLike && children.length === 0;
 
 	const accepts = (dt: DataTransfer) => {
-		const t = Array.from(dt.types || []);
-		return (
-			t.includes('application/x-block-template') ||
-			t.includes('application/x-move-node')
-		);
+		const arr = typesToArray(dt.types);
+		return arr.includes(TYPE_TPL) || arr.includes(TYPE_MOVE);
 	};
 
 	const containerLabel =
@@ -406,11 +474,27 @@ function NodeView(props: {
 			<div
 				data-res-id={id}
 				draggable={!isRoot}
+				onPointerDownCapture={(ev) => {
+					const el = ev.currentTarget as HTMLElement;
+					const willCopy = IS_MAC
+						? ev.metaKey || ev.altKey
+						: ev.ctrlKey || ev.altKey;
+					el.dataset.copyIntent = willCopy ? '1' : '0';
+				}}
 				onDragStart={(e) => {
 					if (isRoot) return;
 					e.stopPropagation();
-					e.dataTransfer.setData('application/x-move-node', id);
-					e.dataTransfer.effectAllowed = 'move';
+					e.dataTransfer.setData(TYPE_MOVE, id);
+
+					const el = e.currentTarget as HTMLElement;
+					const prelocked = el.dataset.copyIntent === '1';
+					e.dataTransfer.setData(TYPE_COPY_INTENT, prelocked ? '1' : '0');
+
+					e.dataTransfer.effectAllowed = 'copyMove';
+				}}
+				onDragEnd={(e) => {
+					const el = e.currentTarget as HTMLElement;
+					if (el.dataset.copyIntent) el.dataset.copyIntent = '0';
 				}}
 				style={wrapperStyle}
 				onClick={(e) => {
@@ -434,11 +518,17 @@ function NodeView(props: {
 							if (!containerEmpty || !isDragging) return;
 							if (!accepts(e.dataTransfer)) return;
 							e.preventDefault();
+
+							const wantCopy = IS_MAC ? e.altKey : e.ctrlKey || e.altKey;
 							try {
-								const isMove = Array.from(
-									e.dataTransfer.types || [],
-								).includes('application/x-move-node');
-								e.dataTransfer.dropEffect = isMove ? 'move' : 'copy';
+								const isMove = typesToArray(
+									e.dataTransfer.types,
+								).includes(TYPE_MOVE);
+								e.dataTransfer.dropEffect = wantCopy
+									? 'copy'
+									: isMove
+										? 'move'
+										: 'copy';
 							} catch {
 								// no ops
 							}
@@ -446,14 +536,20 @@ function NodeView(props: {
 						onDrop={(e) => {
 							if (!containerEmpty || !isDragging) return;
 							e.preventDefault();
+
 							const dt = e.dataTransfer;
-							const tplKey = dt.getData('application/x-block-template');
-							const moveId = dt.getData('application/x-move-node');
-							const copy = e.altKey || e.ctrlKey || e.metaKey;
+							const tplKey = dt.getData(TYPE_TPL);
+							const moveId = dt.getData(TYPE_MOVE);
+
+							const copyIntent = dt.getData(TYPE_COPY_INTENT) === '1';
+							const copyNow = IS_MAC ? e.altKey : e.ctrlKey || e.altKey;
+							const copy = copyIntent || copyNow;
 
 							if (tplKey) {
-								handleDropInside(id, tplKey || undefined, undefined);
-							} else if (moveId) {
+								handleDropInside(id, tplKey, undefined);
+								return;
+							}
+							if (moveId) {
 								if (copy) {
 									const sub = extractSubtree(schema, moveId);
 									const cloned = cloneSubtreeWithIds(sub);
@@ -524,6 +620,8 @@ function NodeView(props: {
 											visible={isDragging}
 											axis="x"
 											matchId={cid}
+											copyKeyRef={copyKeyRef}
+											isMac={isMac}
 										/>
 										<div
 											style={
@@ -577,6 +675,8 @@ function NodeView(props: {
 													visible={isDragging}
 													axis="y"
 													matchId={cid}
+													copyKeyRef={copyKeyRef}
+													isMac={isMac}
 												/>
 											)}
 
@@ -595,6 +695,8 @@ function NodeView(props: {
 												handleDropAtSide={handleDropAtSide}
 												handleDropInside={handleDropInside}
 												applyAndClean={applyAndClean}
+												isMac={IS_MAC}
+												copyKeyRef={copyKeyRef}
 											/>
 
 											<DropZone
@@ -630,6 +732,8 @@ function NodeView(props: {
 												visible={isDragging}
 												axis="y"
 												matchId={cid}
+												copyKeyRef={copyKeyRef}
+												isMac={isMac}
 											/>
 										</div>
 										<DropZone
@@ -665,6 +769,8 @@ function NodeView(props: {
 											visible={isDragging}
 											axis="x"
 											matchId={cid}
+											copyKeyRef={copyKeyRef}
+											isMac={isMac}
 										/>
 									</div>
 								);
@@ -712,6 +818,8 @@ function NodeView(props: {
 										visible={isDragging}
 										axis="y"
 										matchId={cid}
+										copyKeyRef={copyKeyRef}
+										isMac={isMac}
 									/>
 
 									<div
@@ -755,6 +863,8 @@ function NodeView(props: {
 												visible={isDragging}
 												axis="x"
 												matchId={cid}
+												copyKeyRef={copyKeyRef}
+												isMac={isMac}
 											/>
 										)}
 
@@ -788,6 +898,8 @@ function NodeView(props: {
 												handleDropAtSide={handleDropAtSide}
 												handleDropInside={handleDropInside}
 												applyAndClean={applyAndClean}
+												isMac={IS_MAC}
+												copyKeyRef={copyKeyRef}
 											/>
 										</div>
 
@@ -824,6 +936,8 @@ function NodeView(props: {
 											visible={isDragging}
 											axis="x"
 											matchId={cid}
+											copyKeyRef={copyKeyRef}
+											isMac={isMac}
 										/>
 									</div>
 
@@ -860,6 +974,8 @@ function NodeView(props: {
 										visible={isDragging}
 										axis="y"
 										matchId={cid}
+										copyKeyRef={copyKeyRef}
+										isMac={isMac}
 									/>
 								</div>
 							);
@@ -905,7 +1021,7 @@ function renderPrimitive(
 					action={node.props?.formAction}
 					method={node.props?.formMethod}
 					encType={node.props?.enctype}
-				></form>
+				/>
 			);
 
 		case 'page':
@@ -936,16 +1052,14 @@ function renderPrimitive(
 			const hasHtml = /<[a-z][\s\S]*>/i.test(html);
 			return hasHtml ? (
 				<>
-					<style>
-						{`blockquote {
-							  background: ${theme.components?.blockquote?.bg || 'rgba(99, 102, 241, 0.1)'};
-							  border-left: ${theme.components?.blockquote?.borderLeft || '4px solid rgb(59, 130, 246)'};
-							  border-radius: ${theme.components?.blockquote?.radius || '8'}px;
-							  padding: ${theme.components?.blockquote?.p || '16px 20px'};
-							  color: ${theme.components?.blockquote?.color};
-							  font-style: italic;
-							}`}
-					</style>
+					<style>{`blockquote {
+            background: ${theme.components?.blockquote?.bg || 'rgba(99, 102, 241, 0.1)'};
+            border-left: ${theme.components?.blockquote?.borderLeft || '4px solid rgb(59, 130, 246)'};
+            border-radius: ${theme.components?.blockquote?.radius || '8'}px;
+            padding: ${theme.components?.blockquote?.p || '16px 20px'};
+            color: ${theme.components?.blockquote?.color};
+            font-style: italic;
+          }`}</style>
 					<div
 						data-prim="true"
 						style={baseStyle}
@@ -1058,7 +1172,6 @@ function renderPrimitive(
 					style={baseStyle}
 				/>
 			);
-
 			return node.props?.label ? (
 				<div
 					style={{
@@ -1103,7 +1216,6 @@ function renderPrimitive(
 					{node.props?.value}
 				</textarea>
 			);
-
 			return node.props?.label ? (
 				<div
 					style={{
@@ -1144,7 +1256,6 @@ function renderPrimitive(
 					))}
 				</select>
 			);
-
 			return node.props?.label ? (
 				<div
 					style={{
