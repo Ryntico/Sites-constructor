@@ -9,6 +9,7 @@ type Props = {
 	children: React.ReactNode;
 	isSelected?: boolean;
 	canRemove?: boolean;
+	onDuplicate?(nodeId: string): void;
 };
 
 export function EditableNodeWrapper({
@@ -19,6 +20,7 @@ export function EditableNodeWrapper({
 	children,
 	isSelected = false,
 	canRemove,
+	onDuplicate,
 }: Props) {
 	const [hovered, setHovered] = useState(false);
 
@@ -63,7 +65,9 @@ export function EditableNodeWrapper({
 						try {
 							e.dataTransfer.setData('application/x-move-node', nodeId);
 							e.dataTransfer.effectAllowed = 'move';
-						} catch {}
+						} catch {
+							// no ops
+						}
 					}}
 				>
 					<svg width="14" height="14" viewBox="0 0 14 14" aria-hidden="true">
@@ -88,6 +92,18 @@ export function EditableNodeWrapper({
 					style={iconBtn}
 				>
 					×
+				</button>
+
+				<button
+					type="button"
+					title="Дублировать"
+					onClick={(e) => {
+						e.stopPropagation();
+						onDuplicate?.(nodeId);
+					}}
+					style={iconBtn}
+				>
+					⧉
 				</button>
 			</div>
 

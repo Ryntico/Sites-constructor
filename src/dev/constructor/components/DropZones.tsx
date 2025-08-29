@@ -3,14 +3,31 @@ import type { Axis } from '@/types/siteTypes';
 
 const TYPE_TPL = 'application/x-block-template';
 const TYPE_MOVE = 'application/x-move-node';
+const TYPE_COPY_INTENT = 'application/x-copy-intent';
 
 type Props = {
-	onDrop: (tplKey?: string, moveNodeId?: string) => void;
+	onDrop: (tplKey?: string, moveNodeId?: string, opts?: { copy?: boolean }) => void;
 	scrollContainer?: React.RefObject<HTMLElement>;
 	visible?: boolean;
 	axis?: Axis;
 	matchId?: string;
+	copyKeyRef?: React.RefObject<boolean>;
+	isMac?: boolean;
 };
+
+function typesToArray(types: DataTransfer['types']): string[] {
+	const maybeIterable = types as unknown as { [Symbol.iterator]?: unknown };
+	if (typeof maybeIterable[Symbol.iterator] === 'function') {
+		return Array.from(types as unknown as Iterable<string>);
+	}
+	const list = types as unknown as { length: number; item(i: number): string | null };
+	const out: string[] = [];
+	for (let i = 0; i < list.length; i++) {
+		const v = list.item(i);
+		if (v) out.push(v);
+	}
+	return out;
+}
 
 export function DropZone({
 	onDrop,
@@ -18,6 +35,8 @@ export function DropZone({
 	visible = false,
 	axis = 'y',
 	matchId,
+	copyKeyRef,
+	isMac = false,
 }: Props) {
 	const selfRef = useRef<HTMLDivElement>(null);
 	const [over, setOver] = useState(false);
@@ -67,7 +86,7 @@ export function DropZone({
 	if (!visible) return null;
 
 	const accepts = (dt: DataTransfer): boolean => {
-		const arr = Array.from(dt.types || []);
+		const arr = typesToArray(dt.types);
 		return arr.includes(TYPE_TPL) || arr.includes(TYPE_MOVE);
 	};
 
@@ -75,10 +94,16 @@ export function DropZone({
 		const dt = e.dataTransfer;
 		if (!accepts(dt)) return;
 		e.preventDefault();
+
+		const wantCopy =
+			(copyKeyRef?.current ?? false) || (isMac ? e.altKey : e.ctrlKey || e.altKey);
 		try {
-			const isMove = Array.from(dt.types || []).includes(TYPE_MOVE);
-			dt.dropEffect = isMove ? 'move' : 'copy';
-		} catch {}
+			const isMove = typesToArray(dt.types).includes(TYPE_MOVE);
+			dt.dropEffect = wantCopy ? 'copy' : isMove ? 'move' : 'copy';
+		} catch {
+			// no ops
+		}
+
 		setOver(true);
 
 		const el = scrollContainer?.current;
@@ -104,8 +129,14 @@ export function DropZone({
 		const dt = e.dataTransfer;
 		const tplKey = dt.getData(TYPE_TPL);
 		const moveId = dt.getData(TYPE_MOVE);
-		if (tplKey) onDrop(tplKey, undefined);
-		else if (moveId) onDrop(undefined, moveId);
+
+		const copyIntent = dt.getData(TYPE_COPY_INTENT) === '1';
+		const copyNow =
+			(copyKeyRef?.current ?? false) || (isMac ? e.altKey : e.ctrlKey || e.altKey);
+		const copy = copyIntent || copyNow;
+
+		if (tplKey) onDrop(tplKey, undefined, { copy });
+		else if (moveId) onDrop(undefined, moveId, { copy });
 	};
 
 	const THICK = 14;

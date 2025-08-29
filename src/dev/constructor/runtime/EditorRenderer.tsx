@@ -22,22 +22,80 @@ import {
 	moveNodeInto,
 	cleanupSchemaBasic,
 	mergePatches,
+	extractSubtree,
+	duplicateNode,
 } from './schemaOps';
 import { DropZone } from '../components/DropZones';
 import { EditableNodeWrapper } from '../components/EditableNodeWrapper';
 
 const TYPE_MOVE = 'application/x-move-node';
 const TYPE_TPL = 'application/x-block-template';
+const TYPE_COPY_INTENT = 'application/x-copy-intent';
 
-export type EditorRendererProps = {
-	schema: PageSchema;
-	theme: ThemeTokens;
-	onSchemaChange(next: PageSchema, patch?: SchemaPatch): void;
-	resolveTemplate(key: string): NodeSubtree | null;
-	onSelectNode?(id: string | null): void;
-	scrollContainer?: React.RefObject<HTMLElement>;
-	selectedId?: string | null;
-};
+const IS_MAC =
+	typeof navigator !== 'undefined' &&
+	(/Mac|iPhone|iPad|iPod/i.test(navigator.platform) ||
+		/Mac|iPhone|iPad|iPod/i.test(navigator.userAgent));
+
+function typesToArray(types: DataTransfer['types']): string[] {
+	const maybeIterable = types as unknown as { [Symbol.iterator]?: unknown };
+	if (typeof maybeIterable[Symbol.iterator] === 'function') {
+		return Array.from(types as unknown as Iterable<string>);
+	}
+	const list = types as unknown as { length: number; item(i: number): string | null };
+	const out: string[] = [];
+	for (let i = 0; i < list.length; i++) {
+		const v = list.item(i);
+		if (v) out.push(v);
+	}
+	return out;
+}
+
+function isCopyKeyLike(
+	k: { altKey: boolean; metaKey: boolean; ctrlKey: boolean },
+	isMac: boolean,
+): boolean {
+	return isMac ? k.metaKey || k.altKey : k.ctrlKey || k.altKey;
+}
+
+function useCopyKey(isMac: boolean): React.RefObject<boolean> {
+	const ref = useRef(false);
+
+	useEffect(() => {
+		const fromKey = (e: KeyboardEvent) => {
+			ref.current = isCopyKeyLike(e, isMac);
+		};
+		const fromDragOver = (e: DragEvent) => {
+			ref.current = isCopyKeyLike(e, isMac);
+		};
+		const reset = () => {
+			ref.current = false;
+		};
+		const onVis = () => {
+			if (document.visibilityState !== 'visible') reset();
+		};
+
+		window.addEventListener('keydown', fromKey, true);
+		window.addEventListener('keyup', fromKey, true);
+		window.addEventListener('dragover', fromDragOver, true);
+		window.addEventListener('dragend', reset, true);
+		window.addEventListener('drop', reset, true);
+		window.addEventListener('blur', reset, true);
+		document.addEventListener('visibilitychange', onVis, true);
+
+		return () => {
+			window.removeEventListener('keydown', fromKey, true);
+			window.removeEventListener('keyup', fromKey, true);
+			window.removeEventListener('dragover', fromDragOver, true);
+			window.removeEventListener('dragend', reset, true);
+			window.removeEventListener('drop', reset, true);
+			window.removeEventListener('blur', reset, true);
+			document.removeEventListener('visibilitychange', onVis, true);
+		};
+	}, [isMac]);
+
+	return ref;
+}
 
 function dndContainerStyle(
 	baseStyle: React.CSSProperties,
@@ -68,6 +126,16 @@ function dndContainerStyle(
 	};
 }
 
+export type EditorRendererProps = {
+	schema: PageSchema;
+	theme: ThemeTokens;
+	onSchemaChange(next: PageSchema, patch?: SchemaPatch): void;
+	resolveTemplate(key: string): NodeSubtree | null;
+	onSelectNode?(id: string | null): void;
+	scrollContainer?: React.RefObject<HTMLElement>;
+	selectedId?: string | null;
+};
+
 export function EditorRenderer({
 	schema,
 	theme,
@@ -79,9 +147,10 @@ export function EditorRenderer({
 }: EditorRendererProps) {
 	const [isDragging, setIsDragging] = useState(false);
 	const dragInside = useRef(0);
+	const copyKeyRef = useCopyKey(IS_MAC);
 
-	const accepts = (types: DOMStringList | readonly string[]): boolean => {
-		const arr = Array.from(types as unknown as Iterable<string>);
+	const accepts = (types: DataTransfer['types']): boolean => {
+		const arr = typesToArray(types);
 		return arr.includes(TYPE_MOVE) || arr.includes(TYPE_TPL);
 	};
 
@@ -111,9 +180,7 @@ export function EditorRenderer({
 	const onEditorClickCapture: React.MouseEventHandler<HTMLDivElement> = (e) => {
 		const t = e.target as HTMLElement;
 		const a = t.closest('a[href]') as HTMLAnchorElement | null;
-		if (a) {
-			e.preventDefault();
-		}
+		if (a) e.preventDefault();
 	};
 
 	useEffect(() => {
@@ -188,6 +255,11 @@ export function EditorRenderer({
 		onSelectNode?.(null);
 	};
 
+	const handleDuplicate = (nodeId: string) => {
+		const { next, patch } = duplicateNode(schema, nodeId);
+		onSchemaChange(next, patch);
+	};
+
 	return (
 		<div
 			data-editor-root=""
@@ -220,6 +292,7 @@ export function EditorRenderer({
 				onDropTemplate={handleDropTemplate}
 				onDropMove={handleDropMove}
 				onDelete={handleDelete}
+				onDuplicate={handleDuplicate}
 				onSelect={onSelectNode}
 				scrollContainer={scrollContainer}
 				isRoot
@@ -227,6 +300,9 @@ export function EditorRenderer({
 				selectedId={selectedId}
 				handleDropAtSide={handleDropAtSide}
 				handleDropInside={handleDropInside}
+				applyAndClean={applyAndClean}
+				isMac={IS_MAC}
+				copyKeyRef={copyKeyRef}
 			/>
 		</div>
 	);
@@ -239,6 +315,7 @@ function NodeView(props: {
 	onDropTemplate: (parentId: string, index: number, tplKey: string) => void;
 	onDropMove: (parentId: string, index: number, nodeId: string) => void;
 	onDelete: (nodeId: string) => void;
+	onDuplicate: (nodeId: string) => void;
 	onSelect?: (id: string) => void;
 	scrollContainer?: React.RefObject<HTMLElement>;
 	isRoot?: boolean;
@@ -251,6 +328,9 @@ function NodeView(props: {
 		movingId?: string,
 	) => void;
 	handleDropInside: (parentId: string, tplKey?: string, movingId?: string) => void;
+	applyAndClean: (schema: PageSchema, patch: SchemaPatch) => void;
+	isMac: boolean;
+	copyKeyRef: React.RefObject<boolean>;
 }) {
 	const {
 		id,
@@ -259,6 +339,7 @@ function NodeView(props: {
 		onDropTemplate,
 		onDropMove,
 		onDelete,
+		onDuplicate,
 		onSelect,
 		isRoot,
 		scrollContainer,
@@ -266,6 +347,9 @@ function NodeView(props: {
 		selectedId,
 		handleDropAtSide,
 		handleDropInside,
+		applyAndClean,
+		isMac,
+		copyKeyRef,
 	} = props;
 
 	const node = schema.nodes[id];
@@ -316,26 +400,23 @@ function NodeView(props: {
 				}
 			: node.type === 'divider'
 				? {
-					display: 'block',
-					width: '100%',
-					...baseStyle,
-				}
+						display: 'block',
+						width: '100%',
+						...baseStyle,
+					}
 				: {
-					display: 'inline-flex',
-					flex: '0 0 auto',
-					minWidth: 0,
-					verticalAlign: 'top',
-				}),
+						display: 'inline-flex',
+						flex: '0 0 auto',
+						minWidth: 0,
+						verticalAlign: 'top',
+					}),
 	};
 
 	const containerEmpty = parentLike && children.length === 0;
 
 	const accepts = (dt: DataTransfer) => {
-		const t = Array.from(dt.types || []);
-		return (
-			t.includes('application/x-block-template') ||
-			t.includes('application/x-move-node')
-		);
+		const arr = typesToArray(dt.types);
+		return arr.includes(TYPE_TPL) || arr.includes(TYPE_MOVE);
 	};
 
 	const containerLabel =
@@ -388,15 +469,32 @@ function NodeView(props: {
 			onSelect={(nid) => onSelect?.(nid)}
 			isSelected={selectedId === id}
 			canRemove={schema.rootId !== id}
+			onDuplicate={onDuplicate}
 		>
 			<div
 				data-res-id={id}
 				draggable={!isRoot}
+				onPointerDownCapture={(ev) => {
+					const el = ev.currentTarget as HTMLElement;
+					const willCopy = IS_MAC
+						? ev.metaKey || ev.altKey
+						: ev.ctrlKey || ev.altKey;
+					el.dataset.copyIntent = willCopy ? '1' : '0';
+				}}
 				onDragStart={(e) => {
 					if (isRoot) return;
 					e.stopPropagation();
-					e.dataTransfer.setData('application/x-move-node', id);
-					e.dataTransfer.effectAllowed = 'move';
+					e.dataTransfer.setData(TYPE_MOVE, id);
+
+					const el = e.currentTarget as HTMLElement;
+					const prelocked = el.dataset.copyIntent === '1';
+					e.dataTransfer.setData(TYPE_COPY_INTENT, prelocked ? '1' : '0');
+
+					e.dataTransfer.effectAllowed = 'copyMove';
+				}}
+				onDragEnd={(e) => {
+					const el = e.currentTarget as HTMLElement;
+					if (el.dataset.copyIntent) el.dataset.copyIntent = '0';
 				}}
 				style={wrapperStyle}
 				onClick={(e) => {
@@ -420,24 +518,51 @@ function NodeView(props: {
 							if (!containerEmpty || !isDragging) return;
 							if (!accepts(e.dataTransfer)) return;
 							e.preventDefault();
+
+							const wantCopy = IS_MAC ? e.altKey : e.ctrlKey || e.altKey;
 							try {
-								const isMove = Array.from(
-									e.dataTransfer.types || [],
-								).includes('application/x-move-node');
-								e.dataTransfer.dropEffect = isMove ? 'move' : 'copy';
-							} catch {}
+								const isMove = typesToArray(
+									e.dataTransfer.types,
+								).includes(TYPE_MOVE);
+								e.dataTransfer.dropEffect = wantCopy
+									? 'copy'
+									: isMove
+										? 'move'
+										: 'copy';
+							} catch {
+								// no ops
+							}
 						}}
 						onDrop={(e) => {
 							if (!containerEmpty || !isDragging) return;
 							e.preventDefault();
+
 							const dt = e.dataTransfer;
-							const tplKey = dt.getData('application/x-block-template');
-							const moveId = dt.getData('application/x-move-node');
-							handleDropInside(
-								id,
-								tplKey || undefined,
-								moveId || undefined,
-							);
+							const tplKey = dt.getData(TYPE_TPL);
+							const moveId = dt.getData(TYPE_MOVE);
+
+							const copyIntent = dt.getData(TYPE_COPY_INTENT) === '1';
+							const copyNow = IS_MAC ? e.altKey : e.ctrlKey || e.altKey;
+							const copy = copyIntent || copyNow;
+
+							if (tplKey) {
+								handleDropInside(id, tplKey, undefined);
+								return;
+							}
+							if (moveId) {
+								if (copy) {
+									const sub = extractSubtree(schema, moveId);
+									const cloned = cloneSubtreeWithIds(sub);
+									const { next, patch } = appendSubtree(
+										schema,
+										cloned,
+										id,
+									);
+									applyAndClean(next, patch);
+								} else {
+									handleDropInside(id, undefined, moveId);
+								}
+							}
 						}}
 					>
 						{children.map((cid, idx) => {
@@ -463,13 +588,40 @@ function NodeView(props: {
 										}}
 									>
 										<DropZone
-											onDrop={(tpl, moveId) =>
-												handleDropAtSide(cid, 'left', tpl, moveId)
-											}
+											onDrop={(tpl, moveId, opts) => {
+												const copy = !!opts?.copy;
+												if (tpl) {
+													handleDropAtSide(
+														cid,
+														'left',
+														tpl,
+														undefined,
+													);
+												} else if (moveId) {
+													if (copy) {
+														copyNodeAtSide(
+															schema,
+															cid,
+															'left',
+															moveId,
+															applyAndClean,
+														);
+													} else {
+														handleDropAtSide(
+															cid,
+															'left',
+															undefined,
+															moveId,
+														);
+													}
+												}
+											}}
 											scrollContainer={scrollContainer}
 											visible={isDragging}
 											axis="x"
 											matchId={cid}
+											copyKeyRef={copyKeyRef}
+											isMac={isMac}
 										/>
 										<div
 											style={
@@ -491,18 +643,40 @@ function NodeView(props: {
 										>
 											{idx === 0 && (
 												<DropZone
-													onDrop={(tpl, moveId) =>
-														handleDropAtSide(
-															cid,
-															'top',
-															tpl,
-															moveId,
-														)
-													}
+													onDrop={(tpl, moveId, opts) => {
+														const copy = !!opts?.copy;
+														if (tpl) {
+															handleDropAtSide(
+																cid,
+																'top',
+																tpl,
+																undefined,
+															);
+														} else if (moveId) {
+															if (copy) {
+																copyNodeAtSide(
+																	schema,
+																	cid,
+																	'top',
+																	moveId,
+																	applyAndClean,
+																);
+															} else {
+																handleDropAtSide(
+																	cid,
+																	'top',
+																	undefined,
+																	moveId,
+																);
+															}
+														}
+													}}
 													scrollContainer={scrollContainer}
 													visible={isDragging}
 													axis="y"
 													matchId={cid}
+													copyKeyRef={copyKeyRef}
+													isMac={isMac}
 												/>
 											)}
 
@@ -513,42 +687,90 @@ function NodeView(props: {
 												onDropTemplate={onDropTemplate}
 												onDropMove={onDropMove}
 												onDelete={onDelete}
+												onDuplicate={onDuplicate}
 												onSelect={onSelect}
 												scrollContainer={scrollContainer}
 												isDragging={isDragging}
 												selectedId={selectedId}
 												handleDropAtSide={handleDropAtSide}
 												handleDropInside={handleDropInside}
+												applyAndClean={applyAndClean}
+												isMac={IS_MAC}
+												copyKeyRef={copyKeyRef}
 											/>
 
 											<DropZone
-												onDrop={(tpl, moveId) =>
-													handleDropAtSide(
-														cid,
-														'bottom',
-														tpl,
-														moveId,
-													)
-												}
+												onDrop={(tpl, moveId, opts) => {
+													const copy = !!opts?.copy;
+													if (tpl) {
+														handleDropAtSide(
+															cid,
+															'bottom',
+															tpl,
+															undefined,
+														);
+													} else if (moveId) {
+														if (copy) {
+															copyNodeAtSide(
+																schema,
+																cid,
+																'bottom',
+																moveId,
+																applyAndClean,
+															);
+														} else {
+															handleDropAtSide(
+																cid,
+																'bottom',
+																undefined,
+																moveId,
+															);
+														}
+													}
+												}}
 												scrollContainer={scrollContainer}
 												visible={isDragging}
 												axis="y"
 												matchId={cid}
+												copyKeyRef={copyKeyRef}
+												isMac={isMac}
 											/>
 										</div>
 										<DropZone
-											onDrop={(tpl, moveId) =>
-												handleDropAtSide(
-													cid,
-													'right',
-													tpl,
-													moveId,
-												)
-											}
+											onDrop={(tpl, moveId, opts) => {
+												const copy = !!opts?.copy;
+												if (tpl) {
+													handleDropAtSide(
+														cid,
+														'right',
+														tpl,
+														undefined,
+													);
+												} else if (moveId) {
+													if (copy) {
+														copyNodeAtSide(
+															schema,
+															cid,
+															'right',
+															moveId,
+															applyAndClean,
+														);
+													} else {
+														handleDropAtSide(
+															cid,
+															'right',
+															undefined,
+															moveId,
+														);
+													}
+												}
+											}}
 											scrollContainer={scrollContainer}
 											visible={isDragging}
 											axis="x"
 											matchId={cid}
+											copyKeyRef={copyKeyRef}
+											isMac={isMac}
 										/>
 									</div>
 								);
@@ -564,13 +786,40 @@ function NodeView(props: {
 									}}
 								>
 									<DropZone
-										onDrop={(tpl, moveId) =>
-											handleDropAtSide(cid, 'top', tpl, moveId)
-										}
+										onDrop={(tpl, moveId, opts) => {
+											const copy = !!opts?.copy;
+											if (tpl) {
+												handleDropAtSide(
+													cid,
+													'top',
+													tpl,
+													undefined,
+												);
+											} else if (moveId) {
+												if (copy) {
+													copyNodeAtSide(
+														schema,
+														cid,
+														'top',
+														moveId,
+														applyAndClean,
+													);
+												} else {
+													handleDropAtSide(
+														cid,
+														'top',
+														undefined,
+														moveId,
+													);
+												}
+											}
+										}}
 										scrollContainer={scrollContainer}
 										visible={isDragging}
 										axis="y"
 										matchId={cid}
+										copyKeyRef={copyKeyRef}
+										isMac={isMac}
 									/>
 
 									<div
@@ -582,18 +831,40 @@ function NodeView(props: {
 									>
 										{idx === 0 && (
 											<DropZone
-												onDrop={(tpl, moveId) =>
-													handleDropAtSide(
-														cid,
-														'left',
-														tpl,
-														moveId,
-													)
-												}
+												onDrop={(tpl, moveId, opts) => {
+													const copy = !!opts?.copy;
+													if (tpl) {
+														handleDropAtSide(
+															cid,
+															'left',
+															tpl,
+															undefined,
+														);
+													} else if (moveId) {
+														if (copy) {
+															copyNodeAtSide(
+																schema,
+																cid,
+																'left',
+																moveId,
+																applyAndClean,
+															);
+														} else {
+															handleDropAtSide(
+																cid,
+																'left',
+																undefined,
+																moveId,
+															);
+														}
+													}
+												}}
 												scrollContainer={scrollContainer}
 												visible={isDragging}
 												axis="x"
 												matchId={cid}
+												copyKeyRef={copyKeyRef}
+												isMac={isMac}
 											/>
 										)}
 
@@ -619,39 +890,92 @@ function NodeView(props: {
 												onDropTemplate={onDropTemplate}
 												onDropMove={onDropMove}
 												onDelete={onDelete}
+												onDuplicate={onDuplicate}
 												onSelect={onSelect}
 												scrollContainer={scrollContainer}
 												isDragging={isDragging}
 												selectedId={selectedId}
 												handleDropAtSide={handleDropAtSide}
 												handleDropInside={handleDropInside}
+												applyAndClean={applyAndClean}
+												isMac={IS_MAC}
+												copyKeyRef={copyKeyRef}
 											/>
 										</div>
 
 										<DropZone
-											onDrop={(tpl, moveId) =>
-												handleDropAtSide(
-													cid,
-													'right',
-													tpl,
-													moveId,
-												)
-											}
+											onDrop={(tpl, moveId, opts) => {
+												const copy = !!opts?.copy;
+												if (tpl) {
+													handleDropAtSide(
+														cid,
+														'right',
+														tpl,
+														undefined,
+													);
+												} else if (moveId) {
+													if (copy) {
+														copyNodeAtSide(
+															schema,
+															cid,
+															'right',
+															moveId,
+															applyAndClean,
+														);
+													} else {
+														handleDropAtSide(
+															cid,
+															'right',
+															undefined,
+															moveId,
+														);
+													}
+												}
+											}}
 											scrollContainer={scrollContainer}
 											visible={isDragging}
 											axis="x"
 											matchId={cid}
+											copyKeyRef={copyKeyRef}
+											isMac={isMac}
 										/>
 									</div>
 
 									<DropZone
-										onDrop={(tpl, moveId) =>
-											handleDropAtSide(cid, 'bottom', tpl, moveId)
-										}
+										onDrop={(tpl, moveId, opts) => {
+											const copy = !!opts?.copy;
+											if (tpl) {
+												handleDropAtSide(
+													cid,
+													'bottom',
+													tpl,
+													undefined,
+												);
+											} else if (moveId) {
+												if (copy) {
+													copyNodeAtSide(
+														schema,
+														cid,
+														'bottom',
+														moveId,
+														applyAndClean,
+													);
+												} else {
+													handleDropAtSide(
+														cid,
+														'bottom',
+														undefined,
+														moveId,
+													);
+												}
+											}
+										}}
 										scrollContainer={scrollContainer}
 										visible={isDragging}
 										axis="y"
 										matchId={cid}
+										copyKeyRef={copyKeyRef}
+										isMac={isMac}
 									/>
 								</div>
 							);
@@ -672,7 +996,24 @@ function findParent(schema: PageSchema, childId: string): string | null {
 	return null;
 }
 
-function renderPrimitive(node: NodeJson, baseStyle: React.CSSProperties, theme: ThemeTokens) {
+function copyNodeAtSide(
+	schema: PageSchema,
+	refId: string,
+	side: Side,
+	moveId: string,
+	applyAndClean: (schema: PageSchema, patch: SchemaPatch) => void,
+) {
+	const sub = extractSubtree(schema, moveId);
+	const cloned = cloneSubtreeWithIds(sub);
+	const { next, patch } = insertTemplateAtSide(schema, refId, side, cloned);
+	applyAndClean(next, patch);
+}
+
+function renderPrimitive(
+	node: NodeJson,
+	baseStyle: React.CSSProperties,
+	theme: ThemeTokens,
+) {
 	switch (node.type) {
 		case 'form':
 			return (
@@ -680,7 +1021,7 @@ function renderPrimitive(node: NodeJson, baseStyle: React.CSSProperties, theme: 
 					action={node.props?.formAction}
 					method={node.props?.formMethod}
 					encType={node.props?.enctype}
-				></form>
+				/>
 			);
 
 		case 'page':
@@ -711,25 +1052,20 @@ function renderPrimitive(node: NodeJson, baseStyle: React.CSSProperties, theme: 
 			const hasHtml = /<[a-z][\s\S]*>/i.test(html);
 			return hasHtml ? (
 				<>
-					<style>
-						{
-							`blockquote {
-							  background: ${theme.components?.blockquote?.bg || 'rgba(99, 102, 241, 0.1)'};
-							  border-left: ${theme.components?.blockquote?.borderLeft || '4px solid rgb(59, 130, 246)'};
-							  border-radius: ${theme.components?.blockquote?.radius || '8'}px;
-							  padding: ${theme.components?.blockquote?.p || '16px 20px'};
-							  color: ${theme.components?.blockquote?.color};
-							  font-style: italic;
-							}`
-						}
-					</style>
+					<style>{`blockquote {
+            background: ${theme.components?.blockquote?.bg || 'rgba(99, 102, 241, 0.1)'};
+            border-left: ${theme.components?.blockquote?.borderLeft || '4px solid rgb(59, 130, 246)'};
+            border-radius: ${theme.components?.blockquote?.radius || '8'}px;
+            padding: ${theme.components?.blockquote?.p || '16px 20px'};
+            color: ${theme.components?.blockquote?.color};
+            font-style: italic;
+          }`}</style>
 					<div
 						data-prim="true"
 						style={baseStyle}
 						dangerouslySetInnerHTML={{ __html: html }}
 					/>
 				</>
-
 			) : (
 				<p data-prim="true" style={baseStyle}>
 					{html || 'Text'}
@@ -776,7 +1112,7 @@ function renderPrimitive(node: NodeJson, baseStyle: React.CSSProperties, theme: 
 		}
 
 		case 'divider':
-			return <div style={baseStyle} />
+			return <div style={baseStyle} />;
 
 		case 'list':
 			return <ul data-prim="true" style={baseStyle} />;
@@ -836,7 +1172,6 @@ function renderPrimitive(node: NodeJson, baseStyle: React.CSSProperties, theme: 
 					style={baseStyle}
 				/>
 			);
-
 			return node.props?.label ? (
 				<div
 					style={{
@@ -881,7 +1216,6 @@ function renderPrimitive(node: NodeJson, baseStyle: React.CSSProperties, theme: 
 					{node.props?.value}
 				</textarea>
 			);
-
 			return node.props?.label ? (
 				<div
 					style={{
@@ -922,7 +1256,6 @@ function renderPrimitive(node: NodeJson, baseStyle: React.CSSProperties, theme: 
 					))}
 				</select>
 			);
-
 			return node.props?.label ? (
 				<div
 					style={{

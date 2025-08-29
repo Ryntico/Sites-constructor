@@ -475,3 +475,29 @@ export function cleanupManualEmptyContainers(schema: PageSchema): {
 
 	return { next, patch };
 }
+
+export function extractSubtree(schema: PageSchema, rootId: string): NodeSubtree {
+	const ids = Array.from(collectDescendants(schema, rootId));
+	const nodes: Record<string, NodeJson> = {};
+	for (const id of ids) nodes[id] = schema.nodes[id];
+	return { rootId, nodes };
+}
+
+export function duplicateNode(
+	schema: PageSchema,
+	nodeId: string,
+): { next: PageSchema; patch: SchemaPatch } {
+	const parentId = findParentId(schema, nodeId);
+	if (!parentId) return { next: schema, patch: EMPTY_PATCH };
+
+	const children = getChildren(schema, parentId);
+	const idx = children.indexOf(nodeId);
+	if (idx < 0) return { next: schema, patch: EMPTY_PATCH };
+
+	const sub = extractSubtree(schema, nodeId);
+	const cloned = cloneSubtreeWithIds(sub);
+
+	const insertIndex = idx + 1;
+	const { next, patch } = insertSubtree(schema, cloned, parentId, insertIndex);
+	return { next, patch };
+}
