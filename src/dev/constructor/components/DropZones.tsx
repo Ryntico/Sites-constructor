@@ -1,9 +1,11 @@
 import React, { useLayoutEffect, useRef, useState } from 'react';
 import type { Axis } from '@/types/siteTypes';
-
-const TYPE_TPL = 'application/x-block-template';
-const TYPE_MOVE = 'application/x-move-node';
-const TYPE_COPY_INTENT = 'application/x-copy-intent';
+import {
+	TYPE_TPL,
+	TYPE_MOVE,
+	TYPE_COPY_INTENT,
+} from '@/dev/constructor/runtime/dnd/constants';
+import { typesToArray } from '@/dev/constructor/runtime/dnd/utils';
 
 type Props = {
 	onDrop: (tplKey?: string, moveNodeId?: string, opts?: { copy?: boolean }) => void;
@@ -14,20 +16,6 @@ type Props = {
 	copyKeyRef?: React.RefObject<boolean>;
 	isMac?: boolean;
 };
-
-function typesToArray(types: DataTransfer['types']): string[] {
-	const maybeIterable = types as unknown as { [Symbol.iterator]?: unknown };
-	if (typeof maybeIterable[Symbol.iterator] === 'function') {
-		return Array.from(types as unknown as Iterable<string>);
-	}
-	const list = types as unknown as { length: number; item(i: number): string | null };
-	const out: string[] = [];
-	for (let i = 0; i < list.length; i++) {
-		const v = list.item(i);
-		if (v) out.push(v);
-	}
-	return out;
-}
 
 export function DropZone({
 	onDrop,
@@ -40,7 +28,6 @@ export function DropZone({
 }: Props) {
 	const selfRef = useRef<HTMLDivElement>(null);
 	const [over, setOver] = useState(false);
-
 	const [box, setBox] = useState<{
 		w: number;
 		h: number;
@@ -69,7 +56,6 @@ export function DropZone({
 		};
 
 		measure();
-
 		const ro = new ResizeObserver(measure);
 		ro.observe(target);
 		window.addEventListener('resize', measure);
@@ -95,9 +81,10 @@ export function DropZone({
 		if (!accepts(dt)) return;
 		e.preventDefault();
 
-		const wantCopy =
-			(copyKeyRef?.current ?? false) || (isMac ? e.altKey : e.ctrlKey || e.altKey);
 		try {
+			const wantCopy =
+				(copyKeyRef?.current ?? false) ||
+				(isMac ? e.altKey : e.ctrlKey || e.altKey);
 			const isMove = typesToArray(dt.types).includes(TYPE_MOVE);
 			dt.dropEffect = wantCopy ? 'copy' : isMove ? 'move' : 'copy';
 		} catch {
@@ -129,7 +116,6 @@ export function DropZone({
 		const dt = e.dataTransfer;
 		const tplKey = dt.getData(TYPE_TPL);
 		const moveId = dt.getData(TYPE_MOVE);
-
 		const copyIntent = dt.getData(TYPE_COPY_INTENT) === '1';
 		const copyNow =
 			(copyKeyRef?.current ?? false) || (isMac ? e.altKey : e.ctrlKey || e.altKey);

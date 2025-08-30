@@ -5,7 +5,7 @@ import type {
 	StyleShortcuts,
 	NodeJson,
 } from '@/types/siteTypes';
-import { isContainer } from '@/dev/constructor/runtime/schemaOps.ts';
+import { isContainer } from '@/dev/constructor/ops/schemaOps.ts';
 import { RichText } from '@/dev/constructor/components/RichText.tsx';
 import { SelectOptionsEditor } from '@/dev/constructor/components/SelectOptionsEditor.tsx';
 import { ImageUploader } from './components/ImageUploader';

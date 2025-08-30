@@ -1,6 +1,6 @@
 import React from 'react';
-import type { PageSchema, NodeJson, ThemeTokens, Action } from '@/types/siteTypes';
-import { mergeResponsive, styleObjToCss } from './style';
+import type { PageSchema, NodeJson, ThemeTokens, Action } from '@/types/siteTypes.ts';
+import { mergeResponsive, styleObjToCss } from './responsive.ts';
 
 function actionsAttr(on?: Record<string, Action[]>) {
 	if (!on?.click?.length) return undefined;
@@ -76,9 +76,15 @@ function Node({
 			const html = node.props?.text ?? '';
 			const hasHtml = /<[a-z][\s\S]*>/i.test(html);
 			return hasHtml ? (
-				<div style={base} {...dataAttrs} dangerouslySetInnerHTML={{ __html: html }} />
+				<div
+					style={base}
+					{...dataAttrs}
+					dangerouslySetInnerHTML={{ __html: html }}
+				/>
 			) : (
-				<p style={base} {...dataAttrs}>{html}</p>
+				<p style={base} {...dataAttrs}>
+					{html}
+				</p>
 			);
 		}
 		case 'image':
@@ -149,16 +155,22 @@ function Node({
 			);
 
 			return node.props?.label ? (
-				<div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start', gap: '4px' }}>
-					<label
-						htmlFor={id}
-						style={{ fontSize: '14px', color: '#4a5568' }}
-					>
+				<div
+					style={{
+						display: 'flex',
+						flexDirection: 'column',
+						alignItems: 'flex-start',
+						gap: '4px',
+					}}
+				>
+					<label htmlFor={id} style={{ fontSize: '14px', color: '#4a5568' }}>
 						{node.props.label}
 					</label>
 					{input}
 				</div>
-			) : input;
+			) : (
+				input
+			);
 		}
 		case 'textarea': {
 			const id = `textarea-${node.id}`;
@@ -188,16 +200,22 @@ function Node({
 			);
 
 			return node.props?.label ? (
-				<div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start', gap: '4px' }}>
-					<label
-						htmlFor={id}
-						style={{ fontSize: '14px', color: '#4a5568' }}
-					>
+				<div
+					style={{
+						display: 'flex',
+						flexDirection: 'column',
+						alignItems: 'flex-start',
+						gap: '4px',
+					}}
+				>
+					<label htmlFor={id} style={{ fontSize: '14px', color: '#4a5568' }}>
 						{node.props.label}
 					</label>
 					{textarea}
 				</div>
-			) : textarea;
+			) : (
+				textarea
+			);
 		}
 		case 'select': {
 			const id = `select-${node.id}`;
@@ -223,13 +241,22 @@ function Node({
 			);
 
 			return node.props?.label ? (
-				<div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start', gap: '4px' }}>
+				<div
+					style={{
+						display: 'flex',
+						flexDirection: 'column',
+						alignItems: 'flex-start',
+						gap: '4px',
+					}}
+				>
 					<label htmlFor={id} style={{ fontSize: '14px', color: '#4a5568' }}>
 						{node.props.label}
 					</label>
 					{select}
 				</div>
-			) : select;
+			) : (
+				select
+			);
 		}
 		case 'divider': {
 			return <div style={base} {...dataAttrs} />;
@@ -253,7 +280,7 @@ function Node({
 		case 'form': {
 			return (
 				<form
-					{...node.props?.formId && { id: node.props?.formId }}
+					{...(node.props?.formId && { id: node.props?.formId })}
 					action={node.props?.formAction}
 					method={node.props?.formMethod}
 					encType={node.props?.enctype}
@@ -274,7 +301,7 @@ function Node({
 					{(node.props?.preAuthor || node.props?.cite) && (
 						<p style={{ fontSize: 12, color: '#888', marginTop: 8 }}>
 							{node.props?.preAuthor}
-							{node.props?.cite && (<cite>{node.props.cite}</cite>)}
+							{node.props?.cite && <cite>{node.props.cite}</cite>}
 						</p>
 					)}
 				</blockquote>
@@ -282,7 +309,7 @@ function Node({
 		}
 
 		case 'anchor': {
-			return <div id={node.id} style={base}></div>
+			return <div id={node.id} style={base}></div>;
 		}
 
 		default:
@@ -384,7 +411,8 @@ function renderStaticHtml(schema: PageSchema, theme: ThemeTokens) {
 				const formId = node.props?.formId ?? '';
 				const action = node.props?.formAction ?? '';
 				const method = node.props?.formMethod ?? 'post';
-				const enctype = node.props?.enctype ?? 'application/x-www-form-urlencoded';
+				const enctype =
+					node.props?.enctype ?? 'application/x-www-form-urlencoded';
 				return `<form id="${formId}" action="${action}" method="${method}" enctype="${enctype}" style="${style}"${data}>${kids
 					.map(walk)
 					.join('')}</form>`;
@@ -392,14 +420,20 @@ function renderStaticHtml(schema: PageSchema, theme: ThemeTokens) {
 
 			case 'blockquote': {
 				const text = escapeHtml(node.props?.text ?? '');
-				const author = node.props?.preAuthor ? escapeHtml(node.props.preAuthor) : '';
+				const author = node.props?.preAuthor
+					? escapeHtml(node.props.preAuthor)
+					: '';
 				const cite = node.props?.cite ? escapeAttr(node.props.cite) : '';
 				const citeAttr = cite ? ` cite="${cite}"` : '';
-				const footer = (author || cite) ?
-					`<p style="font-size:12px;color:#888;margin-top:8px">` +
-					(author ? `${author}` : '') +
-					(cite ? `<cite style="margin-left:8px;font-style:italic">(${escapeHtml(cite)})</cite>` : '') +
-					`</p>` : '';
+				const footer =
+					author || cite
+						? `<p style="font-size:12px;color:#888;margin-top:8px">` +
+							(author ? `${author}` : '') +
+							(cite
+								? `<cite style="margin-left:8px;font-style:italic">(${escapeHtml(cite)})</cite>`
+								: '') +
+							`</p>`
+						: '';
 				return `<blockquote style="${style}"${citeAttr}${data}>${text}${footer}</blockquote>`;
 			}
 			case 'input': {
@@ -493,9 +527,12 @@ function renderStaticHtml(schema: PageSchema, theme: ThemeTokens) {
 					  style="${style}"
 					  ${data} 
 					>
-					${node.props?.options?.map((option, index) => (
-						`<option key="${index}" value="${option.value}">${option.text}</option>`
-					)).join('')}
+					${node.props?.options
+						?.map(
+							(option, index) =>
+								`<option key="${index}" value="${option.value}">${option.text}</option>`,
+						)
+						.join('')}
 					</select>
 				`;
 
@@ -510,7 +547,7 @@ function renderStaticHtml(schema: PageSchema, theme: ThemeTokens) {
 			}
 
 			case 'anchor': {
-				return `<div id=${node.id} style="${style}"></div>`
+				return `<div id=${node.id} style="${style}"></div>`;
 			}
 
 			default:

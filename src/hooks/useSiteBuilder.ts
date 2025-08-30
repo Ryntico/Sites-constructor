@@ -14,7 +14,7 @@ import { useEffect, useMemo, useRef } from 'react';
 import { store } from '@/store';
 import { DEFAULT_THEME } from '@const/defaultTheme.ts';
 import { useDebounce } from '@/hooks/useDebounce';
-import { hasChanges, mergePatches } from '@/dev/constructor/runtime/schemaOps';
+import { hasChanges, mergePatches } from '@/dev/constructor/ops/schemaOps.ts';
 import * as sitesApi from '@/services/firebase/sites';
 
 export function useSiteBuilder(siteId: string, pageId: string) {
