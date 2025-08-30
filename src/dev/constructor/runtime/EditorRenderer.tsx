@@ -23,7 +23,6 @@ import {
 	cloneSubtreeWithIds,
 	insertSubtree,
 } from './schemaOps';
-import { DropZone } from '../components/DropZones';
 import { EditableNodeWrapper } from '../components/EditableNodeWrapper';
 
 import { IS_MAC, TYPE_MOVE, TYPE_TPL, TYPE_COPY_INTENT } from './dnd/constants';
@@ -38,9 +37,10 @@ import { ContainerLabel } from '@/dev/constructor/components/ContainerLabel.tsx'
 import {
 	computeAxis,
 	isFillLike,
-	buildContainerWrapStyle,
 	acceptsDt,
+	buildContainerWrapStyle,
 } from './render/helpers';
+import { ChildFrame } from '@/dev/constructor/components/ChildFrame.tsx';
 
 export type EditorRendererProps = {
 	schema: PageSchema;
@@ -307,7 +307,6 @@ function NodeView(props: {
 		: '';
 
 	const axis: Axis = computeAxis(baseStyle, node.type);
-
 	const EDITOR_PAD = 14;
 
 	const wrapperStyle: React.CSSProperties = parentLike
@@ -421,8 +420,8 @@ function NodeView(props: {
 							const moveId = dt.getData(TYPE_MOVE);
 							const copyIntent = dt.getData(TYPE_COPY_INTENT) === '1';
 							const copyNow =
-								(props.copyKeyRef.current ?? false) ||
-								(props.isMac ? e.altKey : e.ctrlKey || e.altKey);
+								(copyKeyRef.current ?? false) ||
+								(isMac ? e.altKey : e.ctrlKey || e.altKey);
 							const copy = copyIntent || copyNow;
 							if (tplKey)
 								props.handleDropInside(id, tplKey, undefined, { copy });
@@ -435,251 +434,68 @@ function NodeView(props: {
 						{children.map((cid, idx) => {
 							const isFill = isFillLike(schema, cid);
 
-							if (axis === 'y') {
-								return (
-									<div
-										key={cid}
-										style={{
+							const centerStyle: React.CSSProperties =
+								axis === 'y'
+									? {
 											display: 'flex',
-											alignItems: 'stretch',
-											width: '100%',
-										}}
-									>
-										<DropZone
-											onDrop={(tpl, moveId, opts) =>
-												props.handleDropAtSide(
-													cid,
-													'left',
-													tpl,
-													moveId,
-													opts,
-												)
-											}
-											scrollContainer={scrollContainer}
-											visible={isDragging}
-											axis="x"
-											matchId={cid}
-											copyKeyRef={props.copyKeyRef}
-											isMac={props.isMac}
-										/>
-										<div
-											style={
-												isFill
-													? {
-															display: 'flex',
-															flexDirection: 'column',
-															flex: '1 1 auto',
-															minWidth: 0,
-															maxWidth: '100%',
-														}
-													: {
-															display: 'inline-flex',
-															flexDirection: 'column',
-															flex: '0 0 auto',
-															minWidth: 0,
-														}
-											}
-										>
-											{idx === 0 && (
-												<DropZone
-													onDrop={(tpl, moveId, opts) =>
-														props.handleDropAtSide(
-															cid,
-															'top',
-															tpl,
-															moveId,
-															opts,
-														)
+											flexDirection: 'column',
+											...(isFill
+												? {
+														flex: '1 1 auto',
+														minWidth: 0,
+														maxWidth: '100%',
 													}
-													scrollContainer={scrollContainer}
-													visible={isDragging}
-													axis="y"
-													matchId={cid}
-													copyKeyRef={props.copyKeyRef}
-													isMac={props.isMac}
-												/>
-											)}
-
-											<NodeView
-												id={cid}
-												schema={schema}
-												theme={theme}
-												onDropTemplate={onDropTemplate}
-												onDropMove={onDropMove}
-												onDelete={onDelete}
-												onDuplicate={props.onDuplicate}
-												onSelect={onSelect}
-												scrollContainer={scrollContainer}
-												isDragging={isDragging}
-												selectedId={props.selectedId}
-												handleDropAtSide={props.handleDropAtSide}
-												handleDropInside={props.handleDropInside}
-												isMac={props.isMac}
-												copyKeyRef={props.copyKeyRef}
-											/>
-
-											<DropZone
-												onDrop={(tpl, moveId, opts) =>
-													props.handleDropAtSide(
-														cid,
-														'bottom',
-														tpl,
-														moveId,
-														opts,
-													)
-												}
-												scrollContainer={scrollContainer}
-												visible={isDragging}
-												axis="y"
-												matchId={cid}
-												copyKeyRef={props.copyKeyRef}
-												isMac={props.isMac}
-											/>
-										</div>
-										<DropZone
-											onDrop={(tpl, moveId, opts) =>
-												props.handleDropAtSide(
-													cid,
-													'right',
-													tpl,
-													moveId,
-													opts,
-												)
+												: {
+														display: 'inline-flex',
+														flex: '0 0 auto',
+														minWidth: 0,
+													}),
+										}
+									: isFill
+										? {
+												flex: '1 1 auto',
+												minWidth: 0,
+												maxWidth: '100%',
 											}
-											scrollContainer={scrollContainer}
-											visible={isDragging}
-											axis="x"
-											matchId={cid}
-											copyKeyRef={props.copyKeyRef}
-											isMac={props.isMac}
-										/>
-									</div>
-								);
-							}
+										: {
+												flex: '0 0 auto',
+												minWidth: 0,
+												display: 'inline-flex',
+											};
 
 							return (
-								<div
+								<ChildFrame
 									key={cid}
-									style={{
-										display: 'flex',
-										flexDirection: 'column',
-										minWidth: 0,
-									}}
+									axis={axis}
+									cid={cid}
+									isFirst={idx === 0}
+									isDragging={isDragging}
+									scrollContainer={scrollContainer}
+									onDropSide={(side, tpl, move, o) =>
+										props.handleDropAtSide(cid, side, tpl, move, o)
+									}
+									copyKeyRef={copyKeyRef}
+									isMac={isMac}
+									centerStyle={centerStyle}
 								>
-									<DropZone
-										onDrop={(tpl, moveId, opts) =>
-											props.handleDropAtSide(
-												cid,
-												'top',
-												tpl,
-												moveId,
-												opts,
-											)
-										}
+									<NodeView
+										id={cid}
+										schema={schema}
+										theme={theme}
+										onDropTemplate={onDropTemplate}
+										onDropMove={onDropMove}
+										onDelete={onDelete}
+										onDuplicate={props.onDuplicate}
+										onSelect={onSelect}
 										scrollContainer={scrollContainer}
-										visible={isDragging}
-										axis="y"
-										matchId={cid}
-										copyKeyRef={props.copyKeyRef}
+										isDragging={isDragging}
+										selectedId={props.selectedId}
+										handleDropAtSide={props.handleDropAtSide}
+										handleDropInside={props.handleDropInside}
 										isMac={props.isMac}
-									/>
-
-									<div
-										style={{
-											display: 'flex',
-											alignItems: 'stretch',
-											minWidth: 0,
-										}}
-									>
-										<DropZone
-											onDrop={(tpl, moveId, opts) =>
-												props.handleDropAtSide(
-													cid,
-													'left',
-													tpl,
-													moveId,
-													opts,
-												)
-											}
-											scrollContainer={scrollContainer}
-											visible={isDragging}
-											axis="x"
-											matchId={cid}
-											copyKeyRef={props.copyKeyRef}
-											isMac={props.isMac}
-										/>
-
-										<div
-											style={
-												isFill
-													? {
-															flex: '1 1 auto',
-															minWidth: 0,
-															maxWidth: '100%',
-														}
-													: {
-															flex: '0 0 auto',
-															minWidth: 0,
-															display: 'inline-flex',
-														}
-											}
-										>
-											<NodeView
-												id={cid}
-												schema={schema}
-												theme={theme}
-												onDropTemplate={onDropTemplate}
-												onDropMove={onDropMove}
-												onDelete={onDelete}
-												onDuplicate={props.onDuplicate}
-												onSelect={onSelect}
-												scrollContainer={scrollContainer}
-												isDragging={isDragging}
-												selectedId={props.selectedId}
-												handleDropAtSide={props.handleDropAtSide}
-												handleDropInside={props.handleDropInside}
-												isMac={props.isMac}
-												copyKeyRef={props.copyKeyRef}
-											/>
-										</div>
-
-										<DropZone
-											onDrop={(tpl, moveId, opts) =>
-												props.handleDropAtSide(
-													cid,
-													'right',
-													tpl,
-													moveId,
-													opts,
-												)
-											}
-											scrollContainer={scrollContainer}
-											visible={isDragging}
-											axis="x"
-											matchId={cid}
-											copyKeyRef={props.copyKeyRef}
-											isMac={props.isMac}
-										/>
-									</div>
-
-									<DropZone
-										onDrop={(tpl, moveId, opts) =>
-											props.handleDropAtSide(
-												cid,
-												'bottom',
-												tpl,
-												moveId,
-												opts,
-											)
-										}
-										scrollContainer={scrollContainer}
-										visible={isDragging}
-										axis="y"
-										matchId={cid}
 										copyKeyRef={props.copyKeyRef}
-										isMac={props.isMac}
 									/>
-								</div>
+								</ChildFrame>
 							);
 						})}
 					</div>
