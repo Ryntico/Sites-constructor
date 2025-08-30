@@ -280,6 +280,11 @@ function Node({
 				</blockquote>
 			);
 		}
+
+		case 'anchor': {
+			return <div id={node.id} style={base}></div>
+		}
+
 		default:
 			return <div style={{ color: 'crimson' }}>Unknown node: {node.type}</div>;
 	}
@@ -502,6 +507,10 @@ function renderStaticHtml(schema: PageSchema, theme: ThemeTokens) {
 						 ${selectHtml}
 					   </div>`
 					: selectHtml;
+			}
+
+			case 'anchor': {
+				return `<div id=${node.id} style="${style}"></div>`
 			}
 
 			default:

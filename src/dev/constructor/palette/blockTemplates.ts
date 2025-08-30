@@ -122,6 +122,8 @@ const boxCard: BlockTemplateDoc = {
 					style: {
 						base: {
 							display: 'flex',
+							flexDirection: 'row',
+							gap: 8,
 							p: 16,
 							bg: 'transparent',
 							radius: '',
@@ -306,12 +308,56 @@ const divider: BlockTemplateDoc = {
 				id: 'divider_root',
 				type: 'divider',
 				props: {
-					style: { 
-						base: { 
+					style: {
+						base: {
+							display: 'block',
 							my: 8,
 							h: 2,
+							w: '100%',
 							bg: 'token:colors.border',
-						} 
+						},
+					},
+				},
+			},
+		},
+	},
+};
+
+const anchor: BlockTemplateDoc = {
+	id: 'anchor',
+	name: 'Якорь',
+	schema: {
+		rootId: 'anchor_root',
+		nodes: {
+			anchor_root: {
+				id: 'anchor_root',
+				type: 'anchor',
+				props: {
+					style: {
+						base: {
+							h: '1px',
+							minW: '100px',
+							opacity: 0
+						}
+					},
+				},
+			},
+			btn_root: {
+				id: 'btn_root',
+				type: 'button',
+				props: {
+					text: 'Ссылка на якорь',
+					href: '#',
+					style: {
+						base: {
+							bg: 'token:colors.primary.500',
+							color: 'token:colors.text.onPrimary',
+							px: 16,
+							py: 12,
+							radius: 'token:radius.md',
+							shadow: 'token:shadow.sm',
+							alignSelf: 'start',
+						},
 					},
 				},
 			},
@@ -334,4 +380,5 @@ export const BLOCK_TEMPLATES: BlockTemplateDoc[] = [
 	textarea,
 	select,
 	divider,
+	anchor,
 ];

@@ -16,6 +16,7 @@ import {
 	moveNode,
 	removeNode,
 	cloneSubtreeWithIds,
+	cloneSubtreeWithIdsForAnchor,
 	insertTemplateAtSide,
 	moveNodeToSide,
 	appendSubtree,
@@ -213,9 +214,19 @@ export function EditorRenderer({
 		if (tplKey) {
 			const sub = resolveTemplate(tplKey);
 			if (!sub) return;
-			const cloned = cloneSubtreeWithIds(sub);
-			const { next, patch } = appendSubtree(schema, cloned, parentId);
-			applyAndClean(next, patch);
+			const cloned = tplKey === 'anchor' ? cloneSubtreeWithIdsForAnchor(sub) : cloneSubtreeWithIds(sub);
+			if (Array.isArray(cloned)) {
+				let newSchema: PageSchema = schema;
+				cloned.forEach((node) => {
+					const { next, patch } = appendSubtree(newSchema, node, parentId);
+					newSchema = next;
+					applyAndClean(newSchema, patch);
+				});
+			}
+			else {
+				const { next, patch } = appendSubtree(schema, cloned, parentId);
+				applyAndClean(next, patch);
+			}
 			return;
 		}
 		if (movingId) {
@@ -233,8 +244,20 @@ export function EditorRenderer({
 		if (tplKey) {
 			const sub = resolveTemplate(tplKey);
 			if (!sub) return;
-			const { next, patch } = insertTemplateAtSide(schema, refId, side, sub);
-			applyAndClean(next, patch);
+			const cloned = tplKey === 'anchor' ? cloneSubtreeWithIdsForAnchor(sub) : cloneSubtreeWithIds(sub);
+
+			if (Array.isArray(cloned)) {
+				let newSchema: PageSchema = schema;
+				cloned.forEach((node) => {
+					const { next, patch } = insertTemplateAtSide(newSchema, refId, side, node);
+					newSchema = next;
+					applyAndClean(newSchema, patch);
+				});
+			}
+			else {
+				const { next, patch } = insertTemplateAtSide(schema, refId, side, cloned);
+				applyAndClean(next, patch);
+			}
 			return;
 		}
 		if (movingId) {
@@ -1112,7 +1135,7 @@ function renderPrimitive(
 		}
 
 		case 'divider':
-			return <div style={baseStyle} />;
+			return <div>---------------------Разделитель---------------------</div>;
 
 		case 'list':
 			return <ul data-prim="true" style={baseStyle} />;
@@ -1273,6 +1296,14 @@ function renderPrimitive(
 			) : (
 				select
 			);
+		}
+
+		case 'anchor': {
+			return <div
+				id={node.id}
+				style={{ ...baseStyle, width: 100 }}
+				title="Не отображается на сайте и превью"
+			>Якорь ⚓</div>
 		}
 
 		default:
