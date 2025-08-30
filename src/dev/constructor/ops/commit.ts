@@ -1,5 +1,5 @@
-import type { PageSchema, SchemaPatch } from '@/types/siteTypes';
-import { cleanupSchemaBasic, mergePatches } from '../schemaOps';
+import type { PageSchema, SchemaPatch } from '@/types/siteTypes.ts';
+import { cleanupSchemaBasic, mergePatches } from './schemaOps.ts';
 
 export function commitWithCleanup(
 	next: PageSchema,

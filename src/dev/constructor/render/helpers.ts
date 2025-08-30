@@ -1,8 +1,6 @@
 import type { CSSProperties } from 'react';
-import type { Axis, PageSchema } from '@/types/siteTypes';
-import { TYPE_MOVE, TYPE_TPL } from '../dnd/constants';
-import { typesToArray } from '../dnd/utils';
-import { isContainer } from '../schemaOps';
+import type { Axis, PageSchema } from '@/types/siteTypes.ts';
+import { isContainer } from '../ops/schemaOps.ts';
 
 export function computeAxis(base: CSSProperties, nodeType: string): Axis {
 	const disp = base?.display as CSSProperties['display'] | undefined;
@@ -36,10 +34,4 @@ export function buildContainerWrapStyle(
 		paddingLeft: base.paddingLeft ?? editorPad,
 		paddingRight: base.paddingRight ?? 6,
 	};
-}
-
-export function acceptsDt(dtOrTypes: DataTransfer | DataTransfer['types']): boolean {
-	const types = 'types' in dtOrTypes ? dtOrTypes.types : dtOrTypes;
-	const arr = typesToArray(types);
-	return arr.includes(TYPE_TPL) || arr.includes(TYPE_MOVE);
 }

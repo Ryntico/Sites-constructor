@@ -1,11 +1,11 @@
-import type { ThemeTokens, StyleShortcuts } from '@/types/siteTypes';
+import type { ThemeTokens, StyleShortcuts } from '@/types/siteTypes.ts';
 
 const isToken = (v: unknown): v is string =>
 	typeof v === 'string' && v.startsWith('token:');
 
 export function resolveToken(theme: ThemeTokens, token: string): any {
 	const path = token.replace(/^token:/, '').split('.');
-	let cur: any = theme ;
+	let cur: any = theme;
 	for (const key of path) {
 		if (cur == null) break;
 		cur = cur[key];
@@ -78,7 +78,6 @@ export function styleFromShortcuts(
 	if (s.color) css.color = pick(s.color);
 	if (s.borderColor) css.borderColor = pick(s.borderColor);
 	if (s.borderLeft) {
-
 		css.borderLeft = pick(s.borderLeft);
 	}
 	if (s.borderLeftWidth) css.borderLeftWidth = pxIfNumber(pick(s.borderLeftWidth));
@@ -87,8 +86,8 @@ export function styleFromShortcuts(
 	if (s.shadow) css.boxShadow = pick(s.shadow);
 	if (s.textAlign) css.textAlign = s.textAlign as 'left' | 'center' | 'right';
 
-	if (s.items){
-		if (s.items === 'stretch' || s.items === 'baseline') css.alignItems = s.items
+	if (s.items) {
+		if (s.items === 'stretch' || s.items === 'baseline') css.alignItems = s.items;
 		else css.alignItems = mapAlign(s.items as 'start' | 'center' | 'end');
 	}
 
@@ -104,10 +103,15 @@ export function styleFromShortcuts(
 		}
 	}
 
-	if (s.flexDirection) css.flexDirection = s.flexDirection as 'row' | 'row-reverse' | 'column' | 'column-reverse';
+	if (s.flexDirection)
+		css.flexDirection = s.flexDirection as
+			| 'row'
+			| 'row-reverse'
+			| 'column'
+			| 'column-reverse';
 
 	if (s.wrap) css.flexWrap = s.wrap as 'nowrap' | 'wrap' | 'wrap-reverse';
-	
+
 	if (s.alignSelf) {
 		if (s.alignSelf === 'start') {
 			css.alignSelf = 'flex-start';

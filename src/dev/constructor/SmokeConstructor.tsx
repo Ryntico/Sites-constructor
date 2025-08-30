@@ -1,7 +1,7 @@
 import React, { type RefObject, useEffect, useMemo, useRef, useState } from 'react';
-import { exportPageToHtml } from './runtime/Renderer';
-import { cleanupManualEmptyContainers, cloneSubtreeWithIds } from './runtime/schemaOps';
-import { EditorRenderer } from './runtime/EditorRenderer';
+import { exportPageToHtml } from './render/Renderer.tsx';
+import { cleanupManualEmptyContainers, cloneSubtreeWithIds } from './ops/schemaOps.ts';
+import { EditorRenderer } from './editor/EditorRenderer.tsx';
 import { Inspector } from './Inspector';
 import { Palette } from './palette/Palette';
 import { PreviewPane } from '../preview/PreviewPane';

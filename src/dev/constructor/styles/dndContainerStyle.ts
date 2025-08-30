@@ -1,5 +1,5 @@
 import { type CSSProperties } from 'react';
-import type { Axis } from '@/types/siteTypes';
+import type { Axis } from '@/types/siteTypes.ts';
 
 export function dndContainerStyle(
 	base: CSSProperties,

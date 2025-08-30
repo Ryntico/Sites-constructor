@@ -1,5 +1,5 @@
-import type { PageSchema, SchemaPatch, NodeSubtree, Side } from '@/types/siteTypes';
-import { appendSubtree, insertTemplateAtSide } from '../schemaOps';
+import type { PageSchema, SchemaPatch, NodeSubtree, Side } from '@/types/siteTypes.ts';
+import { appendSubtree, insertTemplateAtSide } from './schemaOps.ts';
 
 export function appendMany(
 	schema: PageSchema,

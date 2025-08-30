@@ -1,5 +1,5 @@
 import React from 'react';
-import type { NodeJson, ThemeTokens } from '@/types/siteTypes';
+import type { NodeJson, ThemeTokens } from '@/types/siteTypes.ts';
 
 export function renderPrimitive(
 	node: NodeJson,

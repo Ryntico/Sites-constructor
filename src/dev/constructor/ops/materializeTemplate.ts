@@ -1,5 +1,5 @@
-import type { NodeSubtree } from '@/types/siteTypes';
-import { cloneSubtreeWithIds, cloneSubtreeWithIdsForAnchor } from '../schemaOps';
+import type { NodeSubtree } from '@/types/siteTypes.ts';
+import { cloneSubtreeWithIds, cloneSubtreeWithIdsForAnchor } from './schemaOps.ts';
 
 export function materializeTemplate(key: string, sub: NodeSubtree): NodeSubtree[] {
 	if (key === 'anchor') {
