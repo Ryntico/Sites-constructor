@@ -35,6 +35,12 @@ import { appendMany, insertManyAtSide } from './ops/insertions';
 import { renderPrimitive } from './render/primitives';
 import { dndContainerStyle } from '@/dev/constructor/runtime/styles/dndContainerStyle.ts';
 import { ContainerLabel } from '@/dev/constructor/components/ContainerLabel.tsx';
+import {
+	computeAxis,
+	isFillLike,
+	buildContainerWrapStyle,
+	acceptsDt,
+} from './render/helpers';
 
 export type EditorRendererProps = {
 	schema: PageSchema;
@@ -59,10 +65,7 @@ export function EditorRenderer({
 	const dragInside = useRef(0);
 	const copyKeyRef = useCopyKey(IS_MAC);
 
-	const accepts = (types: DataTransfer['types']): boolean => {
-		const arr = typesToArray(types);
-		return arr.includes(TYPE_MOVE) || arr.includes(TYPE_TPL);
-	};
+	const accepts = (types: DataTransfer['types']): boolean => acceptsDt(types);
 
 	const onRootDragEnter: React.DragEventHandler<HTMLDivElement> = (e) => {
 		if (!accepts(e.dataTransfer.types)) return;
@@ -284,6 +287,7 @@ function NodeView(props: {
 		isDragging,
 		selectedId,
 		isMac,
+		copyKeyRef,
 	} = props;
 
 	const node = schema.nodes[id];
@@ -302,43 +306,33 @@ function NodeView(props: {
 		? mediaCssText.replaceAll('[data-res-id]', targetSelector)
 		: '';
 
-	const axis: Axis = (() => {
-		const disp = baseStyle?.display as React.CSSProperties['display'] | undefined;
-		const fd = baseStyle?.flexDirection as
-			| React.CSSProperties['flexDirection']
-			| undefined;
-		if (disp === 'flex' || disp === 'inline-flex')
-			return fd && fd.startsWith('column') ? 'y' : 'x';
-		return node.type === 'row' ? 'x' : 'y';
-	})();
+	const axis: Axis = computeAxis(baseStyle, node.type);
 
 	const EDITOR_PAD = 14;
-	const editorPadForContainer: React.CSSProperties = parentLike
-		? {
-				paddingTop: baseStyle.paddingTop ?? EDITOR_PAD,
-				paddingLeft: baseStyle.paddingLeft ?? EDITOR_PAD,
-				paddingRight: baseStyle.paddingRight ?? 6,
-			}
-		: {};
 
-	const wrapperStyle: React.CSSProperties = {
-		position: 'relative',
-		userSelect: 'none',
-		...(parentLike
+	const wrapperStyle: React.CSSProperties = parentLike
+		? {
+				position: 'relative',
+				userSelect: 'none',
+				...(node.type === 'section' ? { width: '100%' } : {}),
+				...buildContainerWrapStyle(baseStyle, EDITOR_PAD),
+			}
+		: node.type === 'divider'
 			? {
-					...(node.type === 'section' ? { width: '100%' } : {}),
-					...editorPadForContainer,
+					position: 'relative',
+					userSelect: 'none',
+					display: 'block',
+					width: '100%',
 					...baseStyle,
 				}
-			: node.type === 'divider'
-				? { display: 'block', width: '100%', ...baseStyle }
-				: {
-						display: 'inline-flex',
-						flex: '0 0 auto',
-						minWidth: 0,
-						verticalAlign: 'top',
-					}),
-	};
+			: {
+					position: 'relative',
+					userSelect: 'none',
+					display: 'inline-flex',
+					flex: '0 0 auto',
+					minWidth: 0,
+					verticalAlign: 'top',
+				};
 
 	const containerEmpty = parentLike && children.length === 0;
 
@@ -399,17 +393,18 @@ function NodeView(props: {
 						)}
 						onDragOver={(e) => {
 							if (!containerEmpty || !isDragging) return;
-							const dt = e.dataTransfer;
-							const arr = typesToArray(dt.types);
-							if (!arr.includes(TYPE_TPL) && !arr.includes(TYPE_MOVE))
-								return;
+							if (!acceptsDt(e.dataTransfer)) return;
 							e.preventDefault();
 							try {
 								const wantCopy =
-									(props.copyKeyRef.current ?? false) ||
-									(props.isMac ? e.altKey : e.ctrlKey || e.altKey);
-								const isMove = arr.includes(TYPE_MOVE);
-								dt.dropEffect = wantCopy
+									(copyKeyRef.current ?? false) ||
+									(isMac ? e.altKey : e.ctrlKey || e.altKey);
+								const isMove =
+									acceptsDt(e.dataTransfer) &&
+									typesToArray(e.dataTransfer.types).includes(
+										TYPE_MOVE,
+									);
+								e.dataTransfer.dropEffect = wantCopy
 									? 'copy'
 									: isMove
 										? 'move'
@@ -438,17 +433,7 @@ function NodeView(props: {
 						<ContainerLabel type={node.type} base={baseStyle} />
 
 						{children.map((cid, idx) => {
-							const child = schema.nodes[cid];
-							const isTextLike =
-								child?.type === 'heading' ||
-								child?.type === 'paragraph' ||
-								child?.type === 'list' ||
-								child?.type === 'listItem';
-
-							const isFill =
-								isTextLike ||
-								(child ? isContainer(child) : false) ||
-								child?.type === 'divider';
+							const isFill = isFillLike(schema, cid);
 
 							if (axis === 'y') {
 								return (
