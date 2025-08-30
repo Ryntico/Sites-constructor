@@ -76,6 +76,66 @@ export function cloneSubtreeWithIds(sub: NodeSubtree): NodeSubtree {
 	return { rootId: idMap.get(sub.rootId)!, nodes: outNodes };
 }
 
+export function cloneSubtreeWithIdsForAnchor(
+	sub: NodeSubtree
+): { rootId: string; nodes: Record<string, NodeJson> }[] {
+	const idMap = new Map<string, string>();
+	const outNodes: Record<string, NodeJson> = {};
+	let newAnchorId: string | null = null;
+	let buttonId: string | null = null;
+
+	Object.entries(sub.nodes).forEach(([oldId, node]) => {
+		if (node.type === 'anchor') {
+			newAnchorId = genId('anc');
+			idMap.set(oldId, newAnchorId);
+		} else if (node.type === 'button') {
+			buttonId = genId('btn');
+			idMap.set(oldId, buttonId);
+		} else {
+			idMap.set(oldId, genId('nd'));
+		}
+	});
+
+	Object.entries(sub.nodes).forEach(([oldId, node]) => {
+		const newId = idMap.get(oldId)!;
+		const cloned: NodeJson = {
+			...node,
+			id: newId,
+		};
+
+		if (node.childrenOrder?.length) {
+			cloned.childrenOrder = node.childrenOrder.map(cid => idMap.get(cid)!);
+		}
+
+		if (node.type === 'button' && node.props?.href && newAnchorId) {
+			cloned.props = {
+				...cloned.props,
+				href: `#${newAnchorId}`
+			};
+		}
+
+		outNodes[newId] = cloned;
+	});
+
+	const result = [];
+
+	if (newAnchorId) {
+		result.push({
+			rootId: newAnchorId,
+			nodes: { [newAnchorId]: outNodes[newAnchorId] }
+		});
+	}
+
+	if (buttonId) {
+		result.push({
+			rootId: buttonId,
+			nodes: { [buttonId]: outNodes[buttonId] }
+		});
+	}
+
+	return result;
+}
+
 export function isContainer(node: NodeJson | undefined): boolean {
 	if (!node) return false;
 	return ['page', 'section', 'box', 'row', 'form'].includes(node.type);
@@ -277,12 +337,10 @@ export function insertTemplateAtSide(
 	schema: PageSchema,
 	refId: string,
 	side: Side,
-	sub: NodeSubtree,
+	cloned: NodeSubtree,
 ): { next: PageSchema; patch: SchemaPatch } {
 	const parentId = findParentId(schema, refId);
 	if (!parentId) return { next: schema, patch: EMPTY_PATCH };
-
-	const cloned = cloneSubtreeWithIds(sub);
 
 	const desiredAxis: Axis = side === 'left' || side === 'right' ? 'x' : 'y';
 	const parent = schema.nodes[parentId]!;

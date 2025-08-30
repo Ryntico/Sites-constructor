@@ -51,6 +51,7 @@ export type StyleShortcuts = {
 	mb?: number;
 	ml?: number;
 	bg?: string;
+	opacity?: number | string;
 	color?: string;
 	borderColor?: string;
 	radius?: string | number;
@@ -90,7 +91,8 @@ export type ElementType =
 	| 'textarea'
 	| 'select'
 	| 'richtext'
-	| 'blockquote';
+	| 'blockquote'
+	| 'anchor';
 
 export type NodeJson = {
 	id: string;
