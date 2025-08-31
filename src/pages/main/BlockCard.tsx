@@ -15,10 +15,10 @@ export const BlockCard: React.FC<BlockCardProps> = ({ block, onDelete, onEdit })
     <Card shadow="sm" padding="lg" radius="md" withBorder>
       <Text>{block.name}</Text>
       <Group mt="md">
-        <Button onClick={handlerEdit}>
+        <Button onClick={handlerEdit} variant="light">
           Edit
         </Button>
-        <Button color="red" onClick={handlerDelete}>
+        <Button color="red" onClick={handlerDelete} variant="light">
           Delete
         </Button>
       </Group>
