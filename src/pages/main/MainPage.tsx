@@ -1,7 +1,10 @@
-import { useState, useMemo } from 'react';
-import { Pagination, Box, SimpleGrid, Center, Stack, Loader, Text } from '@mantine/core';
+import {useState, useMemo, useRef, RefObject, JSX} from 'react';
+import { Box, SimpleGrid, Center, Stack, Loader, Text } from '@mantine/core';
 import { BlockCard } from '@pages/main/BlockCard.tsx';
 import { Filters, SortField, SortOrder } from "@pages/main/Filters";
+import { useInfiniteScroll } from "@hooks/useInfiniteScroll.ts";
+import { useNavigate } from "react-router-dom";
+import {getRouteExistingProject} from "@const/router";
 
 export const MainPage = () => {
   const [blocks, setBlocks] = useState([
@@ -14,11 +17,13 @@ export const MainPage = () => {
     { id: 7, name: "Block 7", date: 7 },
     { id: 8, name: "Block 8", date: 8 },
   ]);
-  
+
+  const triggerRef = useRef<RefObject<HTMLDivElement | undefined>>();
+  const wrapperRef = useRef<RefObject<HTMLDivElement | undefined>>();
+  const navigate = useNavigate();
   const [nameFilter, setNameFilter] = useState('');
   const [sort, setSort] = useState<{ field: SortField; order: SortOrder }>({ field: SortField.TITLE, order: SortOrder.ASC });
-  const [currentPage, setCurrentPage] = useState(1);
-  const itemsPerPage = 4;
+  const isLoading = false;
 
   const filteredBlocks = useMemo(() => {
     let result = blocks;
@@ -38,27 +43,18 @@ export const MainPage = () => {
     setBlocks(updatedBlocks);
   };
 
-  const handleEdit = (id: number) => {
-    console.log(`Edit block with ID: ${id}`);
+  const handleEdit = (id: string) => {
+    navigate(getRouteExistingProject(id));
   };
 
-  const totalPages = Math.ceil(filteredBlocks.length / itemsPerPage);
-  const startIndex = (currentPage - 1) * itemsPerPage;
-  const endIndex = startIndex + itemsPerPage;
-  const currentBlocks = filteredBlocks.slice(startIndex, endIndex);
-
-  const isLoading = false;
-
-  if(isLoading) {
-    return (
-        <Center р="100vh" p='md'>
-          <Loader />
-        </Center>
-    )
-  }
+  useInfiniteScroll({
+    callback: () => {console.log('trigger api')},
+    triggerRef,
+    wrapperRef,
+  });
 
   return (
-    <Stack p='md' justify='space-between' h='90vh'>
+    <Stack p='md' justify='space-between' h='90vh' ref={wrapperRef}>
       <Box>
         <Filters
           nameFilter={nameFilter}
@@ -67,14 +63,14 @@ export const MainPage = () => {
           onSortChange={setSort}
         />
 
-        {!currentBlocks.length && (
+        {!blocks.length && (
             <Center>
               <Text ta="center" mt="md">Ничего не найдено</Text>
             </Center>
-        )}
+        ) as JSX.Element}
 
         <SimpleGrid cols={4} spacing={12} pb='md'>
-          {currentBlocks.map((block) => (
+          {blocks.map((block) => (
             <BlockCard
               key={block.id}
               block={block}
@@ -84,13 +80,13 @@ export const MainPage = () => {
           ))}
         </SimpleGrid>
       </Box>
-      <Center>
-        <Pagination
-          total={totalPages}
-          page={currentPage}
-          onChange={setCurrentPage}
-        />
-      </Center>
+      {isLoading ? (
+          <Center w='100vh' p='md'>
+            <Loader />
+          </Center>
+      ): (
+          <div ref={triggerRef} />
+      )}
     </Stack>
   );
 };
