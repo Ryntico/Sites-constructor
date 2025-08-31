@@ -2,7 +2,7 @@ import React, { type RefObject, useEffect, useMemo, useRef, useState } from 'rea
 import { exportPageToHtml } from './render/Renderer.tsx';
 import { cleanupManualEmptyContainers, cloneSubtreeWithIds } from './ops/schemaOps.ts';
 import { EditorRenderer } from './editor/EditorRenderer.tsx';
-import { Inspector } from './Inspector';
+import { Inspector } from './Inspector/index.tsx';
 import { Palette } from './palette/Palette';
 import { PreviewPane } from '../preview/PreviewPane';
 import { ThemeEditor } from '../theme/ThemeEditor';

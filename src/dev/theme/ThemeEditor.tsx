@@ -1,5 +1,6 @@
 import React from 'react';
 import type { ThemeTokens } from '@/types/siteTypes.ts';
+import type { JSONContent } from '@tiptap/react';
 
 type Props = {
 	theme: ThemeTokens;
@@ -8,9 +9,9 @@ type Props = {
 };
 
 export function ThemeEditor({ theme, onChange, onReset }: Props) {
-	const set = (path: (string | number)[], value: any) => {
-		const next: any = structuredClone(theme);
-		let cur: any = next;
+	const set = (path: (string | number)[], value: unknown) => {
+		const next = structuredClone(theme);
+		let cur = next as JSONContent;
 		for (let i = 0; i < path.length - 1; i++) cur = cur[path[i]];
 		cur[path[path.length - 1]] = value;
 		onChange(next);
