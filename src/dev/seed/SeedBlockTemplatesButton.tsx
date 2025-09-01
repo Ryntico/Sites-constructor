@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { Button, Text, Group } from '@mantine/core';
 import { seedBlockTemplates } from '@/dev/seed/seedBlockTemplates';
 
 export function SeedBlockTemplatesButton() {
@@ -6,9 +7,11 @@ export function SeedBlockTemplatesButton() {
 	const [msg, setMsg] = useState('');
 
 	return (
-		<div style={{ display: 'inline-flex', gap: 8, alignItems: 'center' }}>
-			<button
-				disabled={busy}
+		<Group gap="xs" align="center">
+			<Button
+				size="xs"
+				variant="outline"
+				loading={busy}
 				onClick={async () => {
 					setBusy(true);
 					try {
@@ -22,18 +25,12 @@ export function SeedBlockTemplatesButton() {
 						setBusy(false);
 					}
 				}}
-				style={{
-					padding: '6px 10px',
-					borderRadius: 8,
-					border: '1px solid #d0d3dc',
-					background: busy ? '#f1f3f5' : '#fff',
-					cursor: busy ? 'default' : 'pointer',
-					fontSize: 12,
-				}}
 			>
 				{busy ? 'Синхронизирую…' : 'Обновить блок-шаблоны'}
-			</button>
-			<span style={{ fontSize: 12, color: '#687087' }}>{msg}</span>
-		</div>
+			</Button>
+			<Text size="sm" c="dimmed">
+				{msg}
+			</Text>
+		</Group>
 	);
 }

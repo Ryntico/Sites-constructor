@@ -1,4 +1,5 @@
-import React, { useMemo } from 'react';
+import { useMemo } from 'react';
+import { Paper, Text, Box } from '@mantine/core';
 import type { PageSchema, ThemeTokens, NodeJson, StyleShortcuts } from '@/types/siteTypes';
 import { isContainer } from '@/dev/constructor/ops/schemaOps.ts';
 import { RichText } from '@/dev/constructor/components/RichText.tsx';
@@ -32,11 +33,6 @@ type Props = {
 	onChange(next: PageSchema): void;
 	theme?: ThemeTokens;
 	ownerId?: string;
-};
-
-const card: React.CSSProperties = {
-	padding: 12,
-	background: '#fff',
 };
 
 export function Inspector({ schema, selectedId, onChange, theme, ownerId }: Props) {
@@ -111,17 +107,26 @@ export function Inspector({ schema, selectedId, onChange, theme, ownerId }: Prop
 		return Object.keys(theme.shadow).map((k) => [`shadow.${k}`, theme.shadow[k]]);
 	}, [theme]);
 
-	if (!selectedId) return <div style={card}>Выберите элемент</div>;
-	if (!node) return <div style={card}>Нет узла</div>;
+	if (!selectedId) return (
+		<Paper p="md" withBorder>
+			Выберите элемент
+		</Paper>
+	);
+
+	if (!node) return (
+		<Paper p="md" withBorder>
+			Нет узла
+		</Paper>
+	);
 
 	const s = (p.style?.[bp] ?? {}) as StyleShortcuts;
 
 	return (
-		<div style={{ ...card, display: 'grid', gap: 12 }}>
-			<div>
-				<div style={{ fontWeight: 600, marginBottom: 4 }}>Инспектор</div>
-				<div style={{ fontSize: 12, color: '#666' }}>{node.type}</div>
-			</div>
+		<Paper p="md" withBorder style={{ display: 'grid', gap: 12 }}>
+			<Box>
+				<Text fw={600} mb={4}>Инспектор</Text>
+				<Text size="sm" c="dimmed">{node.type}</Text>
+			</Box>
 
 			{node.type === 'richtext' && (
 				<RichText value={p.text ?? ''} patchProps={patchProps} />
@@ -204,6 +209,6 @@ export function Inspector({ schema, selectedId, onChange, theme, ownerId }: Prop
 				radiusOptions={radiusOptions}
 				shadowOptions={shadowOptions}
 			/>
-		</div>
+		</Paper>
 	);
 }

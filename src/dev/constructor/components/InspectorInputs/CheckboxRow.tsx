@@ -1,3 +1,5 @@
+import { Checkbox } from '@mantine/core';
+
 export function CheckboxRow({
 								label,
 								checked,
@@ -10,24 +12,22 @@ export function CheckboxRow({
 	title?: string;
 }) {
 	return (
-		<label
-			style={{
-				display: 'flex',
-				alignItems: 'center',
-				gap: 4,
-				fontSize: 14,
-				color: '#4a4a4a',
-				cursor: 'pointer',
+		<Checkbox
+			label={label}
+			checked={checked}
+			onChange={(event) => onChange(event.currentTarget.checked)}
+			title={title}
+			size="sm"
+			styles={{
+				label: {
+					fontSize: 14,
+					color: '#4a4a4a',
+					cursor: 'pointer',
+				},
+				body: {
+					alignItems: 'center',
+				},
 			}}
-		>
-			<input
-				type="checkbox"
-				checked={checked}
-				onChange={(e) => onChange(e.target.checked)}
-				style={{ margin: 0 }}
-				title={title}
-			/>
-			{label}
-		</label>
+		/>
 	);
 }
