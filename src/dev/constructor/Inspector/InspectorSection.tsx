@@ -1,4 +1,5 @@
 import React from 'react';
+import { Paper, Text } from '@mantine/core';
 
 export function InspectorSection({
 									 title,
@@ -8,9 +9,23 @@ export function InspectorSection({
 	children: React.ReactNode;
 }) {
 	return (
-		<div style={{ borderTop: '1px solid #eef1f6', paddingTop: 10 }}>
-			{title && <div style={{ fontWeight: 600, marginBottom: 8 }}>{title}</div>}
+		<Paper
+			withBorder={false}
+			style={{
+				borderTop: '1px solid #eef1f6',
+				paddingTop: 10,
+				backgroundColor: 'transparent'
+			}}
+		>
+			{title && (
+				<Text
+					fw={600}
+					mb="sm"
+				>
+					{title}
+				</Text>
+			)}
 			{children}
-		</div>
+		</Paper>
 	);
 }

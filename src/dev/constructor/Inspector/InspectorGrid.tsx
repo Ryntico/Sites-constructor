@@ -1,4 +1,5 @@
 import React from 'react';
+import { Grid } from '@mantine/core';
 
 export function InspectorGrid({
 								  cols = 2,
@@ -10,15 +11,14 @@ export function InspectorGrid({
 	style?: React.CSSProperties;
 }) {
 	return (
-		<div
-			style={{
-				display: 'grid',
-				gap: 8,
-				gridTemplateColumns: `repeat(${cols}, minmax(0,1fr))`,
-				...(style || {}),
-			}}
+		<Grid
+			gutter="xs"
+			style={style}
+			columns={cols}
 		>
-			{children}
-		</div>
+			{React.Children.map(children, (child) => (
+				<Grid.Col span={1}>{child}</Grid.Col>
+			))}
+		</Grid>
 	);
 }

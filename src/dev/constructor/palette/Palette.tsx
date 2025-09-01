@@ -1,4 +1,13 @@
 import { useState, useRef, type JSX } from 'react';
+import {
+	Paper,
+	Box,
+	Text,
+	Button,
+	ScrollArea,
+	Group,
+	Grid,
+} from '@mantine/core';
 import { PaletteItem } from './PaletteItem';
 import {
 	ChevronLeft,
@@ -6,7 +15,7 @@ import {
 	BoxCard,
 	RichText,
 	Image,
-	Button,
+	Button as ButtonIcon,
 	Form,
 	Blockquote,
 	Select,
@@ -22,7 +31,7 @@ const icons = {
 	'box_card': BoxCard,
 	'richtext': RichText,
 	'image_card': Image,
-	'button_primary': Button,
+	'button_primary': ButtonIcon,
 	'form': Form,
 	'input': Input,
 	'select': Select,
@@ -73,96 +82,62 @@ export function Palette({ items }: { items: { id: string; name: string }[] }) {
 	};
 
 	return (
-		<div
+		<Paper
 			ref={contentRef}
+			withBorder
+			p={isCollapsed ? '8px 0 0 0' : 'sm'}
 			style={{
-				display: 'grid',
-				gap: 10,
-				padding: isCollapsed ? '4px 0 0 0' : '4px',
-				alignContent: 'start',
-				justifyContent: 'center',
-				border: '1px solid #e6e8ef',
-				borderRadius: 12,
 				height: 'calc(100vh - 160px)',
-				overflowY: 'auto',
-				overflowX: 'hidden',
-				width: isCollapsed ? '20px' : '240px',
-				transition: 'width 0.3s ease-in-out, min-width 0.3s ease-in-out',
+				overflow: 'hidden',
+				width: isCollapsed ? 20 : 240,
+				transition: 'width 0.3s ease',
 				position: 'relative',
-				willChange: 'width, min-width',
 			}}
 		>
-			<div
-				style={{
-					width: isCollapsed ? '20px' : '240px',
-					overflowX: 'hidden',
-					overflowY: 'auto',
-					height: '100%',
-				}}
-			>
+			<ScrollArea h="100%"
+						onClick={isCollapsed ? toggleCollapse : undefined}
+						style={isCollapsed ? { cursor: 'pointer' } : {}}>
 				{isCollapsed ? (
-					<div
-						onClick={toggleCollapse}
-						style={{
-							color: '#64748b',
-							height: '100%',
-							display: 'flex',
-							alignItems: 'center',
-							justifyContent: 'center',
-							cursor: 'pointer',
-						}}
+					<Box onClick={toggleCollapse}
+						 h="100%"
+						 style={{
+							 display: 'flex',
+							 alignItems: 'center',
+							 justifyContent: 'center',
+							 cursor: 'pointer',
+						 }}
 					>
 						<DoubleChevronRight />
-					</div>
+					</Box>
 				) : (
-					<>
-						<div style={{
-							display: 'flex',
-							justifyContent: 'space-between',
-							alignItems: 'center',
-							padding: '0 8px',
-						}}>
-							<div style={{ fontWeight: 600 }}>Элементы</div>
-							<button
+					<Box>
+						<Group justify="space-evenly" align="center" mb="xs">
+							<Text fw={600} size="sm">Элементы</Text>
+							<Button
+								variant="subtle"
+								color="gray"
+								size="xs"
+								p={4}
 								onClick={toggleCollapse}
-								style={{
-									background: 'none',
-									border: 'none',
-									cursor: 'pointer',
-									display: 'flex',
-									alignItems: 'center',
-									justifyContent: 'center',
-									color: '#64748b',
-									transition: 'color 0.2s ease-in-out',
-								}}
 							>
 								<ChevronLeft />
-							</button>
-						</div>
-						<div
-							style={{
-								padding: '0 8px',
-								fontWeight: 100,
-								fontSize: 12,
-								color: '#878787',
-							}}>Перетащите
-							в редактор
-						</div>
-						<div style={{
-							display: 'grid',
-							gridTemplateColumns: '1fr 1fr',
-							alignItems: 'start',
-							opacity: isCollapsed ? 0 : 1,
-							transition: 'opacity 0.2s ease-in-out',
-							padding: '4px',
-						}}>
+							</Button>
+						</Group>
+
+						<Text size="xs" c="dimmed" mb="md">
+							Перетащите в редактор
+						</Text>
+
+						<Grid gutter="xs">
 							{itemsForRender.map((i) => (
-								<PaletteItem key={i.id} name={i.name} mimeKey={i.id} icon={i.icon} />
+								<Grid.Col key={i.id} span={6}>
+									<PaletteItem name={i.name} mimeKey={i.id} icon={i.icon} />
+								</Grid.Col>
 							))}
-						</div>
-					</>
+						</Grid>
+					</Box>
 				)}
-			</div>
-		</div>
+			</ScrollArea>
+		</Paper>
 	);
 }

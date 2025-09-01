@@ -58,37 +58,35 @@ export function LayoutInspector({ patchStyle, s }: LayoutInspectorProps) {
 			</InspectorGrid>
 
 			{s.display === 'flex' && (
-				<InspectorSection>
-					<InspectorGrid cols={3}>
-						<SelectRow
-							label="align-items"
-							value={s.items ?? ''}
-							onChange={(v) => patchStyle({ items: v || undefined })}
-							options={[
-								['', '—'],
-								['start', 'start'],
-								['center', 'center'],
-								['end', 'end'],
-								['baseline', 'baseline'],
-								['stretch', 'stretch'],
-							]}
-						/>
-						<SelectRow
-							label="justify-content"
-							value={s.justify ?? ''}
-							onChange={(v) => patchStyle({ justify: v || undefined })}
-							options={[
-								['', '—'],
-								['start', 'start'],
-								['center', 'center'],
-								['end', 'end'],
-								['between', 'between'],
-								['around', 'around'],
-								['evenly', 'evenly'],
-							]}
-						/>
-					</InspectorGrid>
-				</InspectorSection>
+				<InspectorGrid cols={3}>
+					<SelectRow
+						label="align-items"
+						value={s.items ?? ''}
+						onChange={(v) => patchStyle({ items: v || undefined })}
+						options={[
+							['', '—'],
+							['start', 'start'],
+							['center', 'center'],
+							['end', 'end'],
+							['baseline', 'baseline'],
+							['stretch', 'stretch'],
+						]}
+					/>
+					<SelectRow
+						label="justify-content"
+						value={s.justify ?? ''}
+						onChange={(v) => patchStyle({ justify: v || undefined })}
+						options={[
+							['', '—'],
+							['start', 'start'],
+							['center', 'center'],
+							['end', 'end'],
+							['between', 'between'],
+							['around', 'around'],
+							['evenly', 'evenly'],
+						]}
+					/>
+				</InspectorGrid>
 			)}
 		</InspectorSection>
 	);

@@ -1,4 +1,16 @@
-import React, { type RefObject, useEffect, useMemo, useRef, useState } from 'react';
+import { type RefObject, useEffect, useMemo, useRef, useState } from 'react';
+import {
+	Paper,
+	Tabs,
+	Button,
+	Group,
+	Title,
+	Text,
+	Card,
+	ScrollArea,
+	Box,
+	Grid
+} from '@mantine/core';
 import { exportPageToHtml } from './render/Renderer.tsx';
 import { cleanupManualEmptyContainers, cloneSubtreeWithIds } from './ops/schemaOps.ts';
 import { EditorRenderer } from './editor/EditorRenderer.tsx';
@@ -170,46 +182,46 @@ export function SmokeConstructor() {
 
 	if (!siteId || needsSite) {
 		return (
-			<div style={{ padding: 24 }}>
-				<h3>Сайтов нет</h3>
-				<button
-					style={btn}
-					onClick={async () => {
-						const newId = await createEmptySiteId({
-							ownerId: user?.uid,
-							siteName: 'Мой сайт',
-							firstPageId: 'home',
-							firstPageTitle: 'Home',
-							firstPageRoute: '/',
-						});
-						setSiteId(newId);
-						localStorage.setItem('currentSiteId', newId);
-					}}
-				>
-					Создать сайт
-				</button>
-				<button
-					style={btn}
-					onClick={() =>
-						createSiteFromTemplateId({
-							ownerId: user?.uid,
-							name: 'Demo site',
-							templateId: 'base-smoke',
-						})
-					}
-				>
-					Создать сайт из base-smoke
-				</button>
-			</div>
+			<Box p="lg">
+				<Title order={3} mb="md">Сайтов нет</Title>
+				<Group>
+					<Button
+						onClick={async () => {
+							const newId = await createEmptySiteId({
+								ownerId: user?.uid,
+								siteName: 'Мой сайт',
+								firstPageId: 'home',
+								firstPageTitle: 'Home',
+								firstPageRoute: '/',
+							});
+							setSiteId(newId);
+							localStorage.setItem('currentSiteId', newId);
+						}}
+					>
+						Создать сайт
+					</Button>
+					<Button
+						variant="outline"
+						onClick={() =>
+							createSiteFromTemplateId({
+								ownerId: user?.uid,
+								name: 'Demo site',
+								templateId: 'base-smoke',
+							})
+						}
+					>
+						Создать сайт из base-smoke
+					</Button>
+				</Group>
+			</Box>
 		);
 	}
 
 	if (needsPage) {
 		return (
-			<div style={{ padding: 24 }}>
-				<h3>Нет страниц</h3>
-				<button
-					style={btn}
+			<Box p="lg">
+				<Title order={3} mb="md">Нет страниц</Title>
+				<Button
 					onClick={() =>
 						createPageFromTemplateId({
 							pageId: 'home',
@@ -220,237 +232,214 @@ export function SmokeConstructor() {
 					}
 				>
 					Создать страницу из base-smoke
-				</button>
-			</div>
+				</Button>
+			</Box>
 		);
 	}
 
 	return (
-		<div style={{ display: 'grid', gap: 16, padding: 16 }}>
-			<div
-				style={{
-					border: '1px solid #e6e8ef',
-					borderRadius: 12,
-					overflow: 'hidden',
-					background: '#fff',
-				}}
-			>
-				<div
-					style={{
-						padding: 12,
-						borderBottom: '1px solid #e6e8ef',
-						display: 'flex',
-						justifyContent: 'space-between',
-						alignItems: 'center',
-						gap: 12,
-						flexWrap: 'wrap',
-					}}
-				>
-					<strong>Конструктор (Smoke) — DnD</strong>
-					<div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
-						<button
-							onClick={() => setShowCode(true)}
-							style={btn}
-							disabled={!exported}
-							title={
-								!exported ? 'Данные ещё грузятся…' : 'Показать HTML-код'
-							}
-						>
-							Посмотреть код
-						</button>
-						<button
-							onClick={() =>
-								exported && download('page-export.html', exported)
-							}
-							style={btn}
-							disabled={!exported}
-							title={!exported ? 'Данные ещё грузятся…' : 'Скачать HTML'}
-						>
-							Экспорт HTML
-						</button>
-						<button
-							onClick={() => exported && openFullPreview(exported)}
-							style={btn}
-							disabled={!exported}
-							title={!exported ? 'Данные ещё грузятся…' : 'Открыть превью'}
-						>
-							Полный предпросмотр
-						</button>
-					</div>
-				</div>
+		<Box p="md" style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+			<Paper withBorder radius="md">
+				<Box p="md" style={{ borderBottom: '1px solid #e6e8ef' }}>
+					<Group justify="space-between" align="center" wrap="wrap">
+						<Title order={4}>Конструктор (Smoke) — DnD</Title>
+						<Group wrap="wrap">
+							<Button
+								onClick={() => setShowCode(true)}
+								disabled={!exported}
+								title={!exported ? 'Данные ещё грузятся…' : 'Показать HTML-код'}
+								size="sm"
+								variant="outline"
+							>
+								Посмотреть код
+							</Button>
+							<Button
+								onClick={() => exported && download('page-export.html', exported)}
+								disabled={!exported}
+								title={!exported ? 'Данные ещё грузятся…' : 'Скачать HTML'}
+								size="sm"
+								variant="outline"
+							>
+								Экспорт HTML
+							</Button>
+							<Button
+								onClick={() => exported && openFullPreview(exported)}
+								disabled={!exported}
+								title={!exported ? 'Данные ещё грузятся…' : 'Открыть превью'}
+								size="sm"
+								variant="outline"
+							>
+								Полный предпросмотр
+							</Button>
+						</Group>
+					</Group>
+				</Box>
 
-				<div
-					style={{
-						display: 'grid',
-						gridTemplateColumns: 'auto 1fr 360px',
-						gap: 16,
-						padding: 16,
-						alignItems: 'start',
-					}}
-				>
-					<Palette
-						items={blockTemplates.map((b) => ({ id: b.id, name: b.name }))}
-					/>
-					<div
-						ref={canvasRef}
-						style={{
-							border: '1px solid #e6e8ef',
-							borderRadius: 12,
-							padding: 12,
-							background: '#fafbff',
-							maxHeight: 'calc(100vh - 160px)',
-							overflow: 'auto',
-							display: 'grid',
-							gap: 12,
-						}}
-					>
-						<div style={{ display: 'flex', gap: 8 }}>
-							<button
-								onClick={() => setMode('edit')}
-								style={{
-									...btnSmall,
-									background: mode === 'edit' ? '#eef2ff' : '#fff',
-								}}
-							>
-								Редактор
-							</button>
-							<button
-								onClick={() => setMode('preview')}
-								style={{
-									...btnSmall,
-									background: mode === 'preview' ? '#eef2ff' : '#fff',
-								}}
-							>
-								Превью
-							</button>
-							<button
-								style={btnSmall}
-								onClick={() => {
-									if (!schema) return;
-									const res = cleanupManualEmptyContainers(schema);
-									applySchemaChange(res.next, res.patch);
-									if (selectedId && !res.next.nodes[selectedId]) {
-										setSelectedId(null);
-									}
-								}}
-								title="Удалить все пустые контейнеры, созданные вручную"
-							>
-								Очистить пустые ручные контейнеры
-							</button>
-							<SeedBlockTemplatesButton />
-							<button
-								onClick={handleUndo}
-								style={btnSmall}
-								disabled={!canUndo(historyRef.current)}
-								title="Отменить (Ctrl/Cmd+Z)"
-							>
-								Undo
-							</button>
-							<button
-								onClick={handleRedo}
-								style={btnSmall}
-								disabled={!canRedo(historyRef.current)}
-								title="Повторить (Shift+Ctrl/Cmd+Z / Ctrl+Y)"
-							>
-								Redo
-							</button>
-						</div>
+				<Box p="md">
+					<Box style={{ display: 'flex', gap: 16, alignItems: 'flex-start' }}>
+						{/* Palette - фиксированная ширина */}
+						<Box style={{ flex: '0 0 auto' }}>
+							<Palette
+								items={blockTemplates.map((b) => ({ id: b.id, name: b.name }))}
+							/>
+						</Box>
 
-						{loading || !schema || !theme ? (
-							<div style={{ padding: 12 }}>Загрузка…</div>
-						) : mode === 'edit' ? (
-							<div
+						{/* Editor - основное пространство с защитой от сжатия */}
+						<Box style={{
+							flex: '1 1 0%',
+							minWidth: 0, // Важно: предотвращает сжатие контента
+							minHeight: 'calc(100vh - 160px)',
+							display: 'flex',
+							flexDirection: 'column'
+						}}>
+							<Paper
+								withBorder
+								p="md"
 								style={{
-									border: '1px dashed #d7dbea',
-									borderRadius: 10,
-									padding: 12,
-									background: '#fff',
+									background: '#fafbff',
+									flex: 1,
+									overflow: 'auto',
+									display: 'flex',
+									flexDirection: 'column',
+									gap: 12,
 								}}
 							>
-								<EditorRenderer
-									schema={schema}
-									theme={theme}
-									onSchemaChange={(next, patch) => {
-										applySchemaChange(next, patch);
-										if (next.nodes[selectedId ?? ''] == null)
-											setSelectedId(null);
+								<Group>
+									<Button
+										onClick={() => setMode('edit')}
+										variant={mode === 'edit' ? 'filled' : 'outline'}
+										size="xs"
+									>
+										Редактор
+									</Button>
+									<Button
+										onClick={() => setMode('preview')}
+										variant={mode === 'preview' ? 'filled' : 'outline'}
+										size="xs"
+									>
+										Превью
+									</Button>
+									<Button
+										onClick={() => {
+											if (!schema) return;
+											const res = cleanupManualEmptyContainers(schema);
+											applySchemaChange(res.next, res.patch);
+											if (selectedId && !res.next.nodes[selectedId]) {
+												setSelectedId(null);
+											}
+										}}
+										title="Удалить все пустые контейнеры, созданные вручную"
+										size="xs"
+										variant="outline"
+									>
+										Очистить пустые контейнеры
+									</Button>
+									<SeedBlockTemplatesButton />
+									<Button
+										onClick={handleUndo}
+										disabled={!canUndo(historyRef.current)}
+										title="Отменить (Ctrl/Cmd+Z)"
+										size="xs"
+										variant="outline"
+									>
+										Undo
+									</Button>
+									<Button
+										onClick={handleRedo}
+										disabled={!canRedo(historyRef.current)}
+										title="Повторить (Shift+Ctrl/Cmd+Z / Ctrl+Y)"
+										size="xs"
+										variant="outline"
+									>
+										Redo
+									</Button>
+								</Group>
+
+								{loading || !schema || !theme ? (
+									<Text p="md">Загрузка…</Text>
+								) : mode === 'edit' ? (
+									<div style={{ all: 'initial' }}>
+										<EditorRenderer
+											schema={schema}
+											theme={theme}
+											onSchemaChange={(next, patch) => {
+												applySchemaChange(next, patch);
+												if (next.nodes[selectedId ?? ''] == null)
+													setSelectedId(null);
+											}}
+											resolveTemplate={(k) => resolveTemplate(k)}
+											onSelectNode={setSelectedId}
+											selectedId={selectedId}
+											scrollContainer={canvasRef as RefObject<HTMLElement>}
+										/>
+									</div>
+								) : (
+									<div style={{ all: 'initial' }}>
+										<PreviewPane schema={schema} theme={theme} />
+									</div>
+								)}
+							</Paper>
+						</Box>
+
+						<Box style={{ flex: '0 0 360px' }}>
+							<Paper
+								withBorder
+								p="md"
+								style={{
+									display: 'flex',
+									flexDirection: 'column',
+									gap: 12,
+									height: 'calc(100vh - 160px)',
+									overflow: 'auto',
+								}}
+							>
+								<Tabs
+									value={rightTab}
+									onChange={(value) => {
+										if (value === 'inspector' || value === 'theme') {
+											setRightTab(value);
+										}
 									}}
-									resolveTemplate={(k) => resolveTemplate(k)}
-									onSelectNode={setSelectedId}
-									selectedId={selectedId}
-									scrollContainer={canvasRef as RefObject<HTMLElement>}
-								/>
-							</div>
-						) : (
-							<PreviewPane schema={schema} theme={theme} />
-						)}
-					</div>
+								>
+									<Tabs.List>
+										<Tabs.Tab value="inspector">Инспектор</Tabs.Tab>
+										<Tabs.Tab value="theme">Тема</Tabs.Tab>
+									</Tabs.List>
 
-					<div
-						style={{
-							border: '1px solid #e6e8ef',
-							borderRadius: 12,
-							padding: 12,
-							background: '#fff',
-							display: 'grid',
-							gap: 12,
-							alignContent: 'start',
-							height: 'calc(100vh - 160px)',
-							overflow: 'auto',
-						}}
-					>
-						<div style={{ display: 'flex', gap: 8 }}>
-							<button
-								onClick={() => setRightTab('inspector')}
-								style={{
-									...btnSmall,
-									background:
-										rightTab === 'inspector' ? '#eef2ff' : '#fff',
-								}}
-							>
-								Инспектор
-							</button>
-							<button
-								onClick={() => setRightTab('theme')}
-								style={{
-									...btnSmall,
-									background: rightTab === 'theme' ? '#eef2ff' : '#fff',
-								}}
-							>
-								Тема
-							</button>
-						</div>
+									<Tabs.Panel value="inspector" pt="xs">
+										<Inspector
+											schema={schema!}
+											selectedId={selectedId}
+											onChange={setSchema}
+											theme={theme!}
+											ownerId={user?.uid}
+										/>
+									</Tabs.Panel>
 
-						{rightTab === 'inspector' ? (
-							<Inspector
-								schema={schema!}
-								selectedId={selectedId}
-								onChange={setSchema}
-								theme={theme!}
-								ownerId={user?.uid}
-							/>
-						) : (
-							<ThemeEditor
-								theme={theme!}
-								onChange={setTheme}
-								onReset={() => {}}
-							/>
-						)}
-					</div>
-				</div>
-			</div>
+									<Tabs.Panel value="theme" pt="xs">
+										{theme && (
+											<ThemeEditor
+												theme={theme!}
+												onChange={setTheme}
+												onReset={() => {}}
+											/>
+										)}
+									</Tabs.Panel>
+								</Tabs>
+							</Paper>
+						</Box>
+					</Box>
+				</Box>
+			</Paper>
 
-			<div
-				style={{
-					display: 'grid',
-					gap: 16,
-					gridTemplateColumns: 'repeat(auto-fit, minmax(420px, 1fr))',
-					alignItems: 'start',
-				}}
-			>
-				<JsonCard title="JSON — Текущая тема" obj={theme ?? {}} />
-				<JsonCard title="JSON — Страница (текущее состояние)" obj={{ schema }} />
-			</div>
+			<Grid>
+				<Grid.Col span={6}>
+					<JsonCard title="JSON — Текущая тема" obj={theme ?? {}} />
+				</Grid.Col>
+				<Grid.Col span={6}>
+					<JsonCard title="JSON — Страница (текущее состояние)" obj={{ schema }} />
+				</Grid.Col>
+			</Grid>
 
 			<CodePreviewModal
 				open={showCode}
@@ -460,53 +449,23 @@ export function SmokeConstructor() {
 				title="Исходный HTML (экспорт)"
 				autoCloseAfterCopyMs={0}
 			/>
-		</div>
+		</Box>
 	);
 }
 
-const btn: React.CSSProperties = {
-	padding: '8px 12px',
-	borderRadius: 8,
-	border: '1px solid #d0d3dc',
-	background: '#f7f8fb',
-	cursor: 'pointer',
-};
-const btnSmall: React.CSSProperties = {
-	padding: '6px 10px',
-	borderRadius: 8,
-	border: '1px solid #d0d3dc',
-	background: '#fff',
-	cursor: 'pointer',
-	fontSize: 12,
-};
-
-function JsonCard({ title, obj }: { title: string; obj: any }) {
+function JsonCard({ title, obj }: { title: string; obj: object }) {
 	return (
-		<div>
-			<div
-				style={{
-					padding: 12,
-					border: '1px solid #e6e8ef',
-					borderRadius: 12,
-					background: '#fff',
-					marginBottom: 8,
-				}}
-			>
-				<strong>{title}</strong>
-			</div>
-			<pre
-				style={{
-					margin: 0,
-					padding: 12,
-					border: '1px solid #e6e8ef',
-					borderRadius: 12,
-					background: '#fff',
-					overflow: 'auto',
-					maxHeight: 'calc(100vh - 220px)',
-				}}
-			>
-				{JSON.stringify(obj, null, 2)}
-			</pre>
-		</div>
+		<Card withBorder>
+			<Card.Section withBorder p="md">
+				<Title order={5}>{title}</Title>
+			</Card.Section>
+			<ScrollArea.Autosize mah="calc(100vh - 220px)">
+				<Box p="md">
+          <pre style={{ margin: 0, fontSize: 12 }}>
+            {JSON.stringify(obj, null, 2)}
+          </pre>
+				</Box>
+			</ScrollArea.Autosize>
+		</Card>
 	);
 }
