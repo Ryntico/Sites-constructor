@@ -25,6 +25,8 @@ import { appendMany, insertManyAtSide } from '@/dev/constructor/ops/insertions';
 import { acceptsDt } from '@/dev/constructor/runtime/dnd/utils';
 import { NodeView } from '@/dev/constructor/editor/NodeView';
 
+import '@/dev/constructor/styles/editorBase.css';
+
 export type EditorRendererProps = {
 	schema: PageSchema;
 	theme: ThemeTokens;
@@ -168,20 +170,6 @@ export function EditorRenderer({
 			onDrop={onRootDrop}
 			onClickCapture={onEditorClickCapture}
 		>
-			<style>{`[data-editor-root] h1,
-        [data-editor-root] h2,
-        [data-editor-root] h3,
-        [data-editor-root] h4,
-        [data-editor-root] h5,
-        [data-editor-root] h6,
-        [data-editor-root] p {
-        white-space: pre-wrap;
-        overflow-wrap: anywhere;
-        word-break: normal;
-        max-width: 100%;
-      }
-      [data-editor-root] [data-res-id] { min-width: 0; max-width: 100%; }`}</style>
-
 			<NodeView
 				id={schema.rootId}
 				schema={schema}

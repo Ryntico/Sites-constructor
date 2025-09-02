@@ -18,7 +18,8 @@ import { renderPrimitive } from '@/dev/constructor/render/primitives';
 import {
 	computeAxis,
 	isFillLike,
-	buildContainerWrapStyle,
+	buildWrapperStyle,
+	buildCenterStyle,
 } from '@/dev/constructor/render/helpers';
 
 import { dndContainerStyle } from '@/dev/constructor/styles/dndContainerStyle';
@@ -98,29 +99,11 @@ export function NodeView(props: NodeViewProps) {
 	const axis: Axis = computeAxis(baseStyle, node.type);
 	const EDITOR_PAD = 14;
 
-	const wrapperStyle: React.CSSProperties = parentLike
-		? {
-				position: 'relative',
-				userSelect: 'none',
-				...(node.type === 'section' ? { width: '100%' } : {}),
-				...buildContainerWrapStyle(baseStyle, EDITOR_PAD),
-			}
-		: node.type === 'divider'
-			? {
-					position: 'relative',
-					userSelect: 'none',
-					display: 'block',
-					width: '100%',
-					...baseStyle,
-				}
-			: {
-					position: 'relative',
-					userSelect: 'none',
-					display: 'inline-flex',
-					flex: '0 0 auto',
-					minWidth: 0,
-					verticalAlign: 'top',
-				};
+	const wrapperStyle = buildWrapperStyle(baseStyle, {
+		parentLike,
+		nodeType: node.type,
+		editorPad: EDITOR_PAD,
+	});
 
 	const containerEmpty = parentLike && children.length === 0;
 
@@ -221,35 +204,7 @@ export function NodeView(props: NodeViewProps) {
 
 						{children.map((cid, idx) => {
 							const isFill = isFillLike(schema, cid);
-
-							const centerStyle: React.CSSProperties =
-								axis === 'y'
-									? {
-											display: 'flex',
-											flexDirection: 'column',
-											...(isFill
-												? {
-														flex: '1 1 auto',
-														minWidth: 0,
-														maxWidth: '100%',
-													}
-												: {
-														display: 'inline-flex',
-														flex: '0 0 auto',
-														minWidth: 0,
-													}),
-										}
-									: isFill
-										? {
-												flex: '1 1 auto',
-												minWidth: 0,
-												maxWidth: '100%',
-											}
-										: {
-												flex: '0 0 auto',
-												minWidth: 0,
-												display: 'inline-flex',
-											};
+							const centerStyle = buildCenterStyle(axis, isFill);
 
 							return (
 								<ChildFrame
@@ -275,11 +230,11 @@ export function NodeView(props: NodeViewProps) {
 										onSelect={onSelect}
 										scrollContainer={scrollContainer}
 										isDragging={isDragging}
-										selectedId={props.selectedId}
+										selectedId={selectedId}
 										handleDropAtSide={handleDropAtSide}
 										handleDropInside={handleDropInside}
-										isMac={props.isMac}
-										copyKeyRef={props.copyKeyRef}
+										isMac={isMac}
+										copyKeyRef={copyKeyRef}
 									/>
 								</ChildFrame>
 							);

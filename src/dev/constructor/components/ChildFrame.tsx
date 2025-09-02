@@ -20,6 +20,13 @@ export type ChildFrameProps = {
 	children: React.ReactNode;
 };
 
+const SIDE_AXIS: Record<Side, Axis> = {
+	left: 'x',
+	right: 'x',
+	top: 'y',
+	bottom: 'y',
+};
+
 export function ChildFrame({
 	axis,
 	cid,
@@ -32,103 +39,46 @@ export function ChildFrame({
 	centerStyle,
 	children,
 }: ChildFrameProps): React.ReactElement {
+	const DZ = (side: Side) => (
+		<DropZone
+			key={`${cid}-${side}`}
+			onDrop={(tpl, move, o) => onDropSide(side, tpl, move, o)}
+			scrollContainer={scrollContainer}
+			visible={isDragging}
+			axis={SIDE_AXIS[side]}
+			matchId={cid}
+			copyKeyRef={copyKeyRef}
+			isMac={isMac}
+		/>
+	);
+
 	if (axis === 'y') {
 		return (
 			<div style={{ display: 'flex', alignItems: 'stretch', width: '100%' }}>
-				<DropZone
-					onDrop={(tpl, move, o) => onDropSide('left', tpl, move, o)}
-					scrollContainer={scrollContainer}
-					visible={isDragging}
-					axis="x"
-					matchId={cid}
-					copyKeyRef={copyKeyRef}
-					isMac={isMac}
-				/>
+				{DZ('left')}
 
 				<div style={centerStyle}>
-					{isFirst && (
-						<DropZone
-							onDrop={(tpl, move, o) => onDropSide('top', tpl, move, o)}
-							scrollContainer={scrollContainer}
-							visible={isDragging}
-							axis="y"
-							matchId={cid}
-							copyKeyRef={copyKeyRef}
-							isMac={isMac}
-						/>
-					)}
-
+					{isFirst && DZ('top')}
 					{children}
-
-					<DropZone
-						onDrop={(tpl, move, o) => onDropSide('bottom', tpl, move, o)}
-						scrollContainer={scrollContainer}
-						visible={isDragging}
-						axis="y"
-						matchId={cid}
-						copyKeyRef={copyKeyRef}
-						isMac={isMac}
-					/>
+					{DZ('bottom')}
 				</div>
 
-				<DropZone
-					onDrop={(tpl, move, o) => onDropSide('right', tpl, move, o)}
-					scrollContainer={scrollContainer}
-					visible={isDragging}
-					axis="x"
-					matchId={cid}
-					copyKeyRef={copyKeyRef}
-					isMac={isMac}
-				/>
+				{DZ('right')}
 			</div>
 		);
 	}
 
 	return (
 		<div style={{ display: 'flex', flexDirection: 'column', minWidth: 0 }}>
-			<DropZone
-				onDrop={(tpl, move, o) => onDropSide('top', tpl, move, o)}
-				scrollContainer={scrollContainer}
-				visible={isDragging}
-				axis="y"
-				matchId={cid}
-				copyKeyRef={copyKeyRef}
-				isMac={isMac}
-			/>
+			{DZ('top')}
 
 			<div style={{ display: 'flex', alignItems: 'stretch', minWidth: 0 }}>
-				<DropZone
-					onDrop={(tpl, move, o) => onDropSide('left', tpl, move, o)}
-					scrollContainer={scrollContainer}
-					visible={isDragging}
-					axis="x"
-					matchId={cid}
-					copyKeyRef={copyKeyRef}
-					isMac={isMac}
-				/>
-
+				{DZ('left')}
 				<div style={centerStyle}>{children}</div>
-
-				<DropZone
-					onDrop={(tpl, move, o) => onDropSide('right', tpl, move, o)}
-					scrollContainer={scrollContainer}
-					visible={isDragging}
-					axis="x"
-					matchId={cid}
-					copyKeyRef={copyKeyRef}
-					isMac={isMac}
-				/>
+				{DZ('right')}
 			</div>
 
-			<DropZone
-				onDrop={(tpl, move, o) => onDropSide('bottom', tpl, move, o)}
-				scrollContainer={scrollContainer}
-				visible={isDragging}
-				axis="y"
-				matchId={cid}
-				copyKeyRef={copyKeyRef}
-				isMac={isMac}
-			/>
+			{DZ('bottom')}
 		</div>
 	);
 }

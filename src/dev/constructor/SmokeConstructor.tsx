@@ -9,9 +9,9 @@ import {
 	Card,
 	ScrollArea,
 	Box,
-	Grid
+	Grid,
 } from '@mantine/core';
-import { exportPageToHtml } from './render/Renderer.tsx';
+import { exportPageToHtml } from './render/exportHtml.ts';
 import { cleanupManualEmptyContainers, cloneSubtreeWithIds } from './ops/schemaOps.ts';
 import { EditorRenderer } from './editor/EditorRenderer.tsx';
 import { Inspector } from './Inspector/index.tsx';
@@ -183,7 +183,9 @@ export function SmokeConstructor() {
 	if (!siteId || needsSite) {
 		return (
 			<Box p="lg">
-				<Title order={3} mb="md">Сайтов нет</Title>
+				<Title order={3} mb="md">
+					Сайтов нет
+				</Title>
 				<Group>
 					<Button
 						onClick={async () => {
@@ -220,7 +222,9 @@ export function SmokeConstructor() {
 	if (needsPage) {
 		return (
 			<Box p="lg">
-				<Title order={3} mb="md">Нет страниц</Title>
+				<Title order={3} mb="md">
+					Нет страниц
+				</Title>
 				<Button
 					onClick={() =>
 						createPageFromTemplateId({
@@ -247,16 +251,24 @@ export function SmokeConstructor() {
 							<Button
 								onClick={() => setShowCode(true)}
 								disabled={!exported}
-								title={!exported ? 'Данные ещё грузятся…' : 'Показать HTML-код'}
+								title={
+									!exported
+										? 'Данные ещё грузятся…'
+										: 'Показать HTML-код'
+								}
 								size="sm"
 								variant="outline"
 							>
 								Посмотреть код
 							</Button>
 							<Button
-								onClick={() => exported && download('page-export.html', exported)}
+								onClick={() =>
+									exported && download('page-export.html', exported)
+								}
 								disabled={!exported}
-								title={!exported ? 'Данные ещё грузятся…' : 'Скачать HTML'}
+								title={
+									!exported ? 'Данные ещё грузятся…' : 'Скачать HTML'
+								}
 								size="sm"
 								variant="outline"
 							>
@@ -265,7 +277,9 @@ export function SmokeConstructor() {
 							<Button
 								onClick={() => exported && openFullPreview(exported)}
 								disabled={!exported}
-								title={!exported ? 'Данные ещё грузятся…' : 'Открыть превью'}
+								title={
+									!exported ? 'Данные ещё грузятся…' : 'Открыть превью'
+								}
 								size="sm"
 								variant="outline"
 							>
@@ -280,18 +294,23 @@ export function SmokeConstructor() {
 						{/* Palette - фиксированная ширина */}
 						<Box style={{ flex: '0 0 auto' }}>
 							<Palette
-								items={blockTemplates.map((b) => ({ id: b.id, name: b.name }))}
+								items={blockTemplates.map((b) => ({
+									id: b.id,
+									name: b.name,
+								}))}
 							/>
 						</Box>
 
 						{/* Editor - основное пространство с защитой от сжатия */}
-						<Box style={{
-							flex: '1 1 0%',
-							minWidth: 0, // Важно: предотвращает сжатие контента
-							minHeight: 'calc(100vh - 160px)',
-							display: 'flex',
-							flexDirection: 'column'
-						}}>
+						<Box
+							style={{
+								flex: '1 1 0%',
+								minWidth: 0, // Важно: предотвращает сжатие контента
+								minHeight: 'calc(100vh - 160px)',
+								display: 'flex',
+								flexDirection: 'column',
+							}}
+						>
 							<Paper
 								withBorder
 								p="md"
@@ -314,7 +333,9 @@ export function SmokeConstructor() {
 									</Button>
 									<Button
 										onClick={() => setMode('preview')}
-										variant={mode === 'preview' ? 'filled' : 'outline'}
+										variant={
+											mode === 'preview' ? 'filled' : 'outline'
+										}
 										size="xs"
 									>
 										Превью
@@ -322,9 +343,13 @@ export function SmokeConstructor() {
 									<Button
 										onClick={() => {
 											if (!schema) return;
-											const res = cleanupManualEmptyContainers(schema);
+											const res =
+												cleanupManualEmptyContainers(schema);
 											applySchemaChange(res.next, res.patch);
-											if (selectedId && !res.next.nodes[selectedId]) {
+											if (
+												selectedId &&
+												!res.next.nodes[selectedId]
+											) {
 												setSelectedId(null);
 											}
 										}}
@@ -370,7 +395,9 @@ export function SmokeConstructor() {
 											resolveTemplate={(k) => resolveTemplate(k)}
 											onSelectNode={setSelectedId}
 											selectedId={selectedId}
-											scrollContainer={canvasRef as RefObject<HTMLElement>}
+											scrollContainer={
+												canvasRef as RefObject<HTMLElement>
+											}
 										/>
 									</div>
 								) : (
@@ -437,7 +464,10 @@ export function SmokeConstructor() {
 					<JsonCard title="JSON — Текущая тема" obj={theme ?? {}} />
 				</Grid.Col>
 				<Grid.Col span={6}>
-					<JsonCard title="JSON — Страница (текущее состояние)" obj={{ schema }} />
+					<JsonCard
+						title="JSON — Страница (текущее состояние)"
+						obj={{ schema }}
+					/>
 				</Grid.Col>
 			</Grid>
 
@@ -461,9 +491,9 @@ function JsonCard({ title, obj }: { title: string; obj: object }) {
 			</Card.Section>
 			<ScrollArea.Autosize mah="calc(100vh - 220px)">
 				<Box p="md">
-          <pre style={{ margin: 0, fontSize: 12 }}>
-            {JSON.stringify(obj, null, 2)}
-          </pre>
+					<pre style={{ margin: 0, fontSize: 12 }}>
+						{JSON.stringify(obj, null, 2)}
+					</pre>
 				</Box>
 			</ScrollArea.Autosize>
 		</Card>
