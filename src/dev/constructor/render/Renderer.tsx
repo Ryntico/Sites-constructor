@@ -1,19 +1,19 @@
 import React from 'react';
 import type { PageSchema, NodeJson, ThemeTokens, Action } from '@/types/siteTypes.ts';
-import { mergeResponsive, styleObjToCss } from './responsive.ts';
+import { mergeResponsive } from './responsive.ts';
+import { dataResAttr } from './helpers.ts';
+import { asInputMode, asWrap } from './helpers';
+import { Containers, Text, Controls, Misc } from './components';
 
-function actionsAttr(on?: Record<string, Action[]>) {
-	if (!on?.click?.length) return undefined;
-	try {
-		return JSON.stringify(on.click);
-	} catch {
-		return undefined;
-	}
-}
-
-export function RenderTree(props: { schema: PageSchema; theme: ThemeTokens }) {
-	const { schema, theme } = props;
-	return <Node node={schema.nodes[schema.rootId]} schema={schema} theme={theme} />;
+export function RenderTree({
+	schema,
+	theme,
+}: {
+	schema: PageSchema;
+	theme: ThemeTokens;
+}) {
+	const root = schema.nodes[schema.rootId];
+	return <Node node={root} schema={schema} theme={theme} />;
 }
 
 function Node({
@@ -26,621 +26,232 @@ function Node({
 	theme: ThemeTokens;
 }) {
 	const kids = node.childrenOrder?.map((id) => schema.nodes[id]) ?? [];
+	const children = kids.map((k) => (
+		<Node key={k.id} node={k} schema={schema} theme={theme} />
+	));
 	const { base, mediaCssText } = mergeResponsive(theme, node.props);
-	const dataAttrs: any = { 'data-res-id': node.id };
+	const dataAttrs = dataResAttr(node.id);
 
 	switch (node.type) {
-		case 'page': {
+		case 'page':
 			return (
-				<div
-					style={{ ...base, minHeight: '100vh', background: theme.colors.page }}
-					{...dataAttrs}
+				<Containers.Page
+					base={{ ...base, minHeight: '100vh', background: theme.colors.page }}
+					theme={theme}
+					mediaCssText={mediaCssText}
+					dataAttrs={dataAttrs}
 				>
-					{kids.map((k) => (
-						<Node key={k.id} node={k} schema={schema} theme={theme} />
-					))}
-					{mediaCssText ? (
-						<style dangerouslySetInnerHTML={{ __html: mediaCssText }} />
-					) : null}
-				</div>
+					{children}
+				</Containers.Page>
 			);
-		}
+
 		case 'section':
+			return (
+				<Containers.Container as="section" base={base} dataAttrs={dataAttrs}>
+					{children}
+				</Containers.Container>
+			);
+
 		case 'box':
-		case 'row': {
-			const Tag = node.type === 'section' ? 'section' : 'div';
+		case 'row':
 			return (
-				<Tag style={base as any} {...dataAttrs}>
-					{kids.map((k) => (
-						<Node key={k.id} node={k} schema={schema} theme={theme} />
-					))}
-				</Tag>
+				<Containers.Container as="div" base={base} dataAttrs={dataAttrs}>
+					{children}
+				</Containers.Container>
 			);
-		}
-		case 'heading': {
-			const level = node.props?.level ?? 1;
-			const Tag = `h${level}` as any;
+
+		case 'heading':
 			return (
-				<Tag style={base} {...dataAttrs}>
-					{node.props?.text ?? ''}
-				</Tag>
+				<Text.Heading
+					base={base}
+					dataAttrs={dataAttrs}
+					level={node.props?.level}
+					text={node.props?.text}
+				/>
 			);
-		}
+
 		case 'paragraph':
 			return (
-				<p style={base} {...dataAttrs}>
-					{node.props?.text ?? ''}
-				</p>
-			);
-		case 'richtext': {
-			const html = node.props?.text ?? '';
-			const hasHtml = /<[a-z][\s\S]*>/i.test(html);
-			return hasHtml ? (
-				<div
-					style={base}
-					{...dataAttrs}
-					dangerouslySetInnerHTML={{ __html: html }}
+				<Text.Paragraph
+					base={base}
+					dataAttrs={dataAttrs}
+					text={node.props?.text}
 				/>
-			) : (
-				<p style={base} {...dataAttrs}>
-					{html}
-				</p>
 			);
-		}
+
+		case 'richtext':
+			return (
+				<Text.RichText
+					base={base}
+					dataAttrs={dataAttrs}
+					html={node.props?.text}
+				/>
+			);
+
 		case 'image':
 			return (
-				<img
-					style={base}
+				<Misc.Image
+					base={base}
+					dataAttrs={dataAttrs}
 					src={node.props?.src}
-					alt={node.props?.alt ?? ''}
-					{...dataAttrs}
+					alt={node.props?.alt}
 				/>
 			);
-		case 'button': {
-			const href = node.props?.href;
-			const text = node.props?.text ?? 'Button';
-			const act = actionsAttr(node.props?.on);
-			if (href) {
-				return (
-					<a
-						href={href}
-						style={
-							{
-								...base,
-								textDecoration: 'none',
-								display: 'inline-block',
-							} as React.CSSProperties
-						}
-						data-actions={act}
-						{...dataAttrs}
-					>
-						{text}
-					</a>
-				);
-			}
+
+		case 'button':
 			return (
-				<button style={base as any} data-actions={act} {...dataAttrs}>
-					{text}
-				</button>
+				<Controls.Button
+					base={base}
+					dataAttrs={dataAttrs}
+					href={node.props?.href}
+					text={node.props?.text}
+					actions={node.props?.on as Record<'click', Action[]> | undefined}
+				/>
 			);
-		}
-		case 'input': {
-			const id = `input-${node.id}`;
-			const input = (
-				<input
-					id={id}
-					type={node.props?.type || 'text'}
+
+		case 'input':
+			return (
+				<Controls.Input
+					base={base}
+					dataAttrs={dataAttrs}
+					id={`input-${node.id}`}
+					label={node.props?.label}
+					type={node.props?.type}
 					name={node.props?.name}
 					value={node.props?.value}
 					placeholder={node.props?.placeholder}
 					min={node.props?.min}
 					max={node.props?.max}
 					step={node.props?.step}
-					minLength={node.props?.minlength}
-					maxLength={node.props?.maxlength}
+					minlength={node.props?.minlength}
+					maxlength={node.props?.maxlength}
 					pattern={node.props?.pattern}
 					title={node.props?.title}
 					size={node.props?.size}
-					required={node.props?.required}
-					disabled={node.props?.disabled}
-					readOnly={node.props?.readonly}
-					autoComplete={node.props?.autocomplete ? 'on' : 'off'}
-					autoFocus={node.props?.autofocus}
-					inputMode={node.props?.inputmode}
-					spellCheck={node.props?.spellcheck}
+					required={!!node.props?.required}
+					disabled={!!node.props?.disabled}
+					readonly={!!node.props?.readonly}
+					autocomplete={!!node.props?.autocomplete}
+					autofocus={!!node.props?.autofocus}
+					inputmode={asInputMode(node.props?.inputmode)}
+					spellcheck={
+						typeof node.props?.spellcheck === 'boolean'
+							? node.props?.spellcheck
+							: undefined
+					}
 					dir={node.props?.dir}
-					style={base as React.CSSProperties}
-					{...dataAttrs}
 				/>
 			);
 
-			return node.props?.label ? (
-				<div
-					style={{
-						display: 'flex',
-						flexDirection: 'column',
-						alignItems: 'flex-start',
-						gap: '4px',
-					}}
-				>
-					<label htmlFor={id} style={{ fontSize: '14px', color: '#4a5568' }}>
-						{node.props.label}
-					</label>
-					{input}
-				</div>
-			) : (
-				input
-			);
-		}
-		case 'textarea': {
-			const id = `textarea-${node.id}`;
-			const textarea = (
-				<textarea
-					id={id}
+		case 'textarea':
+			return (
+				<Controls.Textarea
+					base={base}
+					dataAttrs={dataAttrs}
+					id={`textarea-${node.id}`}
+					label={node.props?.label}
 					name={node.props?.name}
 					rows={node.props?.rows}
 					cols={node.props?.cols}
 					placeholder={node.props?.placeholder}
-					disabled={node.props?.disabled}
-					readOnly={node.props?.readonly}
-					required={node.props?.required}
-					maxLength={node.props?.maxlength}
-					minLength={node.props?.minlength}
-					autoFocus={node.props?.autofocus}
-					form={node.props?.formId}
-					wrap={node.props?.wrap}
-					autoComplete={node.props?.autocomplete ? 'on' : 'off'}
-					spellCheck={node.props?.spellcheck}
+					disabled={!!node.props?.disabled}
+					readonly={!!node.props?.readonly}
+					required={!!node.props?.required}
+					maxlength={node.props?.maxlength}
+					minlength={node.props?.minlength}
+					autofocus={!!node.props?.autofocus}
+					formId={node.props?.formId}
+					wrap={asWrap(node.props?.wrap)}
+					autocomplete={!!node.props?.autocomplete}
+					spellcheck={
+						typeof node.props?.spellcheck === 'boolean'
+							? node.props?.spellcheck
+							: undefined
+					}
 					title={node.props?.title}
-					style={base as React.CSSProperties}
-					{...dataAttrs}
-				>
-					{node.props?.value}
-				</textarea>
+					dir={node.props?.dir}
+					value={node.props?.value}
+				/>
 			);
 
-			return node.props?.label ? (
-				<div
-					style={{
-						display: 'flex',
-						flexDirection: 'column',
-						alignItems: 'flex-start',
-						gap: '4px',
-					}}
-				>
-					<label htmlFor={id} style={{ fontSize: '14px', color: '#4a5568' }}>
-						{node.props.label}
-					</label>
-					{textarea}
-				</div>
-			) : (
-				textarea
-			);
-		}
-		case 'select': {
-			const id = `select-${node.id}`;
-			const select = (
-				<select
-					id={id}
-					name={node.props?.name}
-					disabled={node.props?.disabled}
-					required={node.props?.required}
-					autoFocus={node.props?.autofocus}
-					multiple={node.props?.multiple}
-					size={node.props?.size}
-					form={node.props?.formId}
-					style={base as React.CSSProperties}
-					{...dataAttrs}
-				>
-					{node.props?.options?.map((option, index) => (
-						<option key={index} value={option.value}>
-							{option.text}
-						</option>
-					))}
-				</select>
-			);
-
-			return node.props?.label ? (
-				<div
-					style={{
-						display: 'flex',
-						flexDirection: 'column',
-						alignItems: 'flex-start',
-						gap: '4px',
-					}}
-				>
-					<label htmlFor={id} style={{ fontSize: '14px', color: '#4a5568' }}>
-						{node.props.label}
-					</label>
-					{select}
-				</div>
-			) : (
-				select
-			);
-		}
-		case 'divider': {
-			return <div style={base} {...dataAttrs} />;
-		}
-		case 'list': {
-			const Tag = (node.props?.variant === 'ol' ? 'ol' : 'ul') as any;
+		case 'select':
 			return (
-				<Tag style={base} {...dataAttrs}>
-					{kids.map((k) => (
-						<Node key={k.id} node={k} schema={schema} theme={theme} />
-					))}
-				</Tag>
+				<Controls.Select
+					base={base}
+					dataAttrs={dataAttrs}
+					id={`select-${node.id}`}
+					label={node.props?.label}
+					name={node.props?.name}
+					disabled={!!node.props?.disabled}
+					required={!!node.props?.required}
+					autofocus={!!node.props?.autofocus}
+					multiple={!!node.props?.multiple}
+					size={node.props?.size}
+					formId={node.props?.formId}
+					options={node.props?.options}
+				/>
 			);
-		}
+
+		case 'divider':
+			return <Misc.Divider base={base} dataAttrs={dataAttrs} />;
+
+		case 'list':
+			return (
+				<Misc.List
+					as={node.props?.variant === 'ol' ? 'ol' : 'ul'}
+					base={base}
+					dataAttrs={dataAttrs}
+				>
+					{children}
+				</Misc.List>
+			);
+
 		case 'listItem':
 			return (
-				<li style={base} {...dataAttrs}>
-					{node.props?.text ?? ''}
-				</li>
+				<Misc.ListItem
+					base={base}
+					dataAttrs={dataAttrs}
+					text={node.props?.text}
+				/>
 			);
-		case 'form': {
+
+		case 'form':
 			return (
-				<form
-					{...(node.props?.formId && { id: node.props?.formId })}
-					action={node.props?.formAction}
-					method={node.props?.formMethod}
-					encType={node.props?.enctype}
-					style={base}
-					{...dataAttrs}
+				<Controls.Form
+					base={base}
+					dataAttrs={dataAttrs}
+					formId={node.props?.formId}
+					formAction={node.props?.formAction}
+					formMethod={node.props?.formMethod}
+					enctype={
+						node.props?.enctype as
+							| React.FormHTMLAttributes<HTMLFormElement>['encType']
+							| undefined
+					}
 				>
-					{kids.map((k) => (
-						<Node key={k.id} node={k} schema={schema} theme={theme} />
-					))}
-				</form>
+					{children}
+				</Controls.Form>
 			);
-		}
 
-		case 'blockquote': {
+		case 'blockquote':
 			return (
-				<blockquote style={base} {...dataAttrs}>
-					{node.props?.text ?? ''}
-					{(node.props?.preAuthor || node.props?.cite) && (
-						<p style={{ fontSize: 12, color: '#888', marginTop: 8 }}>
-							{node.props?.preAuthor}
-							{node.props?.cite && <cite>{node.props.cite}</cite>}
-						</p>
-					)}
-				</blockquote>
+				<Text.Blockquote
+					base={base}
+					dataAttrs={dataAttrs}
+					text={node.props?.text}
+					preAuthor={node.props?.preAuthor}
+					cite={node.props?.cite}
+				/>
 			);
-		}
 
-		case 'anchor': {
-			return <div id={node.id} style={base}></div>;
-		}
+		case 'anchor':
+			return <Misc.Anchor id={node.id} base={base} dataAttrs={dataAttrs} />;
 
 		default:
-			return <div style={{ color: 'crimson' }}>Unknown node: {node.type}</div>;
+			return (
+				<div style={{ color: 'crimson' }} {...dataAttrs}>
+					Unknown node: {node.type}
+				</div>
+			);
 	}
-}
-
-export function exportPageToHtml(opts: {
-	title: string;
-	schema: PageSchema;
-	theme: ThemeTokens;
-}) {
-	const { title, schema, theme } = opts;
-	const { html, css, js } = renderStaticHtml(schema, theme);
-
-	const doc = [
-		'<!doctype html>',
-		`<html lang="ru">`,
-		'<head>',
-		`<meta charset="utf-8" />`,
-		`<meta name="viewport" content="width=device-width, initial-scale=1" />`,
-		`<title>${escapeHtml(title)}</title>`,
-		`<style>${resetCss()}${baseCss(theme)}${css}</style>`,
-		'</head>',
-		'<body>',
-		html,
-		`<script>${runtimeJs()}</script>`,
-		js ? `<script>${js}</script>` : '',
-		'</body></html>',
-	].join('');
-
-	return doc;
-}
-
-function renderStaticHtml(schema: PageSchema, theme: ThemeTokens) {
-	let css = '';
-	const js = '';
-
-	const walk = (node: NodeJson): string => {
-		const kids = node.childrenOrder?.map((id) => schema.nodes[id]) ?? [];
-		const { base, mediaCssText } = mergeResponsive(theme, node.props);
-		if (mediaCssText) css += mediaCssText;
-
-		const style = styleObjToCss(base);
-		const data = ` data-res-id="${escapeAttr(node.id)}"`;
-
-		switch (node.type) {
-			case 'page':
-				return `<div style="${style};min-height:100vh;background:${theme.colors.page};"${data}>${kids
-					.map(walk)
-					.join('')}</div>`;
-			case 'section':
-			case 'box':
-			case 'row': {
-				const tag = node.type === 'section' ? 'section' : 'div';
-				return `<${tag} style="${style}"${data}>${kids.map(walk).join('')}</${tag}>`;
-			}
-			case 'heading': {
-				const lvl = node.props?.level ?? 1;
-				const text = escapeHtml(node.props?.text ?? '');
-				return `<h${lvl} style="${style}"${data}>${text}</h${lvl}>`;
-			}
-			case 'paragraph':
-				return `<p style="${style}"${data}>${escapeHtml(node.props?.text ?? '')}</p>`;
-			case 'richtext': {
-				const html = node.props?.text ?? '';
-				const hasHtml = /<[a-z][\s\S]*>/i.test(html);
-				return hasHtml
-					? `<div style="${style}"${data}>${html}</div>`
-					: `<p style="${style}"${data}>${escapeHtml(html)}</p>`;
-			}
-			case 'image': {
-				const src = escapeAttr(node.props?.src ?? '');
-				const alt = escapeAttr(node.props?.alt ?? '');
-				return `<img style="${style}" src="${src}" alt="${alt}"${data} />`;
-			}
-			case 'button': {
-				const txt = escapeHtml(node.props?.text ?? 'Button');
-				const actions = node.props?.on?.click?.length
-					? ` data-actions='${escapeAttr(JSON.stringify(node.props!.on!.click))}'`
-					: '';
-				if (node.props?.href) {
-					const href = escapeAttr(node.props.href);
-					return `<a href="${href}" style="${style};text-decoration:none;display:inline-block;"${actions}${data}>${txt}</a>`;
-				}
-				return `<button style="${style}"${actions}${data}>${txt}</button>`;
-			}
-			case 'divider': {
-				return `<div style="${style}"${data}></div>`;
-			}
-			case 'list': {
-				const tag = node.props?.variant === 'ol' ? 'ol' : 'ul';
-				return `<${tag} style="${style}"${data}>${kids.map(walk).join('')}</${tag}>`;
-			}
-			case 'listItem':
-				return `<li style="${style}"${data}>${escapeHtml(node.props?.text ?? '')}</li>`;
-
-			case 'form': {
-				const formId = node.props?.formId ?? '';
-				const action = node.props?.formAction ?? '';
-				const method = node.props?.formMethod ?? 'post';
-				const enctype =
-					node.props?.enctype ?? 'application/x-www-form-urlencoded';
-				return `<form id="${formId}" action="${action}" method="${method}" enctype="${enctype}" style="${style}"${data}>${kids
-					.map(walk)
-					.join('')}</form>`;
-			}
-
-			case 'blockquote': {
-				const text = escapeHtml(node.props?.text ?? '');
-				const author = node.props?.preAuthor
-					? escapeHtml(node.props.preAuthor)
-					: '';
-				const cite = node.props?.cite ? escapeAttr(node.props.cite) : '';
-				const citeAttr = cite ? ` cite="${cite}"` : '';
-				const footer =
-					author || cite
-						? `<p style="font-size:12px;color:#888;margin-top:8px">` +
-							(author ? `${author}` : '') +
-							(cite
-								? `<cite style="margin-left:8px;font-style:italic">(${escapeHtml(cite)})</cite>`
-								: '') +
-							`</p>`
-						: '';
-				return `<blockquote style="${style}"${citeAttr}${data}>${text}${footer}</blockquote>`;
-			}
-			case 'input': {
-				const id = `input-${node.id}`;
-				const inputHtml = `
-					<input 
-					  type="${node.props?.type || 'text'}" 
-					  id="${id}"
-					  name="${escapeAttr(node.props?.name || '')}" 
-					  value="${escapeAttr(node.props?.value || '')}" 
-					  placeholder="${escapeAttr(node.props?.placeholder || '')}" 
-					  ${node.props?.required ? 'required' : ''} 
-					  ${node.props?.disabled ? 'disabled' : ''} 
-					  ${node.props?.readonly ? 'readonly' : ''} 
-					  min="${node.props?.min || ''}" 
-					  max="${node.props?.max || ''}" 
-					  step="${node.props?.step || ''}" 
-					  minlength="${node.props?.minlength || ''}" 
-					  maxlength="${node.props?.maxlength || ''}" 
-					  pattern="${node.props?.pattern || ''}" 
-					  title="${escapeAttr(node.props?.title || '')}" 
-					  size="${node.props?.size || ''}" 
-					  ${node.props?.autocomplete ? 'autocomplete="on"' : ''}
-					  ${node.props?.autofocus ? 'autofocus' : ''} 
-					  inputmode="${node.props?.inputmode || ''}" 
-					  spellcheck="${node.props?.spellcheck || 'true'}" 
-					  style="${style}"
-					  ${data} 
-					/>`;
-
-				return node.props?.label
-					? `<div style="display:flex;flex-direction:column;gap:4px">
-						 <label for="${id}" style="font-size:14px;color:#4a5568">
-						   ${escapeHtml(node.props.label)}
-						 </label>
-						 ${inputHtml}
-					   </div>`
-					: inputHtml;
-			}
-
-			case 'textarea': {
-				const id = `textarea-${node.id}`;
-				const textareaHtml = `
-					<textarea 
-					  id="${id}"
-					  name="${escapeAttr(node.props?.name || '')}" 
-					  rows="${node.props?.rows || 5}" 
-					  cols="${node.props?.cols || 20}" 
-					  placeholder="${escapeAttr(node.props?.placeholder || '')}" 
-					  ${node.props?.required ? 'required' : ''} 
-					  ${node.props?.disabled ? 'disabled' : ''} 
-					  ${node.props?.readonly ? 'readonly' : ''} 
-					  maxlength="${node.props?.maxlength || ''}" 
-					  minlength="${node.props?.minlength || ''}" 
-					  ${node.props?.autofocus ? 'autofocus' : ''} 
-					  form="${node.props?.formId || ''}" 
-					  wrap="${node.props?.wrap || 'soft'}" 
-					  ${node.props?.autocomplete ? 'autocomplete="on"' : ''}
-					  spellcheck="${node.props?.spellcheck || 'true'}" 
-					  dir="${node.props?.dir || 'auto'}" 
-					  title="${escapeAttr(node.props?.title || '')}" 
-					  style="${style};resize:vertical;min-height:100px"
-					  ${data} 
-					>
-					${escapeHtml(node.props?.value || '')}
-					</textarea>
-				`;
-
-				return node.props?.label
-					? `<div style="display:flex;flex-direction:column;gap:4px">
-						 <label for="${id}" style="font-size:14px;color:#4a5568">
-						   ${escapeHtml(node.props.label)}
-						 </label>
-						 ${textareaHtml}
-					   </div>`
-					: textareaHtml;
-			}
-
-			case 'select': {
-				const id = `select-${node.id}`;
-				const selectHtml = `
-					<select 
-					  id="${id}"
-					  name="${escapeAttr(node.props?.name || '')}" 
-					  ${node.props?.disabled ? 'disabled' : ''} 
-					  ${node.props?.required ? 'required' : ''} 
-					  ${node.props?.autofocus ? 'autofocus' : ''} 
-					  multiple="${node.props?.multiple || 'false'}" 
-					  size="${node.props?.size || ''}" 
-					  form="${node.props?.formId || ''}" 
-					  style="${style}"
-					  ${data} 
-					>
-					${node.props?.options
-						?.map(
-							(option, index) =>
-								`<option key="${index}" value="${option.value}">${option.text}</option>`,
-						)
-						.join('')}
-					</select>
-				`;
-
-				return node.props?.label
-					? `<div style="display:flex;flex-direction:column;gap:4px">
-						 <label for="${id}" style="font-size:14px;color:#4a5568">
-						   ${escapeHtml(node.props.label)}
-						 </label>
-						 ${selectHtml}
-					   </div>`
-					: selectHtml;
-			}
-
-			case 'anchor': {
-				return `<div id=${node.id} style="${style}"></div>`;
-			}
-
-			default:
-				return `<div style="color:crimson"${data}>Unknown node: ${escapeHtml(node.type)}</div>`;
-		}
-	};
-
-	const html = walk(schema.nodes[schema.rootId]);
-	return { html, css, js };
-}
-
-function baseCss(theme: ThemeTokens) {
-	const ff =
-		theme.typography?.fontFamily ??
-		"system-ui, -apple-system, Segoe UI, Roboto, Ubuntu, Cantarell, 'Helvetica Neue', Arial, 'Noto Sans', 'Apple Color Emoji','Segoe UI Emoji', 'Segoe UI Symbol'";
-	return `
-  :root { color-scheme: light; }
-  body { margin:0; background:${theme.colors.page}; color:${theme.colors.text.base}; font-family:${ff}; }
-  img { max-width:100%; display:block; }
-  a, button { cursor:pointer; }
-  
-  blockquote {
-      background: ${theme.components?.blockquote?.bg || 'rgba(99, 102, 241, 0.1)'};
-      border-left: ${theme.components?.blockquote?.borderLeft || '4px solid rgb(59, 130, 246)'};
-      border-radius: ${theme.components?.blockquote?.radius || '8'}px;
-      padding: ${theme.components?.blockquote?.p || '16px 20px'};
-      color: ${theme.components?.blockquote?.color};
-      font-style: italic;
-    }
-  `;
-}
-
-function resetCss() {
-	return `
-  *,*::before,*::after{box-sizing:border-box}
-  h1,h2,h3,h4,h5,h6,p{margin:0 0 0.5rem 0}
-  `;
-}
-
-function runtimeJs() {
-	return `
-  (function(){
-    function runActions(list, evt){
-      if(!Array.isArray(list)) return;
-      for(const a of list){
-        try{
-          if(a.type==="openUrl"){
-            if(a.target==="blank") window.open(a.url,"_blank");
-            else window.location.href=a.url;
-          } else if(a.type==="scrollTo"){
-            var el = document.querySelector(a.selector);
-            if(el){
-              var top = el.getBoundingClientRect().top + window.pageYOffset - (a.offset||0);
-              window.scrollTo({ top, behavior: a.behavior||"auto" });
-            }
-          } else if(a.type==="toast"){
-            showToast(a.message, a.variant||"info");
-          }
-        }catch(e){ console.warn("action error", e); }
-      }
-    }
-    function showToast(msg, variant){
-      var c = document.createElement("div");
-      c.textContent = msg;
-      c.style.position="fixed"; c.style.left="50%"; c.style.top="20px"; c.style.transform="translateX(-50%)";
-      c.style.padding="10px 14px"; c.style.borderRadius="8px"; c.style.fontSize="14px";
-      c.style.background= variant==="success"?"#18a957": variant==="error"?"#d64545":"#3b5bdb";
-      c.style.color="#fff"; c.style.boxShadow="0 6px 20px rgba(0,0,0,.12)";
-      document.body.appendChild(c);
-      setTimeout(()=>{ c.style.opacity="0"; c.style.transition="opacity .2s"; setTimeout(()=>c.remove(),200); }, 1800);
-    }
-    document.addEventListener("click", function(e){
-      var t = e.target;
-      while(t && t !== document.body){
-        var attr = t.getAttribute("data-actions");
-        if(attr){
-          try { var actions = JSON.parse(attr); runActions(actions, e); } catch(e){}
-          break;
-        }
-        t = t.parentElement;
-      }
-    });
-  })();
-  `;
-}
-
-function escapeHtml(s: string) {
-	return s.replace(
-		/[&<>"']/g,
-		(m) =>
-			({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[m]!,
-	);
-}
-function escapeAttr(s: string) {
-	return escapeHtml(s);
 }
