@@ -164,6 +164,7 @@ export function EditorRenderer({
 	return (
 		<div
 			data-editor-root=""
+			data-testid="editor-root"
 			onDragEnter={onRootDragEnter}
 			onDragOver={onRootDragOver}
 			onDragLeave={onRootDragLeave}
