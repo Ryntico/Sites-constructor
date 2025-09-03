@@ -1,0 +1,14 @@
+{
+  "extends": "../tsconfig.jest.json",
+  "compilerOptions": {
+    "target": "ES2022",
+    "lib": ["ES2022", "DOM"],
+    "jsx": "react-jsx",
+    "types": ["jest", "jest-environment-jsdom", "@testing-library/jest-dom"],
+    "baseUrl": "..",
+    "paths": {
+      "@/*": ["src/*"]
+    }
+  },
+  "include": ["**/*.ts", "**/*.tsx"]
+}

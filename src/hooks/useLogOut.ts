@@ -11,21 +11,35 @@ interface LogOutReturn {
 	) => Promise<void>;
 }
 
+const toErrorMessage = (err: unknown): string => {
+	if (err instanceof Error) return err.message;
+	if (typeof err === 'string') return err;
+	try {
+		return JSON.stringify(err);
+	} catch {
+		return 'Unknown error';
+	}
+};
+
 export const useLogOut = (): LogOutReturn => {
 	const dispatch = useAppDispatch();
 	const { status } = useAppSelector(selectAuth);
 	const isLoading = status === 'loading';
 	const [error, setError] = useState<string | null>(null);
 
-	const handleSubmit = async (successCallback, rejectCallback) => {
+	const handleSubmit = async (
+		successCallback?: VoidFunction,
+		rejectCallback?: VoidFunction,
+	): Promise<void> => {
 		try {
 			setError(null);
 
 			await dispatch(signOut()).unwrap();
 			successCallback?.();
-		} catch (err) {
+			localStorage.removeItem('currentSiteId');
+		} catch (err: unknown) {
 			rejectCallback?.();
-			setError(err);
+			setError(toErrorMessage(err));
 		}
 	};
 
