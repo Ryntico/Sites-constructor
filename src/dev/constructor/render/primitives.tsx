@@ -1,13 +1,11 @@
 import React from 'react';
 import type { NodeJson, ThemeTokens } from '@/types/siteTypes.ts';
+import { isPercentSize } from '@/dev/constructor/render/helpers.ts';
 
 type StyleWithWH = React.CSSProperties & {
 	w?: string | number;
 	h?: string | number;
 };
-
-const isPercentSize = (v?: string | number): boolean =>
-	typeof v === 'string' && v.trim().endsWith('%');
 
 export function renderPrimitive(
 	node: NodeJson,
