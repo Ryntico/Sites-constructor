@@ -1,5 +1,11 @@
 import React from 'react';
 import type { NodeJson, ThemeTokens } from '@/types/siteTypes.ts';
+import { isPercentSize } from '@/dev/constructor/render/helpers.ts';
+
+type StyleWithWH = React.CSSProperties & {
+	w?: string | number;
+	h?: string | number;
+};
 
 export function renderPrimitive(
 	node: NodeJson,
@@ -71,15 +77,32 @@ export function renderPrimitive(
 			);
 		}
 
-		case 'image':
+		case 'image': {
+			const style: StyleWithWH = {
+				display: 'block',
+				maxWidth: '100%',
+				height: 'auto',
+				...(baseStyle as StyleWithWH),
+			};
+
+			if (isPercentSize(style.width) || isPercentSize(style.w)) {
+				delete style.width;
+				delete style.w;
+			}
+			if (isPercentSize(style.height) || isPercentSize(style.h)) {
+				delete style.height;
+				delete style.h;
+			}
+
 			return (
 				<img
 					data-prim="true"
 					src={node.props?.src}
 					alt={node.props?.alt ?? ''}
-					style={{ maxWidth: '100%', display: 'block', ...baseStyle }}
+					style={style}
 				/>
 			);
+		}
 
 		case 'button': {
 			const label = node.props?.text ?? 'Button';

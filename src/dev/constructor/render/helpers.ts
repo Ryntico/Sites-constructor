@@ -64,10 +64,9 @@ export function buildWrapperStyle(
 	return {
 		position: 'relative',
 		userSelect: 'none',
-		display: 'inline-flex',
+		display: 'block',
 		flex: '0 0 auto',
 		minWidth: 0,
-		verticalAlign: 'top',
 	};
 }
 
@@ -78,12 +77,12 @@ export function buildCenterStyle(axis: Axis, isFill: boolean): CSSProperties {
 			flexDirection: 'column',
 			...(isFill
 				? { flex: '1 1 auto', minWidth: 0, maxWidth: '100%' }
-				: { display: 'inline-flex', flex: '0 0 auto', minWidth: 0 }),
+				: { display: 'block', minWidth: 0 }),
 		};
 	}
 	return isFill
 		? { flex: '1 1 auto', minWidth: 0, maxWidth: '100%' }
-		: { flex: '0 0 auto', minWidth: 0, display: 'inline-flex' };
+		: { minWidth: 0, display: 'block' };
 }
 
 export type DataResAttr = { 'data-res-id': string };
@@ -129,3 +128,6 @@ export function asWrap(v?: string): Wrap | undefined {
 	if (v === 'soft' || v === 'hard') return v;
 	return undefined;
 }
+
+export const isPercentSize = (v?: string | number): boolean =>
+	typeof v === 'string' && v.trim().endsWith('%');
