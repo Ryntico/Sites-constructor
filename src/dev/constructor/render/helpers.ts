@@ -118,7 +118,7 @@ const INPUT_MODES = new Set<InputMode>([
 	'decimal',
 	'search',
 ]);
-export function asInputMode(v?: undefined): InputMode | undefined {
+export function asInputMode(v?: string): InputMode | undefined {
 	if (!v) return undefined;
 	return INPUT_MODES.has(v as InputMode) ? (v as InputMode) : undefined;
 }
