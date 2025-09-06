@@ -9,7 +9,6 @@ export const AppRouter = memo(() => {
 
 	const renderWithWrapper = useCallback((route: AppRoutesProps) => {
 		const element = (
-			// TODO замени на нормальную загрузку
 			<Suspense fallback={<p>загрузка.....................</p>}>
 				{route.element}
 			</Suspense>

@@ -1,9 +1,10 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { Container, Paper } from '@mantine/core';
 import { ProfileView } from './ProfileView.tsx';
 import { ProfileEdit } from './ProfileEdit.tsx';
 import { selectAuth } from '@store/slices/authSlice.ts';
 import { useAppSelector } from '@store/hooks.ts';
+import type { UpdateProfileValues } from '@hooks/useUpdateProfile.ts';
 
 export const ProfilePage = () => {
 	const [isEditing, setIsEditing] = useState(false);
@@ -22,9 +23,9 @@ export const ProfilePage = () => {
 		<Container size="xs" py="xl">
 			<Paper shadow="sm" p="xl" radius="md" withBorder>
 				{isEditing ? (
-					<ProfileEdit user={authData} onSave={handleSave} />
+					<ProfileEdit user={authData as UpdateProfileValues} onSave={handleSave} />
 				) : (
-					<ProfileView user={authData} editCallback={handleEdit} />
+					<ProfileView user={authData as UpdateProfileValues} editCallback={handleEdit} />
 				)}
 			</Paper>
 		</Container>

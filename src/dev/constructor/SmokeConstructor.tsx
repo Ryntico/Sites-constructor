@@ -34,6 +34,7 @@ import {
 	undo,
 } from '@/dev/constructor/runtime/history.ts';
 import CodePreviewModal from '@/dev/constructor/components/CodePreviewModal.tsx';
+import { useParams } from 'react-router-dom';
 
 function download(filename: string, content: string, mime = 'text/html') {
 	const blob = new Blob([content], { type: mime });
@@ -53,9 +54,7 @@ function openFullPreview(html: string) {
 }
 
 export function SmokeConstructor() {
-	const [siteId, setSiteId] = useState<string | null>(
-		localStorage.getItem('currentSiteId'),
-	);
+	const { id: siteId } = useParams();
 
 	const {
 		loading,
@@ -68,10 +67,7 @@ export function SmokeConstructor() {
 		blockTemplates,
 		needsSite,
 		needsPage,
-		createSiteFromTemplateId,
 		createPageFromTemplateId,
-		createEmptySiteId,
-		listUserSites,
 	} = useSiteBuilder(siteId ?? '', 'home');
 
 	const { user } = useAppSelector(selectAuth);
@@ -153,17 +149,6 @@ export function SmokeConstructor() {
 		if (!res.schema.nodes[selectedId ?? '']) setSelectedId(null);
 	}
 
-	useEffect(() => {
-		if (!user?.uid || siteId) return;
-		listUserSites(user.uid).then((sites) => {
-			if (sites.length) {
-				const id = sites[0].id;
-				setSiteId(id);
-				localStorage.setItem('currentSiteId', id);
-			}
-		});
-	}, [user?.uid, siteId, listUserSites]);
-
 	const exported = useMemo(() => {
 		if (!schema || !theme) return '';
 		return exportPageToHtml({
@@ -186,35 +171,6 @@ export function SmokeConstructor() {
 				<Title order={3} mb="md">
 					Сайтов нет
 				</Title>
-				<Group>
-					<Button
-						onClick={async () => {
-							const newId = await createEmptySiteId({
-								ownerId: user?.uid,
-								siteName: 'Мой сайт',
-								firstPageId: 'home',
-								firstPageTitle: 'Home',
-								firstPageRoute: '/',
-							});
-							setSiteId(newId);
-							localStorage.setItem('currentSiteId', newId);
-						}}
-					>
-						Создать сайт
-					</Button>
-					<Button
-						variant="outline"
-						onClick={() =>
-							createSiteFromTemplateId({
-								ownerId: user?.uid,
-								name: 'Demo site',
-								templateId: 'base-smoke',
-							})
-						}
-					>
-						Создать сайт из base-smoke
-					</Button>
-				</Group>
 			</Box>
 		);
 	}
@@ -246,7 +202,7 @@ export function SmokeConstructor() {
 			<Paper withBorder radius="md">
 				<Box p="md" style={{ borderBottom: '1px solid #e6e8ef' }}>
 					<Group justify="space-between" align="center" wrap="wrap">
-						<Title order={4}>Конструктор (Smoke) — DnD</Title>
+						<Title order={4}>{site?.name}</Title>
 						<Group wrap="wrap">
 							<Button
 								onClick={() => setShowCode(true)}

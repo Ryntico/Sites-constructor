@@ -185,8 +185,8 @@ export type SiteDoc = {
 	name: string;
 	theme: ThemeTokens;
 	published?: { version?: number; url?: string; at?: unknown };
-	createdAt?: number | null;
-	updatedAt?: number | null;
+	createAt?: number | null;
+	updateAt?: number | null;
 };
 
 export type SchemaPatch = {
