@@ -1,4 +1,3 @@
-import React from 'react';
 import { Group, Box } from '@mantine/core';
 import { HeaderNavigation } from './HeaderNavigation';
 import { HeaderProfile } from './HeaderProfile';

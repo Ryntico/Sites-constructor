@@ -6,7 +6,7 @@ import { type UpdateProfileValues, useUpdateProfile } from '@hooks/useUpdateProf
 interface ProfileEditProps {
 	user: UpdateProfileValues;
 	onSave: () => void;
-	onCancel: () => void;
+	onCancel?: () => void;
 }
 
 export const ProfileEdit: React.FC<ProfileEditProps> = ({ user, onSave }) => {

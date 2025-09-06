@@ -1,10 +1,10 @@
 import React from "react";
-import { Button, Card, Text , Group} from '@mantine/core';
+import { Button, Card, Text, Group, Center } from '@mantine/core';
 
 interface BlockCardProps {
-  block: { id: number; name: string };
-  onDelete: (id: number) => void;
-  onEdit: (id: number) => void;
+  block: { id: string; name: string };
+  onDelete: (id: string) => void;
+  onEdit: (id: string) => void;
 }
 
 export const BlockCard: React.FC<BlockCardProps> = ({ block, onDelete, onEdit }) => {
@@ -12,13 +12,15 @@ export const BlockCard: React.FC<BlockCardProps> = ({ block, onDelete, onEdit })
   const handlerDelete = () => onDelete(block.id)
 
   return (
-    <Card shadow="sm" padding="lg" radius="md" withBorder>
-      <Text>{block.name}</Text>
-      <Group mt="md">
-        <Button onClick={handlerEdit} variant="light">
+    <Card shadow="sm" padding="xl" radius="md" miw={300} maw={400} withBorder>
+      <Center>
+          <Text >{block.name}</Text>
+      </Center>
+      <Group mt="md" justify="space-evenly">
+        <Button onClick={handlerEdit} variant="light" w={100}>
           Edit
         </Button>
-        <Button color="red" onClick={handlerDelete} variant="light">
+        <Button color="red" onClick={handlerDelete} variant="light" w={100}>
           Delete
         </Button>
       </Group>

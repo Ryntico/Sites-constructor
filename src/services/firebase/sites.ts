@@ -8,9 +8,14 @@ import {
 	updateDoc,
 	serverTimestamp,
 	deleteField,
+	deleteDoc,
 	addDoc,
 	query,
 	where,
+	orderBy,
+	limit,
+	startAfter,
+	onSnapshot,
 	type DocumentData,
 	type UpdateData,
 } from 'firebase/firestore';
@@ -55,6 +60,75 @@ export async function listUserSites(ownerId: string): Promise<SiteDoc[]> {
 		const data = toPlain(d.data() as Omit<SiteDoc, 'id'>);
 		return { id: d.id, ...data };
 	});
+}
+
+export const listUserSitesPaginated = async (
+	ownerId: string,
+	pageSize: number,
+	lastDoc?: SiteDoc | null
+): Promise<{ sites: SiteDoc[], lastDoc: SiteDoc | null, hasMore: boolean }> => {
+	try {
+		let q = query(
+			collection(db, 'sites'),
+			where('ownerId', '==', ownerId),
+			orderBy('updateAt', 'desc'),
+			limit(pageSize + 1)
+		);
+
+		if (lastDoc) {
+			const lastDocRef = doc(db, 'sites', lastDoc.id);
+			const lastDocSnap = await getDoc(lastDocRef);
+			q = query(q, startAfter(lastDocSnap));
+		}
+
+		const querySnapshot = await getDocs(q);
+		const sites: SiteDoc[] = [];
+
+		querySnapshot.forEach((doc) => {
+			sites.push({ id: doc.id, ...toPlain(doc.data()) } as SiteDoc);
+		});
+
+		const hasMore = sites.length > pageSize;
+
+		if (hasMore) {
+			sites.pop();
+		}
+
+		const lastVisible = hasMore && sites.length > 0 ? sites[sites.length - 1] : null;
+
+		return {
+			sites,
+			lastDoc: lastVisible,
+			hasMore
+		};
+	} catch (error) {
+		console.error('Error fetching paginated sites:', error);
+		throw error;
+	}
+}
+
+export function subscribeToUserSites(
+	ownerId: string,
+	callback: (sites: SiteDoc[]) => void
+): () => void {
+	const q = query(
+		collection(db, 'sites'),
+		where('ownerId', '==', ownerId),
+		orderBy('updateAt', 'desc')
+	);
+
+	return onSnapshot(q, (snapshot) => {
+		const sites = snapshot.docs.map(d => ({
+			id: d.id,
+			...toPlain(d.data()) as Omit<SiteDoc, 'id'>
+		}));
+		callback(sites);
+	});
+}
+
+
+export async function deleteSite(siteId: string) {
+	await deleteDoc(doc(db, 'sites', siteId));
 }
 
 export async function listPages(siteId: string): Promise<PageDoc[]> {
