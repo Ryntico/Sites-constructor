@@ -170,6 +170,7 @@ export function EditorRenderer({
 			onDragLeave={onRootDragLeave}
 			onDrop={onRootDrop}
 			onClickCapture={onEditorClickCapture}
+			style={{backgroundColor: theme.colors.page}}
 		>
 			<NodeView
 				id={schema.rootId}

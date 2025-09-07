@@ -262,7 +262,7 @@ export function SmokeConstructor() {
 							style={{
 								flex: '1 1 0%',
 								minWidth: 0, // Важно: предотвращает сжатие контента
-								minHeight: 'calc(100vh - 160px)',
+								height: 'calc(100vh - 160px)',
 								display: 'flex',
 								flexDirection: 'column',
 							}}
@@ -271,7 +271,6 @@ export function SmokeConstructor() {
 								withBorder
 								p="md"
 								style={{
-									background: '#fafbff',
 									flex: 1,
 									overflow: 'auto',
 									display: 'flex',

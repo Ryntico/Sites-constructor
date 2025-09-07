@@ -1,6 +1,22 @@
-import { Burger, Popover, TextInput, Radio, Box } from "@mantine/core";
+import { Popover, TextInput, Radio, Box, ActionIcon } from '@mantine/core';
 import { useDisclosure } from "@mantine/hooks";
-import React from 'react'
+
+const SortIcon = () =>
+    <svg
+        xmlns="http://www.w3.org/2000/svg"
+        width="48"
+        height="48"
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="#607d8b"
+        strokeWidth="1"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+    >
+        <path d="M3 9l4 -4l4 4m-4 -4v14" />
+        <path d="M21 15l-4 4l-4 -4m4 4v-14" />
+    </svg>
+
 
 export enum SortOrder {
     ASC = 'asc',
@@ -38,9 +54,12 @@ export const Filters = ({ nameFilter, onNameFilterChange, sort, onSortChange }: 
                     onChange={(e) => onNameFilterChange(e.target.value)}
                 />
             </Box>
-            <Popover position="bottom" withArrow shadow="md" closeOnClickOutside={false} opened={opened} onClose={close}>
+            <Popover position="bottom" withArrow shadow="md" closeOnClickOutside={false} opened={opened}
+                     onClose={close}>
                 <Popover.Target>
-                    <Burger opened={opened} onClick={toggle} aria-label="выбор сортировки"/>
+                    <ActionIcon variant="default" onClick={toggle}>
+                        <SortIcon></SortIcon>
+                    </ActionIcon>
                 </Popover.Target>
                 <Popover.Dropdown>
                     <Radio.Group
@@ -51,7 +70,7 @@ export const Filters = ({ nameFilter, onNameFilterChange, sort, onSortChange }: 
                             close();
                         }}
                     >
-                        {sortOptions.map(({value, label}) => (
+                        {sortOptions.map(({ value, label }) => (
                             <Radio
                                 key={label}
                                 label={label}
@@ -62,5 +81,5 @@ export const Filters = ({ nameFilter, onNameFilterChange, sort, onSortChange }: 
                 </Popover.Dropdown>
             </Popover>
         </Box>
-    )
+)
 }
