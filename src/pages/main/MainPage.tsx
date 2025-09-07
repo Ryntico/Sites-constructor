@@ -1,5 +1,9 @@
 import { useState, useMemo, useRef, useEffect, useCallback } from 'react';
-import { Box, Center, Stack, Loader, Text, Flex, Button } from '@mantine/core';
+import {
+  Box, Center, Stack, Loader, Text, Flex, Button,
+  Modal, Group, Alert
+} from '@mantine/core';
+import { useDisclosure } from '@mantine/hooks';
 import { BlockCard } from '@pages/main/BlockCard.tsx';
 import { Filters, SortField, SortOrder } from "@pages/main/Filters";
 import { useNavigate } from "react-router-dom";
@@ -7,14 +11,52 @@ import { getRouteExistingProject } from "@const/router";
 import {
   fetchFirstSitesPage,
   fetchNextSitesPage,
+  deleteSite,
   selectAllSites,
   selectSitesStatus,
   selectHasMoreSites,
-  selectIsLoadingMore, PAGE_SIZE,
+  selectIsLoadingMore,
+  PAGE_SIZE,
 } from '@/store/slices/siteListSlice';
 import { useAppDispatch, useAppSelector } from '@store/hooks.ts';
 import { selectAuth } from '@store/slices/authSlice.ts';
 import { subscribeToUserSites } from '@/services/firebase/sites.ts';
+
+const IconAlertCircle = () =>
+    <svg
+        xmlns="http://www.w3.org/2000/svg"
+        width="48"
+        height="48"
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="#607d8b"
+        strokeWidth="1"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+    >
+      <path d="M3 12a9 9 0 1 0 18 0a9 9 0 0 0 -18 0" />
+      <path d="M12 8v4" />
+      <path d="M12 16h.01" />
+    </svg>
+
+const IconTrash = () =>
+    <svg
+        xmlns="http://www.w3.org/2000/svg"
+        width="24"
+        height="24"
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="#ffffff"
+        strokeWidth="1"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+    >
+      <path d="M4 7l16 0" />
+      <path d="M10 11l0 6" />
+      <path d="M14 11l0 6" />
+      <path d="M5 7l1 12a2 2 0 0 0 2 2h8a2 2 0 0 0 2 -2l1 -12" />
+      <path d="M9 7v-3a1 1 0 0 1 1 -1h4a1 1 0 0 1 1 1v3" />
+    </svg>
 
 export const MainPage = () => {
   const { user } = useAppSelector(selectAuth);
@@ -26,11 +68,13 @@ export const MainPage = () => {
 
   const [nameFilter, setNameFilter] = useState('');
   const [debouncedNameFilter, setDebouncedNameFilter] = useState('');
+  const [siteToDelete, setSiteToDelete] = useState<string | null>(null);
+  const [opened, { open, close }] = useDisclosure(false);
 
   useEffect(() => {
     const timer = setTimeout(() => {
       setDebouncedNameFilter(nameFilter);
-    }, 300); // 300ms delay
+    }, 300);
 
     return () => clearTimeout(timer);
   }, [nameFilter]);
@@ -89,6 +133,28 @@ export const MainPage = () => {
     return () => unsubscribe();
   }, [user?.uid]);
 
+  const handleDeleteClick = (id: string) => {
+    setSiteToDelete(id);
+    open();
+  };
+
+  const handleConfirmDelete = async () => {
+    if (siteToDelete) {
+      try {
+        await dispatch(deleteSite(siteToDelete)).unwrap();
+        close();
+        setSiteToDelete(null);
+      } catch (error) {
+        console.error('Failed to delete site:', error);
+      }
+    }
+  };
+
+  const handleCancelDelete = () => {
+    close();
+    setSiteToDelete(null);
+  };
+
   const filteredBlocks = useMemo(() => {
     let result = sites.map(site => ({
       id: site.id,
@@ -119,11 +185,13 @@ export const MainPage = () => {
     return result;
   }, [sites, debouncedNameFilter, sort]);
 
-  const handleDelete = (id: string) => {console.log(id)};
-
   const handleEdit = (id: string) => {
     navigate(getRouteExistingProject(id));
   };
+
+  const siteToDeleteName = siteToDelete
+      ? sites.find(site => site.id === siteToDelete)?.name
+      : '';
 
   return (
       <Stack p='md' justify='space-between' h='90vh'>
@@ -162,7 +230,7 @@ export const MainPage = () => {
                     <BlockCard
                         key={block.id}
                         block={block}
-                        onDelete={handleDelete}
+                        onDelete={() => handleDeleteClick(block.id)}
                         onEdit={handleEdit}
                     />
                 ))}
@@ -177,6 +245,36 @@ export const MainPage = () => {
               <Loader />
             </Center>
         )}
+
+        <Modal
+            opened={opened}
+            onClose={handleCancelDelete}
+            title="Подтверждение удаления"
+            centered
+        >
+          <Alert
+              icon={<IconAlertCircle/>}
+              title="Внимание!"
+              color="red"
+              mb="md"
+          >
+            Вы уверены, что хотите удалить сайт "{siteToDeleteName}"? Это действие нельзя отменить.
+          </Alert>
+
+          <Group justify="flex-end">
+            <Button variant="default" onClick={handleCancelDelete}>
+              Отмена
+            </Button>
+            <Button
+                color="red"
+                onClick={handleConfirmDelete}
+                loading={status === 'loading'}
+                leftSection={<IconTrash/>}
+            >
+              Удалить
+            </Button>
+          </Group>
+        </Modal>
       </Stack>
   );
 };

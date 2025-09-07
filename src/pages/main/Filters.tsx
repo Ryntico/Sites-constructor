@@ -1,4 +1,4 @@
-import { Popover, TextInput, Radio, Box, ActionIcon } from '@mantine/core';
+import { Popover, TextInput, Radio, Box, ActionIcon, Center } from '@mantine/core';
 import { useDisclosure } from "@mantine/hooks";
 
 const SortIcon = () =>
@@ -8,7 +8,7 @@ const SortIcon = () =>
         height="48"
         viewBox="0 0 24 24"
         fill="none"
-        stroke="#607d8b"
+        stroke="#74C0fC"
         strokeWidth="1"
         strokeLinecap="round"
         strokeLinejoin="round"
@@ -43,7 +43,7 @@ interface FiltersProps {
 }
 
 export const Filters = ({ nameFilter, onNameFilterChange, sort, onSortChange }: FiltersProps) => {
-    const [opened, { toggle, close }] = useDisclosure();
+    const [, { toggle, close }] = useDisclosure();
 
     return (
         <Box display='flex' pb='md'>
@@ -54,32 +54,33 @@ export const Filters = ({ nameFilter, onNameFilterChange, sort, onSortChange }: 
                     onChange={(e) => onNameFilterChange(e.target.value)}
                 />
             </Box>
-            <Popover position="bottom" withArrow shadow="md" closeOnClickOutside={false} opened={opened}
-                     onClose={close}>
-                <Popover.Target>
-                    <ActionIcon variant="default" onClick={toggle}>
-                        <SortIcon></SortIcon>
-                    </ActionIcon>
-                </Popover.Target>
-                <Popover.Dropdown>
-                    <Radio.Group
-                        value={sort ? JSON.stringify(sort) : ''}
-                        onChange={(val) => {
-                            const parsed = JSON.parse(val);
-                            onSortChange(parsed);
-                            close();
-                        }}
-                    >
-                        {sortOptions.map(({ value, label }) => (
-                            <Radio
-                                key={label}
-                                label={label}
-                                value={JSON.stringify(value)}
-                            />
-                        ))}
-                    </Radio.Group>
-                </Popover.Dropdown>
-            </Popover>
+            <Center>
+                <Popover position="bottom" withArrow shadow="md">
+                    <Popover.Target>
+                        <ActionIcon variant="subtle" onClick={toggle}>
+                            <SortIcon></SortIcon>
+                        </ActionIcon>
+                    </Popover.Target>
+                    <Popover.Dropdown>
+                        <Radio.Group
+                            value={sort ? JSON.stringify(sort) : ''}
+                            onChange={(val) => {
+                                const parsed = JSON.parse(val);
+                                onSortChange(parsed);
+                                close();
+                            }}
+                        >
+                            {sortOptions.map(({ value, label }) => (
+                                <Radio
+                                    key={label}
+                                    label={label}
+                                    value={JSON.stringify(value)}
+                                />
+                            ))}
+                        </Radio.Group>
+                    </Popover.Dropdown>
+                </Popover>
+            </Center>
         </Box>
 )
 }

@@ -32,7 +32,7 @@ export const fetchUserSites = createAsyncThunk(
 	'sites/fetchUserSites',
 	async (ownerId: string) => {
 		return await api.listUserSites(ownerId);
-	}
+	},
 );
 
 export const fetchFirstSitesPage = createAsyncThunk(
@@ -40,7 +40,7 @@ export const fetchFirstSitesPage = createAsyncThunk(
 	async (payload: { ownerId: string; pageSize?: number }) => {
 		const { ownerId, pageSize = 10 } = payload;
 		return await api.listUserSitesPaginated(ownerId, pageSize);
-	}
+	},
 );
 
 export const fetchNextSitesPage = createAsyncThunk(
@@ -56,7 +56,7 @@ export const fetchNextSitesPage = createAsyncThunk(
 		return await api.listUserSitesPaginated(
 			payload.ownerId,
 			pageSize,
-			lastDoc
+			lastDoc,
 		);
 	},
 	{
@@ -65,8 +65,20 @@ export const fetchNextSitesPage = createAsyncThunk(
 			const { status, pagination } = state.siteList;
 
 			return status !== 'loading-more' && pagination.hasMore;
+		},
+	},
+);
+
+export const deleteSite = createAsyncThunk(
+	'sites/deleteSite',
+	async (siteId: string, { rejectWithValue }) => {
+		try {
+			await api.deleteSite(siteId);
+			return siteId;
+		} catch (error) {
+			return rejectWithValue(error instanceof Error ? error.message : 'Failed to delete site');
 		}
-	}
+	},
 );
 
 const siteListSlice = createSlice({
@@ -99,8 +111,7 @@ const siteListSlice = createSlice({
 			.addCase(fetchUserSites.pending, (state) => {
 				state.status = 'loading';
 			})
-			.addCase(
-				fetchUserSites.fulfilled,
+			.addCase(fetchUserSites.fulfilled,
 				(state, action: PayloadAction<SiteDoc[]>) => {
 					state.status = 'succeeded';
 					state.sites = action.payload;
@@ -109,8 +120,7 @@ const siteListSlice = createSlice({
 						hasMore: false,
 						pageSize: 5,
 					};
-				}
-			)
+			})
 			.addCase(fetchUserSites.rejected, (state, action) => {
 				state.status = 'error';
 				state.error = action.error.message || 'Failed to fetch sites';
@@ -119,15 +129,13 @@ const siteListSlice = createSlice({
 				state.status = 'loading';
 				state.pagination.hasMore = true;
 			})
-			.addCase(
-				fetchFirstSitesPage.fulfilled,
+			.addCase(fetchFirstSitesPage.fulfilled,
 				(state, action: PayloadAction<{ sites: SiteDoc[], lastDoc: SiteDoc | null, hasMore: boolean }>) => {
 					state.status = 'succeeded';
 					state.sites = action.payload.sites;
 					state.pagination.lastDoc = action.payload.lastDoc;
 					state.pagination.hasMore = action.payload.hasMore;
-				}
-			)
+				})
 			.addCase(fetchFirstSitesPage.rejected, (state, action) => {
 				state.status = 'error';
 				state.error = action.error.message || 'Failed to fetch first page';
@@ -135,8 +143,7 @@ const siteListSlice = createSlice({
 			.addCase(fetchNextSitesPage.pending, (state) => {
 				state.status = 'loading-more';
 			})
-			.addCase(
-				fetchNextSitesPage.fulfilled,
+			.addCase(fetchNextSitesPage.fulfilled,
 				(state, action: PayloadAction<{ sites: SiteDoc[], lastDoc: SiteDoc | null, hasMore: boolean }>) => {
 					state.status = 'succeeded';
 
@@ -146,8 +153,7 @@ const siteListSlice = createSlice({
 						state.pagination.lastDoc = action.payload.lastDoc;
 					}
 					state.pagination.hasMore = action.payload.hasMore;
-				}
-			)
+			})
 			.addCase(fetchNextSitesPage.rejected, (state, action) => {
 				state.status = 'error';
 				state.error = action.error.message || 'Failed to fetch next page';
@@ -155,6 +161,21 @@ const siteListSlice = createSlice({
 					state.pagination.hasMore = false;
 					state.status = 'succeeded';
 				}
+			})
+			.addCase(deleteSite.pending, (state) => {
+				state.status = 'loading';
+			})
+			.addCase(deleteSite.fulfilled, (state, action: PayloadAction<string>) => {
+				state.status = 'succeeded';
+				state.sites = state.sites.filter(site => site.id !== action.payload);
+
+				if (state.pagination.lastDoc && state.pagination.lastDoc.id === action.payload) {
+					state.pagination.lastDoc = state.sites.length > 0 ? state.sites[state.sites.length - 1] : null;
+				}
+			})
+			.addCase(deleteSite.rejected, (state, action) => {
+				state.status = 'error';
+				state.error = action.payload as string || 'Failed to delete site';
 			});
 	},
 });
