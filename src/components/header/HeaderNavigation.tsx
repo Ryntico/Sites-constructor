@@ -11,7 +11,7 @@ export const HeaderNavigation = () => {
 	const { createEmptySiteId, createSiteFromTemplateId } = useSiteBuilder('', 'home');
 
 	return (
-		<Group>
+		<Group wrap="nowrap">
 			<Button variant="subtle" onClick={() => navigate(getRouteMain())}>
 				Главная
 			</Button>
@@ -40,7 +40,7 @@ export const HeaderNavigation = () => {
 					navigate(getRouteExistingProject(id));
 				}}
 			>
-				Создать сайт из base-smoke
+				Сайт из шаблона
 			</Button>
 		</Group>
 	);

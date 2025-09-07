@@ -33,11 +33,13 @@ export function PreviewPane({
 						onClick={() => setPreset(p.key)}
 						style={{
 							padding: '6px 10px',
-							borderRadius: 8,
-							border: '1px solid #d0d3dc',
-							background: preset === p.key ? '#eef2ff' : '#fff',
+							borderRadius: 4,
+							border: `1px solid #1970c1`,
+							background: preset === p.key ? '#1970c1' : 'transparent',
 							fontSize: 12,
+							fontWeight: 1000,
 							cursor: 'pointer',
+							color: preset === p.key ? '#fdf4ed' : '#4da6cd',
 						}}
 					>
 						{p.label}

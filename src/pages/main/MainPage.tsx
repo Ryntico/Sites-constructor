@@ -157,7 +157,7 @@ export const MainPage = () => {
           )}
 
           {filteredBlocks.length > 0 && (
-              <Flex pb='md' gap='md' wrap='wrap'>
+              <Flex pb='md' gap='md' wrap='wrap' justify='center'>
                 {filteredBlocks.map((block) => (
                     <BlockCard
                         key={block.id}
