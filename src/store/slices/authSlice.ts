@@ -11,6 +11,7 @@ export type UserDoc = {
 	email: string;
 	firstName: string;
 	lastName: string;
+	avatarUrl?: string;
 	createdAt: FirebaseTimestamp;
 };
 
@@ -24,6 +25,7 @@ export type AuthUser = {
 	displayName: string | null;
 	firstName?: string;
 	lastName?: string;
+	avatarUrl?: string;
 };
 
 type AuthState = {
@@ -44,12 +46,13 @@ const mapAuthUser = (u: FirebaseUser): AuthUser => ({
 	uid: u.uid,
 	email: u.email,
 	displayName: u.displayName,
+	avatarUrl: u.photoURL || undefined,
 });
 
 const ensureUserDoc = async (
 	fbUser: FirebaseUser,
-	initial?: { firstName?: string; lastName?: string },
-) => {
+	initial?: { firstName?: string; lastName?: string; avatarUrl?: string },
+): Promise<{ firstName: string; lastName: string; avatarUrl?: string }> => {
 	const ref = doc(db, 'users', fbUser.uid);
 	const snap = await getDoc(ref);
 	if (!snap.exists()) {
@@ -57,14 +60,26 @@ const ensureUserDoc = async (
 			email: fbUser.email ?? '',
 			firstName: initial?.firstName ?? '',
 			lastName: initial?.lastName ?? '',
+			avatarUrl: initial?.avatarUrl || fbUser.photoURL || undefined,
 			createdAt: serverTimestamp(),
 		};
 		await setDoc(ref, payload);
+		return {
+			firstName: payload.firstName,
+			lastName: payload.lastName,
+			avatarUrl: payload.avatarUrl
+		};
 	}
+	const data = snap.data() as UserDoc;
+	return {
+		firstName: data.firstName,
+		lastName: data.lastName,
+		avatarUrl: data.avatarUrl
+	};
 };
 
 export const fetchUserDoc = createAsyncThunk<
-	{ firstName: string; lastName: string },
+	{ firstName: string; lastName: string; avatarUrl?: string },
 	string,
 	{ rejectValue: string }
 >('auth/fetchUserDoc', async (uid, { rejectWithValue }) => {
@@ -78,6 +93,7 @@ export const fetchUserDoc = createAsyncThunk<
 		return {
 			firstName: data.firstName ?? '',
 			lastName: data.lastName ?? '',
+			avatarUrl: data.avatarUrl // добавляем avatarUrl
 		};
 	} catch (e: unknown) {
 		const msg = e instanceof Error ? e.message : String(e);
@@ -96,12 +112,13 @@ export const signUp = createAsyncThunk<
 			const full = [firstName, lastName].filter(Boolean).join(' ').trim();
 			const fbUser = await authApi.signUp(email, password, full);
 
-			await ensureUserDoc(fbUser, { firstName, lastName });
+			const userData = await ensureUserDoc(fbUser, { firstName, lastName });
 
 			return {
 				...mapAuthUser(fbUser),
-				firstName,
-				lastName,
+				firstName: userData.firstName,
+				lastName: userData.lastName,
+				avatarUrl: userData.avatarUrl // добавляем avatarUrl
 			};
 		} catch (e: unknown) {
 			const msg = e instanceof Error ? e.message : String(e);
@@ -117,15 +134,13 @@ export const signIn = createAsyncThunk<
 >('auth/signIn', async ({ email, password }, { rejectWithValue }) => {
 	try {
 		const fbUser = await authApi.signIn(email, password);
-		await ensureUserDoc(fbUser);
-
-		const snap = await getDoc(doc(db, 'users', fbUser.uid));
-		const data = (snap.data() as Partial<UserDoc>) || {};
+		const userData = await ensureUserDoc(fbUser); // получаем данные включая avatarUrl
 
 		return {
 			...mapAuthUser(fbUser),
-			firstName: data.firstName ?? '',
-			lastName: data.lastName ?? '',
+			firstName: userData.firstName,
+			lastName: userData.lastName,
+			avatarUrl: userData.avatarUrl // добавляем avatarUrl из Firestore
 		};
 	} catch (e: unknown) {
 		const msg = e instanceof Error ? e.message : String(e);
@@ -186,6 +201,25 @@ export const updateEmail = createAsyncThunk<
 		return email;
 	} catch (e: unknown) {
 		const msg = e instanceof Error ? e.message : String(e);
+		return rejectWithValue(msg);
+	}
+});
+
+export const updateAvatar = createAsyncThunk<
+	{ avatarUrl: string },
+	{ avatarUrl?: string },
+	{ rejectValue: string }
+>('auth/updateAvatar', async ({ avatarUrl }, { rejectWithValue }) => {
+	try {
+		const user = auth.currentUser;
+		if (!user) throw new Error('Not authenticated');
+
+		const ref = doc(db, 'users', user.uid);
+		await setDoc(ref, { avatarUrl }, { merge: true });
+
+		return { avatarUrl: avatarUrl || '' };
+	} catch (e: unknown) {
+		const msg = e instanceof Error ? e.message : 'Failed to update avatar';
 		return rejectWithValue(msg);
 	}
 });
@@ -286,8 +320,24 @@ const authSlice = createSlice({
 			if (s.user) {
 				s.user.firstName = a.payload.firstName;
 				s.user.lastName = a.payload.lastName;
+				s.user.avatarUrl = a.payload.avatarUrl;
 			}
 		});
+		builder
+			.addCase(updateAvatar.pending, (state) => {
+				state.status = 'loading';
+				state.error = null;
+			})
+			.addCase(updateAvatar.fulfilled, (state, action) => {
+				state.status = 'succeeded';
+				if (state.user) {
+					state.user.avatarUrl = action.payload.avatarUrl;
+				}
+			})
+			.addCase(updateAvatar.rejected, (state, action) => {
+				state.status = 'error';
+				state.error = action.payload ?? 'Failed to update avatar';
+			});
 	},
 });
 

@@ -3,10 +3,13 @@ import { notifications, type NotificationData } from '@mantine/notifications';
 import { useNavigate } from 'react-router-dom';
 import { getRouteProfile, getRouteLogin } from '@/const/router.ts';
 import { useLogOut } from '@/hooks/useLogOut.ts';
+import { useAppSelector } from '@store/hooks.ts';
+import { selectAuth } from '@store/slices/authSlice.ts';
 
 export const HeaderProfile = () => {
 	const navigate = useNavigate();
 	const { isLoading, handleSubmit } = useLogOut();
+	const { user } = useAppSelector(selectAuth);
 
 	const logoutReject = () => {
 		// в доке color есть и работает, но в типы не добавили
@@ -25,7 +28,7 @@ export const HeaderProfile = () => {
 		<Menu shadow="md" width={200}>
 			<Menu.Target>
 				<Avatar
-					src="https://i.pinimg.com/474x/6d/a8/e6/6da8e6d1456bfb1345cfaedf4690448e.jpg"
+					src={user?.avatarUrl}
 					size="md"
 					radius="xl"
 					style={{ cursor: 'pointer' }}>
