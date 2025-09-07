@@ -17,6 +17,7 @@ export const ProfilePage = () => {
 		email: user?.email,
 		lastName: user?.lastName,
 		firstName: user?.firstName,
+		avatarUrl: user?.avatarUrl,
 	};
 
 	return (

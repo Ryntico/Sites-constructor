@@ -126,8 +126,7 @@ export const MainPage = () => {
   useEffect(() => {
     if (!user?.uid) return;
 
-    const unsubscribe = subscribeToUserSites(user.uid, (realTimeSites) => {
-      console.log('Real-time update:', realTimeSites);
+    const unsubscribe = subscribeToUserSites(user.uid, () => {
     });
 
     return () => unsubscribe();
