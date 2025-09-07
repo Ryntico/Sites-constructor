@@ -2,7 +2,7 @@ import { memo, Suspense, useCallback } from 'react';
 import { Route, Routes } from 'react-router-dom';
 import { RequireAuth } from './RequireAuth';
 import { routeConfig } from './routeConfig';
-import { type AppRoutesProps, UserRole } from './const/types';
+import { type AppRoutesProps, UserRole } from '../types/routerTypes.ts';
 import { RequireNotAuth } from '@/router/RequireNotAuth.tsx';
 import { Center, Loader } from '@mantine/core';
 

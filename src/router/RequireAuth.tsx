@@ -3,7 +3,7 @@ import {getRouteLogin, getRouteMain} from '../const/router';
 import type { ReactElement } from 'react';
 import { selectAuth } from '@store/slices/authSlice';
 import { useAppSelector } from '@store/hooks';
-import { UserRole } from "@/router/const/types.ts";
+import { UserRole } from "@/types/routerTypes.ts";
 import { useMemo } from "react";
 
 interface RequireAuthProps {

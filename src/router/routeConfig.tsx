@@ -1,5 +1,5 @@
 import { lazy } from 'react';
-import type { AppRoutesProps } from './const/types';
+import type { AppRoutesProps } from '../types/routerTypes.ts';
 
 import {
 	AppRoutes,
@@ -11,12 +11,11 @@ import {
 	getRouteProfile,
 	getRouteConstructor,
 } from '../const/router.ts';
-// import SmokeConstructorPage from '@/dev/SmokeConstructorPage.tsx';
 
-import {UserRole} from "./const/types";
+import {UserRole} from "../types/routerTypes.ts";
 
 const SmokeConstructorPage = lazy(() =>
-	import('@/dev/SmokeConstructorPage'))
+	import('@pages/ConstructorPage.tsx'))
 
 const LoginPage = lazy(() =>
 	import('@pages/LoginPage').then((module) => ({ default: module.LoginPage })),
@@ -27,13 +26,13 @@ const SignupPage = lazy(() =>
 );
 
 const ProfilePage = lazy(() =>
-	import('@pages/profile/ProfilePage').then((module) => ({
+	import('@pages/ProfilePage.tsx').then((module) => ({
 		default: module.ProfilePage,
 	})),
 );
 
 const MainPage = lazy(() =>
-	import('@pages/main/MainPage.tsx').then((module) => ({
+	import('@pages/MainPage.tsx').then((module) => ({
 		default: module.MainPage,
 	})),
 );
