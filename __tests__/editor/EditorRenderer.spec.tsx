@@ -12,11 +12,11 @@ import {
 	TYPE_MOVE,
 	TYPE_TPL,
 	TYPE_COPY_INTENT,
-} from '@/dev/constructor/runtime/dnd/constants';
+} from '@/components/constructor/runtime/dnd/constants';
 
-import { EditorRenderer } from '@/dev/constructor/editor/EditorRenderer';
-import { NodeView } from '@/dev/constructor/editor/NodeView';
-import type { NodeViewProps } from '@/dev/constructor/editor/NodeView';
+import { EditorRenderer } from '@/components/constructor/editor/EditorRenderer';
+import { NodeView } from '@/components/constructor/editor/NodeView';
+import type { NodeViewProps } from '@/components/constructor/editor/NodeView';
 import type { NodeSubtree, Side } from '@/types/siteTypes';
 
 function dispatchDrag(

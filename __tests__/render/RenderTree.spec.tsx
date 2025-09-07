@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 import { render, screen } from '@testing-library/react';
-import { RenderTree } from '@/dev/constructor/render/Renderer';
-import { exportPageToHtml } from '@/dev/constructor/render/exportHtml';
+import { RenderTree } from '@/components/constructor/render/Renderer';
+import { exportPageToHtml } from '@/components/constructor/render/exportHtml';
 import type { PageSchema } from '@/types/siteTypes';
 import { makeTheme } from '../../test/utils';
 
