@@ -4,12 +4,13 @@ import { RequireAuth } from './RequireAuth';
 import { routeConfig } from './routeConfig';
 import { type AppRoutesProps, UserRole } from './const/types';
 import { RequireNotAuth } from '@/router/RequireNotAuth.tsx';
+import { Center, Loader } from '@mantine/core';
 
 export const AppRouter = memo(() => {
 
 	const renderWithWrapper = useCallback((route: AppRoutesProps) => {
 		const element = (
-			<Suspense fallback={<p>загрузка.....................</p>}>
+			<Suspense fallback={<Center h="100vh"><Loader /></Center>}>
 				{route.element}
 			</Suspense>
 		);

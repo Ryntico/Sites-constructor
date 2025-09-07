@@ -145,7 +145,7 @@ export function useSiteBuilder(siteId: string, pageId: string) {
 		title?: string;
 		route?: string;
 	}) => {
-		if (!siteState.site) throw new Error('No site to create page in');
+		if (!siteState.site) throw new Error('No siteNameEditor to create page in');
 		const tpl = await getPageTplById(opts.templateId);
 		await dispatch(
 			createPageFromTemplate({

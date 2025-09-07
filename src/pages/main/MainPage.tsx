@@ -144,7 +144,7 @@ export const MainPage = () => {
         close();
         setSiteToDelete(null);
       } catch (error) {
-        console.error('Failed to delete site:', error);
+        console.error('Failed to delete siteNameEditor:', error);
       }
     }
   };
