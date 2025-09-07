@@ -35,6 +35,7 @@ import {
 } from '@/dev/constructor/runtime/history.ts';
 import CodePreviewModal from '@/dev/constructor/components/CodePreviewModal.tsx';
 import { useParams } from 'react-router-dom';
+import { SiteNameEditor } from '@components/siteNameEditor/SiteNameEditor.tsx';
 
 function download(filename: string, content: string, mime = 'text/html') {
 	const blob = new Blob([content], { type: mime });
@@ -76,7 +77,7 @@ export function SmokeConstructor() {
 	const [rightTab, setRightTab] = useState<'inspector' | 'theme'>('inspector');
 	const [showCode, setShowCode] = useState(false);
 
-	const historyKey = `hist:${siteId ?? 'no-site'}:${page?.id ?? 'no-page'}`;
+	const historyKey = `hist:${siteId ?? 'no-siteNameEditor'}:${page?.id ?? 'no-page'}`;
 
 	const historyRef = useRef<HistoryState>(loadHistory(historyKey));
 	const applyingFromHistoryRef = useRef(false);
@@ -202,7 +203,13 @@ export function SmokeConstructor() {
 			<Paper withBorder radius="md">
 				<Box p="md" style={{ borderBottom: '1px solid #e6e8ef' }}>
 					<Group justify="space-between" align="center" wrap="wrap">
-						<Title order={4}>{site?.name}</Title>
+						<SiteNameEditor
+							siteId={siteId!}
+							initialName={site?.name || ''}
+							variant="unstyled"
+							size="lg"
+							className="text-xl font-semibold"
+						/>
 						<Group wrap="wrap">
 							<Button
 								onClick={() => setShowCode(true)}

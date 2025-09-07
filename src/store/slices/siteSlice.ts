@@ -89,7 +89,7 @@ export const createPageFromTemplate = createAsyncThunk<
 		pageId: string;
 		tpl: Pick<PageTemplateDoc, 'schema' | 'title' | 'route'>;
 	}
->('site/createPageFromTemplate', async ({ siteId, pageId, tpl }) => {
+>('siteNameEditor/createPageFromTemplate', async ({ siteId, pageId, tpl }) => {
 	const page: PageDoc = {
 		id: pageId,
 		route: tpl.route || '/',
@@ -104,7 +104,7 @@ export const createPageFromTemplate = createAsyncThunk<
 export const savePageSchema = createAsyncThunk<
 	{ pageId: string; schema: PageSchema },
 	{ siteId: string; pageId: string; schema: PageSchema }
->('site/savePageSchema', async ({ siteId, pageId, schema }) => {
+>('siteNameEditor/savePageSchema', async ({ siteId, pageId, schema }) => {
 	await api.updatePageSchema(siteId, pageId, schema);
 	return { pageId, schema };
 });
@@ -112,9 +112,24 @@ export const savePageSchema = createAsyncThunk<
 export const updateTheme = createAsyncThunk<
 	ThemeTokens,
 	{ siteId: string; theme: ThemeTokens }
->('site/updateTheme', async ({ siteId, theme }) => {
+>('siteNameEditor/updateTheme', async ({ siteId, theme }) => {
 	await api.updateSiteTheme(siteId, theme);
 	return theme;
+});
+
+export const updateSiteName = createAsyncThunk<
+  { siteId: string; name: string },
+  { siteId: string; name: string },
+  { rejectValue: string }
+>('siteNameEditor/updateSiteName', async ({ siteId, name }, { rejectWithValue }) => {
+  try {
+    await api.updateSiteName(siteId, name);
+    return { siteId, name };
+  } catch (error) {
+    return rejectWithValue(
+      error instanceof Error ? error.message : 'Failed to update siteNameEditor name'
+    );
+  }
 });
 
 const slice = createSlice({
@@ -230,6 +245,12 @@ const slice = createSlice({
 		b.addCase(updateTheme.rejected, (s, a) => {
 			s.status = 'error';
 			s.error = a.error.message ?? 'update theme failed';
+		});
+
+		b.addCase(updateSiteName.fulfilled, (state, action) => {
+			if (state.site && state.site.id === action.payload.siteId) {
+				state.site.name = action.payload.name;
+			}
 		});
 	},
 });

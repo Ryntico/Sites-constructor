@@ -198,3 +198,11 @@ export async function patchPageSchema(
 
 	await updateDoc(ref, raw as UpdateData<DocumentData>);
 }
+
+export async function updateSiteName(siteId: string, name: string): Promise<void> {
+  const ref = doc(db, 'sites', siteId);
+  await updateDoc(ref, {
+    name,
+    updateAt: serverTimestamp(),
+  });
+}

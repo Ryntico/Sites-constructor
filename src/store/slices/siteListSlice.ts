@@ -76,7 +76,7 @@ export const deleteSite = createAsyncThunk(
 			await api.deleteSite(siteId);
 			return siteId;
 		} catch (error) {
-			return rejectWithValue(error instanceof Error ? error.message : 'Failed to delete site');
+			return rejectWithValue(error instanceof Error ? error.message : 'Failed to delete siteNameEditor');
 		}
 	},
 );
@@ -175,7 +175,7 @@ const siteListSlice = createSlice({
 			})
 			.addCase(deleteSite.rejected, (state, action) => {
 				state.status = 'error';
-				state.error = action.payload as string || 'Failed to delete site';
+				state.error = action.payload as string || 'Failed to delete siteNameEditor';
 			});
 	},
 });
