@@ -183,7 +183,6 @@ export async function patchPageSchema(
 ): Promise<void> {
 	const ref = doc(db, 'sites', siteId, 'pages', pageId);
 
-	// собираем объект с dot-path
 	const raw: Record<string, unknown> = {
 		updatedAt: serverTimestamp(),
 		draftVersion: Date.now(),
@@ -205,4 +204,30 @@ export async function updateSiteName(siteId: string, name: string): Promise<void
     name,
     updateAt: serverTimestamp(),
   });
+}
+
+export async function getHomePageSchema(siteId: string): Promise<{ schema: PageSchema; theme: ThemeTokens } | null> {
+  try {
+    const site = await getSite(siteId);
+    if (!site) return null;
+
+    const pagesSnap = await getDocs(
+      query(
+        collection(db, 'sites', siteId, 'pages'),
+        where('route', '==', '/'),
+        limit(1)
+      )
+    );
+
+    if (pagesSnap.empty) return null;
+    
+    const pageDoc = pagesSnap.docs[0].data() as PageDoc;
+    return {
+      schema: pageDoc.schema,
+      theme: site.theme
+    };
+  } catch (error) {
+    console.error('Error fetching home page schema:', error);
+    return null;
+  }
 }
