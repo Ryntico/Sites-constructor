@@ -158,7 +158,8 @@ export const MainPage = () => {
     let result = sites.map(site => ({
       id: site.id,
       name: site.name,
-      date: site.updateAt
+      date: site.updateAt,
+      homePage: site.homePage
     }));
 
     if (debouncedNameFilter) {

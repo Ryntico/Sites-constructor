@@ -1,11 +1,19 @@
 import { createSlice, createAsyncThunk, type PayloadAction } from '@reduxjs/toolkit';
 import * as api from '@/services/firebase/sites';
-import type { SiteDoc } from '@/types/siteTypes';
+import type { SiteDoc, PageSchema, ThemeTokens } from '@/types/siteTypes';
 import type { RootState } from '@/store';
 import { mergeArraysWithoutDuplicates } from '@/utils/arrayHelpers';
+import { getHomePageSchema } from '@/utils/pageHelpers';
+
+export type SiteWithPreview = SiteDoc & {
+  homePage?: {
+    schema: PageSchema;
+    theme: ThemeTokens;
+  };
+};
 
 type SiteListState = {
-	sites: SiteDoc[];
+	sites: SiteWithPreview[];
 	status: 'idle' | 'loading' | 'succeeded' | 'error' | 'loading-more';
 	error: string | null;
 	pagination: {
@@ -31,7 +39,21 @@ const initialState: SiteListState = {
 export const fetchUserSites = createAsyncThunk(
 	'sites/fetchUserSites',
 	async (ownerId: string) => {
-		return await api.listUserSites(ownerId);
+		const sites = await api.listUserSites(ownerId);
+
+		const sitesWithPreviews = await Promise.all(
+			sites.map(async (site) => {
+				try {
+					const homePage = await getHomePageSchema(site.id);
+					return { ...site, homePage };
+				} catch (error) {
+					console.error(`Error fetching home page for site ${site.id}:`, error);
+					return { ...site, homePage: null };
+				}
+			})
+		);
+
+		return sitesWithPreviews;
 	},
 );
 
@@ -39,7 +61,25 @@ export const fetchFirstSitesPage = createAsyncThunk(
 	'sites/fetchFirstSitesPage',
 	async (payload: { ownerId: string; pageSize?: number }) => {
 		const { ownerId, pageSize = 10 } = payload;
-		return await api.listUserSitesPaginated(ownerId, pageSize);
+		const { sites, lastDoc, hasMore } = await api.listUserSitesPaginated(ownerId, pageSize);
+
+		const sitesWithPreviews = await Promise.all(
+			sites.map(async (site) => {
+				try {
+					const homePage = await getHomePageSchema(site.id);
+					return { ...site, homePage };
+				} catch (error) {
+					console.error(`Error fetching home page for site ${site.id}:`, error);
+					return { ...site, homePage: null };
+				}
+			})
+		);
+
+		return {
+			sites: sitesWithPreviews,
+			lastDoc,
+			hasMore
+		};
 	},
 );
 
@@ -53,11 +93,29 @@ export const fetchNextSitesPage = createAsyncThunk(
 			throw new Error('No more sites to load');
 		}
 
-		return await api.listUserSitesPaginated(
+		const { sites, lastDoc: newLastDoc, hasMore } = await api.listUserSitesPaginated(
 			payload.ownerId,
 			pageSize,
 			lastDoc,
 		);
+
+		const sitesWithPreviews = await Promise.all(
+			sites.map(async (site) => {
+				try {
+					const homePage = await getHomePageSchema(site.id);
+					return { ...site, homePage };
+				} catch (error) {
+					console.error(`Error fetching home page for site ${site.id}:`, error);
+					return { ...site, homePage: null };
+				}
+			})
+		);
+
+		return {
+			sites: sitesWithPreviews,
+			lastDoc: newLastDoc,
+			hasMore
+		};
 	},
 	{
 		condition: (_, { getState }) => {
