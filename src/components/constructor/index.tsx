@@ -12,7 +12,10 @@ import {
 	Grid,
 } from '@mantine/core';
 import { exportPageToHtml } from '@components/constructor/render/exportHtml.ts';
-import { cleanupManualEmptyContainers, cloneSubtreeWithIds } from '@components/constructor/ops/schemaOps.ts';
+import {
+	cleanupManualEmptyContainers,
+	cloneSubtreeWithIds,
+} from '@components/constructor/ops/schemaOps.ts';
 import { EditorRenderer } from '@components/constructor/editor/EditorRenderer.tsx';
 import { Inspector } from '@components/constructor/Inspector';
 import { Palette } from '@components/constructor/palette/Palette.tsx';
@@ -159,6 +162,12 @@ export function Constructor() {
 		});
 	}, [schema, theme, page?.title, site?.name]);
 
+	const publicUrl = useMemo(() => {
+		if (!site?.id) return '';
+		const pid = page?.id || 'home';
+		return `${window.location.origin}/p/${site.id}/${pid}`;
+	}, [site?.id, page?.id]);
+
 	const resolveTemplate = (id: string): NodeSubtree | null => {
 		const tpl = blockTemplates.find((t) => t.id === id);
 		return tpl ? cloneSubtreeWithIds(tpl.schema) : null;
@@ -247,6 +256,26 @@ export function Constructor() {
 								variant="outline"
 							>
 								Полный предпросмотр
+							</Button>
+							<Button
+								onClick={() =>
+									publicUrl &&
+									window.open(
+										publicUrl,
+										'_blank',
+										'noopener,noreferrer',
+									)
+								}
+								disabled={!publicUrl}
+								title={
+									!publicUrl
+										? 'Сайт ещё не готов'
+										: 'Открыть публичную ссылку'
+								}
+								size="sm"
+								variant="outline"
+							>
+								Открыть по ссылке
 							</Button>
 						</Group>
 					</Group>

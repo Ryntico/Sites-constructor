@@ -10,12 +10,12 @@ import {
 	getRouteNewProject,
 	getRouteProfile,
 	getRouteConstructor,
+	getRoutePublicPreview,
 } from '../const/router.ts';
 
-import {UserRole} from "../types/routerTypes.ts";
+import { UserRole } from '../types/routerTypes.ts';
 
-const SmokeConstructorPage = lazy(() =>
-	import('@pages/ConstructorPage.tsx'))
+const SmokeConstructorPage = lazy(() => import('@pages/ConstructorPage.tsx'));
 
 const LoginPage = lazy(() =>
 	import('@pages/LoginPage').then((module) => ({ default: module.LoginPage })),
@@ -36,6 +36,8 @@ const MainPage = lazy(() =>
 		default: module.MainPage,
 	})),
 );
+
+const PublicPreviewPage = lazy(() => import('@pages/PublicPreview'));
 
 export const routeConfig: Record<AppRoutes, AppRoutesProps> = {
 	[AppRoutes.MAIN]: {
@@ -72,6 +74,13 @@ export const routeConfig: Record<AppRoutes, AppRoutesProps> = {
 		authOnly: true,
 		roles: [UserRole.USER],
 	},
+	[AppRoutes.PUBLIC_PREVIEW]: {
+		path: getRoutePublicPreview(':siteId', ':pageId'),
+		element: <PublicPreviewPage />,
+		roles: [],
+		hideHeader: true,
+	},
+
 	// last
 	[AppRoutes.NOT_FOUND]: {
 		path: '*',
