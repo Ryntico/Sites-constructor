@@ -9,13 +9,13 @@ import {
 	getRouteLogin,
 	getRouteNewProject,
 	getRouteProfile,
-	getRouteConstructor,
 	getRoutePublicPreview,
 } from '../const/router.ts';
 
 import { UserRole } from '../types/routerTypes.ts';
+import { NothingFoundBackground } from '@pages/404/404.tsx';
 
-const SmokeConstructorPage = lazy(() => import('@pages/ConstructorPage.tsx'));
+const ConstructorPage = lazy(() => import('@pages/ConstructorPage.tsx'));
 
 const LoginPage = lazy(() =>
 	import('@pages/LoginPage').then((module) => ({ default: module.LoginPage })),
@@ -64,13 +64,13 @@ export const routeConfig: Record<AppRoutes, AppRoutesProps> = {
 	},
 	[AppRoutes.NEW_PROJECT]: {
 		path: getRouteNewProject(),
-		element: <SmokeConstructorPage />,
+		element: <ConstructorPage />,
 		authOnly: true,
 		roles: [UserRole.USER],
 	},
 	[AppRoutes.EXISTING_PROJECT]: {
 		path: getRouteExistingProject(':id'),
-		element: <SmokeConstructorPage />,
+		element: <ConstructorPage />,
 		authOnly: true,
 		roles: [UserRole.USER],
 	},
@@ -80,16 +80,9 @@ export const routeConfig: Record<AppRoutes, AppRoutesProps> = {
 		roles: [],
 		hideHeader: true,
 	},
-
-	// last
 	[AppRoutes.NOT_FOUND]: {
 		path: '*',
-		element: <p>NOT_FOUND</p>,
+		element: <NothingFoundBackground />,
 		roles: [],
-	},
-	[AppRoutes.DEV_CONSTRUCTOR]: {
-		path: getRouteConstructor(),
-		element: <SmokeConstructorPage />,
-		roles: [],
-	},
+	}
 };
