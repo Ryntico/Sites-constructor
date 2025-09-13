@@ -6,9 +6,7 @@ export enum AppRoutes {
 	NEW_PROJECT = 'new_project',
 	EXISTING_PROJECT = 'existing_project',
 	PUBLIC_PREVIEW = 'public_preview',
-	// last
-	NOT_FOUND = 'not_found',
-	DEV_CONSTRUCTOR = 'constructor',
+	NOT_FOUND = 'not_found'
 }
 
 export const getRouteMain = () => '/';
@@ -17,6 +15,5 @@ export const getRouteSignup = () => '/signup';
 export const getRouteProfile = () => '/me';
 export const getRouteNewProject = () => '/sites/new';
 export const getRouteExistingProject = (siteId: string) => `/sites/${siteId}`;
-export const getRouteConstructor = () => '/dev/constructor';
 export const getRoutePublicPreview = (siteId = ':siteId', pageId?: string) =>
 	pageId ? `/p/${siteId}/${pageId}` : `/p/${siteId}`;

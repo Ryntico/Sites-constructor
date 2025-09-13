@@ -5,51 +5,70 @@ import { routeConfig } from './routeConfig';
 import { type AppRoutesProps, UserRole } from '../types/routerTypes.ts';
 import { RequireNotAuth } from '@/router/RequireNotAuth.tsx';
 import { Center, Loader } from '@mantine/core';
+import { ErrorBoundary } from '@/components/ErrorBoundary/ErrorBoundary';
 
 export const AppRouter = memo(() => {
+  const renderWithWrapper = useCallback((route: AppRoutesProps) => {
+    const element = (
+      <Suspense fallback={
+        <Center h="100vh">
+          <Loader />
+        </Center>
+      }>
+        <ErrorBoundary>
+          {route.element}
+        </ErrorBoundary>
+      </Suspense>
+    );
 
-	const renderWithWrapper = useCallback((route: AppRoutesProps) => {
-		const element = (
-			<Suspense fallback={<Center h="100vh"><Loader /></Center>}>
-				{route.element}
-			</Suspense>
-		);
+    if (route.roles?.includes(UserRole.GUEST)) {
+      return (
+        <Route
+          key={route.path}
+          path={route.path}
+          element={
+            <RequireNotAuth>
+                <ErrorBoundary>
+                    {element}
+                </ErrorBoundary>
+            </RequireNotAuth>
+          }
+        />
+      );
+    }
 
-		if (route.roles?.includes(UserRole.GUEST)) {
-			return (
-				<Route
-					key={route.path}
-					path={route.path}
-					element={
-						<RequireNotAuth>
-							{element}
-						</RequireNotAuth>}
-				/>
-			);
-		}
+    if (route.roles?.includes(UserRole.USER)) {
+      return (
+        <Route
+          key={route.path}
+          path={route.path}
+          element={
+            <RequireAuth roles={route.roles}>
+                <ErrorBoundary>
+                    {element}
+                </ErrorBoundary>
+            </RequireAuth>
+          }
+        />
+      );
+    }
 
-		if (route.roles?.includes(UserRole.USER)) {
-			return (
-				<Route
-					key={route.path}
-					path={route.path}
-					element={
-						<RequireAuth roles={route.roles}>
-							{element}
-						</RequireAuth>
-					}
-				/>
-			);
-		}
+    return (
+      <Route
+        key={route.path}
+        path={route.path}
+        element={
+          <ErrorBoundary>
+            {element}
+          </ErrorBoundary>
+        }
+      />
+    );
+  }, []);
 
-		return (
-			<Route
-				key={route.path}
-				path={route.path}
-				element={element}
-			/>
-		);
-	}, []);
-
-	return <Routes>{Object.values(routeConfig).map(renderWithWrapper)}</Routes>;
+  return (
+    <ErrorBoundary>
+      <Routes>{Object.values(routeConfig).map(renderWithWrapper)}</Routes>
+    </ErrorBoundary>
+  );
 });
