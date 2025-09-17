@@ -10,6 +10,22 @@ type BaseProps = {
 	dataAttrs: DataAttrs;
 };
 
+type FormDataEntry = FormDataEntryValue | FormDataEntryValue[];
+type FormDataObject = Record<string, FormDataEntry>;
+
+function formDataToObject(fd: FormData): FormDataObject {
+	const out: FormDataObject = {};
+	fd.forEach((v, k) => {
+		if (k in out) {
+			const prev = out[k];
+			out[k] = Array.isArray(prev) ? [...prev, v] : [prev, v];
+		} else {
+			out[k] = v;
+		}
+	});
+	return out;
+}
+
 const Labeled: React.FC<{ id: string; label?: string; children: React.ReactNode }> = ({
 	id,
 	label,
@@ -106,7 +122,7 @@ export function Input({
 			step={p.step}
 			minLength={p.minlength}
 			maxLength={p.maxlength}
-			pattern={p.pattern}
+			pattern={p.pattern || undefined}
 			title={p.title}
 			size={p.size}
 			required={p.required}
@@ -264,15 +280,7 @@ export function Form({
 			{...dataAttrs}
 			onSubmit={(e) => {
 				e.preventDefault();
-
-				const fd = new FormData(e.currentTarget);
-				const data: Record<string, any> = {};
-				fd.forEach((v, k) => {
-					if (k in data) {
-						if (Array.isArray(data[k])) data[k].push(v);
-						else data[k] = [data[k], v];
-					} else data[k] = v;
-				});
+				const data = formDataToObject(new FormData(e.currentTarget));
 				console.log('Form data:', data);
 
 				notifications.show({
@@ -280,6 +288,7 @@ export function Form({
 					message: 'Форма отправлена',
 					color: 'green',
 				});
+
 				e.currentTarget.reset();
 			}}
 		>

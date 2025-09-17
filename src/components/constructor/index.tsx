@@ -75,6 +75,7 @@ export function Constructor() {
 	} = useSiteBuilder(siteId ?? '', 'home');
 
 	const { user } = useAppSelector(selectAuth);
+	const isOwner = !!user?.isOwner;
 	const [selectedId, setSelectedId] = useState<string | null>(null);
 	const [mode, setMode] = useState<'edit' | 'preview'>('edit');
 	const [rightTab, setRightTab] = useState<'inspector' | 'theme'>('inspector');
@@ -350,7 +351,7 @@ export function Constructor() {
 									>
 										Очистить пустые контейнеры
 									</Button>
-									<SeedBlockTemplatesButton />
+									{isOwner && <SeedBlockTemplatesButton />}
 									<Button
 										onClick={handleUndo}
 										disabled={!canUndo(historyRef.current)}
@@ -449,18 +450,19 @@ export function Constructor() {
 					</Box>
 				</Box>
 			</Paper>
-
-			<Grid>
-				<Grid.Col span={6}>
-					<JsonCard title="JSON — Текущая тема" obj={theme ?? {}} />
-				</Grid.Col>
-				<Grid.Col span={6}>
-					<JsonCard
-						title="JSON — Страница (текущее состояние)"
-						obj={{ schema }}
-					/>
-				</Grid.Col>
-			</Grid>
+			{isOwner && (
+				<Grid>
+					<Grid.Col span={6}>
+						<JsonCard title="JSON — Текущая тема" obj={theme ?? {}} />
+					</Grid.Col>
+					<Grid.Col span={6}>
+						<JsonCard
+							title="JSON — Страница (текущее состояние)"
+							obj={{ schema }}
+						/>
+					</Grid.Col>
+				</Grid>
+			)}
 
 			<CodePreviewModal
 				open={showCode}
