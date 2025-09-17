@@ -1,6 +1,7 @@
 import React from 'react';
 import type { Action } from '@/types/siteTypes.ts';
 import { serializeActionsAttr } from '../helpers.ts';
+import { notifications } from '@mantine/notifications';
 
 type DataAttrs = { 'data-res-id': string };
 
@@ -261,6 +262,26 @@ export function Form({
 			encType={enctype}
 			style={base}
 			{...dataAttrs}
+			onSubmit={(e) => {
+				e.preventDefault();
+
+				const fd = new FormData(e.currentTarget);
+				const data: Record<string, any> = {};
+				fd.forEach((v, k) => {
+					if (k in data) {
+						if (Array.isArray(data[k])) data[k].push(v);
+						else data[k] = [data[k], v];
+					} else data[k] = v;
+				});
+				console.log('Form data:', data);
+
+				notifications.show({
+					title: 'Успешно',
+					message: 'Форма отправлена',
+					color: 'green',
+				});
+				e.currentTarget.reset();
+			}}
 		>
 			{children}
 		</form>

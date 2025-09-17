@@ -330,6 +330,26 @@ function runtimeJs() {
         t = t.parentElement;
       }
     });
+    document.addEventListener("submit", function(e){
+	  const form = e.target;
+	  if (!(form instanceof HTMLFormElement)) return;
+	  e.preventDefault();
+	
+	  try {
+		const fd = new FormData(form);
+		const obj = {};
+		fd.forEach((v, k) => {
+		  if (obj[k] !== undefined) {
+			if (Array.isArray(obj[k])) obj[k].push(v);
+			else obj[k] = [obj[k], v];
+		  } else obj[k] = v;
+		});
+		console.log("Form data:", obj);
+	  } catch {}
+	
+	  showToast("Форма отправлена", "success");
+	  form.reset();
+	}, true);
   })();
   `;
 }
