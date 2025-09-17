@@ -10,7 +10,7 @@ import { Provider } from 'react-redux';
 import { store } from './store';
 import { onAuthStateChanged } from 'firebase/auth';
 import { auth } from './services/firebase/app';
-import { setUser, fetchUserDoc } from './store/slices/authSlice';
+import { setUser, fetchUserDoc, fetchAdminRole } from './store/slices/authSlice';
 
 onAuthStateChanged(auth, (fbUser) => {
 	store.dispatch(
@@ -26,6 +26,7 @@ onAuthStateChanged(auth, (fbUser) => {
 	);
 	if (fbUser) {
 		store.dispatch(fetchUserDoc(fbUser.uid));
+		store.dispatch(fetchAdminRole(fbUser.uid));
 	}
 });
 

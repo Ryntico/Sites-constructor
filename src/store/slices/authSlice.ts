@@ -1,7 +1,7 @@
-import { createSlice, createAsyncThunk, type PayloadAction } from '@reduxjs/toolkit';
+import { createAsyncThunk, createSlice, type PayloadAction } from '@reduxjs/toolkit';
 import { auth, db } from '@/services/firebase/app.ts';
 import * as authApi from '@/services/firebase/auth';
-import { doc, getDoc, setDoc, serverTimestamp, Timestamp } from 'firebase/firestore';
+import { doc, getDoc, serverTimestamp, setDoc, Timestamp } from 'firebase/firestore';
 import type { User as FirebaseUser } from 'firebase/auth';
 import { updateUserEmail } from '@/services/firebase/auth.ts';
 
@@ -19,6 +19,8 @@ type UserDocCreate = Omit<UserDoc, 'createdAt'> & {
 	createdAt: ReturnType<typeof serverTimestamp>;
 };
 
+export type AdminRole = 'owner' | 'admin' | 'editor';
+
 export type AuthUser = {
 	uid: string;
 	email: string | null;
@@ -26,6 +28,8 @@ export type AuthUser = {
 	firstName?: string;
 	lastName?: string;
 	avatarUrl?: string;
+	roles?: AdminRole[];
+	isOwner?: boolean;
 };
 
 type AuthState = {
@@ -67,16 +71,23 @@ const ensureUserDoc = async (
 		return {
 			firstName: payload.firstName,
 			lastName: payload.lastName,
-			avatarUrl: payload.avatarUrl
+			avatarUrl: payload.avatarUrl,
 		};
 	}
 	const data = snap.data() as UserDoc;
 	return {
 		firstName: data.firstName,
 		lastName: data.lastName,
-		avatarUrl: data.avatarUrl
+		avatarUrl: data.avatarUrl,
 	};
 };
+
+async function getAdminRole(uid: string): Promise<AdminRole | null> {
+	const ref = doc(db, 'admins', uid);
+	const snap = await getDoc(ref);
+	if (!snap.exists()) return null;
+	return (snap.data()?.role ?? null) as AdminRole | null;
+}
 
 export const fetchUserDoc = createAsyncThunk<
 	{ firstName: string; lastName: string; avatarUrl?: string },
@@ -93,8 +104,22 @@ export const fetchUserDoc = createAsyncThunk<
 		return {
 			firstName: data.firstName ?? '',
 			lastName: data.lastName ?? '',
-			avatarUrl: data.avatarUrl // добавляем avatarUrl
+			avatarUrl: data.avatarUrl, // добавляем avatarUrl
 		};
+	} catch (e: unknown) {
+		const msg = e instanceof Error ? e.message : String(e);
+		return rejectWithValue(msg);
+	}
+});
+
+export const fetchAdminRole = createAsyncThunk<
+	{ role: AdminRole | null },
+	string,
+	{ rejectValue: string }
+>('auth/fetchAdminRole', async (uid, { rejectWithValue }) => {
+	try {
+		const role = await getAdminRole(uid);
+		return { role };
 	} catch (e: unknown) {
 		const msg = e instanceof Error ? e.message : String(e);
 		return rejectWithValue(msg);
@@ -111,6 +136,7 @@ export const signUp = createAsyncThunk<
 		try {
 			const full = [firstName, lastName].filter(Boolean).join(' ').trim();
 			const fbUser = await authApi.signUp(email, password, full);
+			const role = await getAdminRole(fbUser.uid);
 
 			const userData = await ensureUserDoc(fbUser, { firstName, lastName });
 
@@ -118,7 +144,9 @@ export const signUp = createAsyncThunk<
 				...mapAuthUser(fbUser),
 				firstName: userData.firstName,
 				lastName: userData.lastName,
-				avatarUrl: userData.avatarUrl // добавляем avatarUrl
+				avatarUrl: userData.avatarUrl, // добавляем avatarUrl
+				roles: role ? [role] : [],
+				isOwner: role === 'owner',
 			};
 		} catch (e: unknown) {
 			const msg = e instanceof Error ? e.message : String(e);
@@ -135,12 +163,15 @@ export const signIn = createAsyncThunk<
 	try {
 		const fbUser = await authApi.signIn(email, password);
 		const userData = await ensureUserDoc(fbUser); // получаем данные включая avatarUrl
+		const role = await getAdminRole(fbUser.uid);
 
 		return {
 			...mapAuthUser(fbUser),
 			firstName: userData.firstName,
 			lastName: userData.lastName,
-			avatarUrl: userData.avatarUrl // добавляем avatarUrl из Firestore
+			avatarUrl: userData.avatarUrl, // добавляем avatarUrl из Firestore
+			roles: role ? [role] : [],
+			isOwner: role === 'owner',
 		};
 	} catch (e: unknown) {
 		const msg = e instanceof Error ? e.message : String(e);
@@ -338,6 +369,13 @@ const authSlice = createSlice({
 				state.status = 'error';
 				state.error = action.payload ?? 'Failed to update avatar';
 			});
+		builder.addCase(fetchAdminRole.fulfilled, (s, a) => {
+			if (s.user) {
+				const role = a.payload.role;
+				s.user.roles = role ? [role] : [];
+				s.user.isOwner = role === 'owner';
+			}
+		});
 	},
 });
 

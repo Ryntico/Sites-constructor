@@ -9,15 +9,25 @@ import {
 	Anchor,
 	Stack,
 	Alert,
+	Tooltip,
 } from '@mantine/core';
 import { useForm } from '@mantine/form';
 import { useNavigate } from 'react-router-dom';
 import { getRouteSignup } from '@const/router';
 import { useLogin, type LoginFormValues } from '@hooks/useLogin';
+import { notifications } from '@mantine/notifications';
+import { sendPasswordResetEmail } from 'firebase/auth';
+import { auth } from '@/services/firebase/app';
+import { useEffect, useState } from 'react';
+import { FirebaseError } from 'firebase/app';
 
 export const LoginPage = () => {
 	const navigate = useNavigate();
 	const { handleSubmit, loading, error: authError } = useLogin();
+	const [resetBusy, setResetBusy] = useState(false);
+	const [resetUntil, setResetUntil] = useState<number>(0);
+	// eslint-disable-next-line @typescript-eslint/no-unused-vars
+	const [_tick, setTick] = useState(0);
 
 	const form = useForm<LoginFormValues>({
 		initialValues: {
@@ -30,6 +40,17 @@ export const LoginPage = () => {
 				value.length >= 8 ? null : 'Пароль должен содержать минимум 8 символов',
 		},
 	});
+
+	const emailValid = /^\S+@\S+$/.test(form.values.email);
+	const now = Date.now();
+	const left = Math.max(0, Math.ceil((resetUntil - now) / 1000));
+	const canSend = emailValid && !resetBusy && left === 0;
+
+	useEffect(() => {
+		if (left <= 0) return;
+		const t = setInterval(() => setTick((x) => x + 1), 1000);
+		return () => clearInterval(t);
+	}, [left]);
 
 	const onSubmit = (values: LoginFormValues) => {
 		void handleSubmit(values, () => navigate('/'));
@@ -69,6 +90,69 @@ export const LoginPage = () => {
 							{...form.getInputProps('password')}
 							size="md"
 						/>
+
+						<Tooltip
+							label={
+								emailValid
+									? left > 0
+										? `Можно повторно через ${left} с`
+										: 'Отправить письмо для сброса пароля'
+									: 'Для восстановления введите корректный email'
+							}
+							position="right"
+							withArrow
+						>
+							<Text size="xs" ta="right" mt={-6}>
+								<Anchor
+									component="button"
+									type="button"
+									onClick={async () => {
+										if (!canSend) return;
+										try {
+											setResetBusy(true);
+											await sendPasswordResetEmail(
+												auth,
+												form.values.email,
+											);
+											setResetUntil(Date.now() + 60_000);
+											notifications.show({
+												title: 'Письмо отправлено',
+												message: `Инструкции отправлены на ${form.values.email}`,
+												color: 'blue',
+											});
+										} catch (err) {
+											const e = err as FirebaseError;
+											console.error(
+												'reset error',
+												e.code,
+												e.message,
+											);
+											notifications.show({
+												title: 'Ошибка',
+												message: `${e.code}: ${e.message}`,
+												color: 'red',
+											});
+										} finally {
+											setResetBusy(false);
+										}
+									}}
+									style={{
+										padding: 0,
+										color: 'var(--mantine-color-blue-6)',
+										opacity: canSend ? 1 : 0.55,
+										cursor: canSend ? 'pointer' : 'default',
+									}}
+								>
+									Забыли пароль?
+								</Anchor>
+								{left > 0 && (
+									<Text span size="xs" c="dimmed">
+										{' '}
+										• повторно через {left} с
+									</Text>
+								)}
+							</Text>
+						</Tooltip>
 
 						{authError && (
 							<Alert

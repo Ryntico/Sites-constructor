@@ -1,6 +1,7 @@
 import React from 'react';
 import type { Action } from '@/types/siteTypes.ts';
 import { serializeActionsAttr } from '../helpers.ts';
+import { notifications } from '@mantine/notifications';
 
 type DataAttrs = { 'data-res-id': string };
 
@@ -8,6 +9,22 @@ type BaseProps = {
 	base: React.CSSProperties;
 	dataAttrs: DataAttrs;
 };
+
+type FormDataEntry = FormDataEntryValue | FormDataEntryValue[];
+type FormDataObject = Record<string, FormDataEntry>;
+
+function formDataToObject(fd: FormData): FormDataObject {
+	const out: FormDataObject = {};
+	fd.forEach((v, k) => {
+		if (k in out) {
+			const prev = out[k];
+			out[k] = Array.isArray(prev) ? [...prev, v] : [prev, v];
+		} else {
+			out[k] = v;
+		}
+	});
+	return out;
+}
 
 const Labeled: React.FC<{ id: string; label?: string; children: React.ReactNode }> = ({
 	id,
@@ -105,7 +122,7 @@ export function Input({
 			step={p.step}
 			minLength={p.minlength}
 			maxLength={p.maxlength}
-			pattern={p.pattern}
+			pattern={p.pattern || undefined}
 			title={p.title}
 			size={p.size}
 			required={p.required}
@@ -261,6 +278,19 @@ export function Form({
 			encType={enctype}
 			style={base}
 			{...dataAttrs}
+			onSubmit={(e) => {
+				e.preventDefault();
+				const data = formDataToObject(new FormData(e.currentTarget));
+				console.log('Form data:', data);
+
+				notifications.show({
+					title: 'Успешно',
+					message: 'Форма отправлена',
+					color: 'green',
+				});
+
+				e.currentTarget.reset();
+			}}
 		>
 			{children}
 		</form>
