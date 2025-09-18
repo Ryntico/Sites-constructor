@@ -1,4 +1,4 @@
-import { ImageUploader } from '@components/ImageUploader.tsx';
+import { ImageUploader } from '@/components/ImageUploader.tsx';
 import type { NodeJson } from '@/types/siteTypes.ts';
 
 interface ImageInspectorProps {

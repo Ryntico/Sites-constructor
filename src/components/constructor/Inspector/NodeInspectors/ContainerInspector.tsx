@@ -1,6 +1,6 @@
 import { InspectorSection } from '../InspectorSection.tsx';
 import { InspectorGrid } from '../InspectorGrid.tsx';
-import { SelectRow } from '@components/constructor/Inspector/InspectorInputs/SelectRow.tsx';
+import { SelectRow } from '@/components/constructor/Inspector/InspectorInputs/SelectRow.tsx';
 import type { NodeJson } from '@/types/siteTypes.ts';
 import type { StyleShortcuts } from '@/types/siteTypes.ts';
 

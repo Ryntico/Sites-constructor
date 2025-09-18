@@ -1,7 +1,7 @@
 import { InspectorSection } from '../InspectorSection.tsx';
 import { InspectorGrid } from '../InspectorGrid.tsx';
-import { TokenOnlyRow } from '@components/constructor/Inspector/InspectorInputs/TokenOnlyRow.tsx';
-import { SelectRow } from '@components/constructor/Inspector/InspectorInputs/SelectRow.tsx';
+import { TokenOnlyRow } from '@/components/constructor/Inspector/InspectorInputs/TokenOnlyRow.tsx';
+import { SelectRow } from '@/components/constructor/Inspector/InspectorInputs/SelectRow.tsx';
 import type { StyleShortcuts } from '@/types/siteTypes.ts';
 
 interface DecorInspectorProps {

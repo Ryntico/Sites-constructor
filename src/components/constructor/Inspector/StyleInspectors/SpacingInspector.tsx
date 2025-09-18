@@ -1,7 +1,7 @@
 import { InspectorSection } from '../InspectorSection.tsx';
 import { InspectorGrid } from '../InspectorGrid.tsx';
-import { NumOrTokenRow } from '@components/constructor/Inspector/InspectorInputs/NumOrTokenRow.tsx';
-import { NumRow } from '@components/constructor/Inspector/InspectorInputs/NumRow.tsx';
+import { NumOrTokenRow } from '@/components/constructor/Inspector/InspectorInputs/NumOrTokenRow.tsx';
+import { NumRow } from '@/components/constructor/Inspector/InspectorInputs/NumRow.tsx';
 import type { NodeJson, StyleShortcuts } from '@/types/siteTypes.ts';
 
 interface SpacingInspectorProps {

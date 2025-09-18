@@ -1,6 +1,6 @@
 import { InspectorSection } from '../InspectorSection.tsx';
 import { InspectorGrid } from '../InspectorGrid.tsx';
-import { TextRow } from '@components/constructor/Inspector/InspectorInputs/TextRow.tsx';
+import { TextRow } from '@/components/constructor/Inspector/InspectorInputs/TextRow.tsx';
 import type { StyleShortcuts } from '@/types/siteTypes.ts';
 
 interface SizingInspectorProps {

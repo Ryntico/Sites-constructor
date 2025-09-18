@@ -1,8 +1,8 @@
 import { useMemo } from 'react';
 import { Paper, Text, Box } from '@mantine/core';
 import type { PageSchema, ThemeTokens, NodeJson, StyleShortcuts } from '@/types/siteTypes.ts';
-import { isContainer } from '@components/constructor/ops/schemaOps.ts';
-import { RichText } from '@components/RichText.tsx';
+import { isContainer } from '@/components/constructor/ops/schemaOps.ts';
+import { RichText } from '@/components/RichText.tsx';
 import {
 	FormInspector,
 	TextareaInspector,

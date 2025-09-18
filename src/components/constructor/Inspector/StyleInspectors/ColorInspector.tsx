@@ -1,6 +1,6 @@
 import { InspectorSection } from '../InspectorSection.tsx';
 import { InspectorGrid } from '../InspectorGrid.tsx';
-import { ColorTokenRow } from '@components/constructor/Inspector/InspectorInputs/ColorTokenRow.tsx';
+import { ColorTokenRow } from '@/components/constructor/Inspector/InspectorInputs/ColorTokenRow.tsx';
 import type { StyleShortcuts } from '@/types/siteTypes.ts';
 
 interface ColorInspectorProps {

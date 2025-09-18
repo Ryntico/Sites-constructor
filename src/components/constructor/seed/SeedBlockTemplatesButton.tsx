@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Button, Text, Group } from '@mantine/core';
-import { seedBlockTemplates } from '@components/constructor/seed/seedBlockTemplates.ts';
+import { seedBlockTemplates } from '@/components/constructor/seed/seedBlockTemplates.ts';
 
 export function SeedBlockTemplatesButton() {
 	const [busy, setBusy] = useState(false);
