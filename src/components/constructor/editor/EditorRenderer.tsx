@@ -15,17 +15,17 @@ import {
 	extractSubtree,
 	duplicateNode,
 	cloneSubtreeWithIds,
-} from '@components/constructor/ops/schemaOps.ts';
+} from '@/components/constructor/ops/schemaOps.ts';
 
-import { IS_MAC } from '@components/constructor/runtime/dnd/constants.ts';
-import { useCopyKey } from '@components/constructor/runtime/hooks/useCopyKey.ts';
-import { commitWithCleanup } from '@components/constructor/ops/commit.ts';
-import { materializeTemplate } from '@components/constructor/ops/materializeTemplate.ts';
-import { appendMany, insertManyAtSide } from '@components/constructor/ops/insertions.ts';
-import { acceptsDt } from '@components/constructor/runtime/dnd/utils.ts';
-import { NodeView } from '@components/constructor/editor/NodeView.tsx';
+import { IS_MAC } from '@/components/constructor/runtime/dnd/constants.ts';
+import { useCopyKey } from '@/components/constructor/runtime/hooks/useCopyKey.ts';
+import { commitWithCleanup } from '@/components/constructor/ops/commit.ts';
+import { materializeTemplate } from '@/components/constructor/ops/materializeTemplate.ts';
+import { appendMany, insertManyAtSide } from '@/components/constructor/ops/insertions.ts';
+import { acceptsDt } from '@/components/constructor/runtime/dnd/utils.ts';
+import { NodeView } from '@/components/constructor/editor/NodeView.tsx';
 
-import '@components/constructor/styles/editorBase.css';
+import '@/components/constructor/styles/editorBase.css';
 
 export type EditorRendererProps = {
 	schema: PageSchema;

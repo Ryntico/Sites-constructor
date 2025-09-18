@@ -1,6 +1,6 @@
 import { collection, doc, getDocs, writeBatch } from 'firebase/firestore';
 import { db } from '@/services/firebase/app.ts';
-import { BLOCK_TEMPLATES } from '@components/constructor/palette/blockTemplates.ts';
+import { BLOCK_TEMPLATES } from '@/components/constructor/palette/blockTemplates.ts';
 
 export type SeedResult = { created: number; updated: number; archived: number };
 

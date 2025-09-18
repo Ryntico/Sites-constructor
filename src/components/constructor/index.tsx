@@ -11,20 +11,20 @@ import {
 	Box,
 	Grid,
 } from '@mantine/core';
-import { exportPageToHtml } from '@components/constructor/render/exportHtml.ts';
+import { exportPageToHtml } from '@/components/constructor/render/exportHtml.ts';
 import {
 	cleanupManualEmptyContainers,
 	cloneSubtreeWithIds,
-} from '@components/constructor/ops/schemaOps.ts';
-import { EditorRenderer } from '@components/constructor/editor/EditorRenderer.tsx';
-import { Inspector } from '@components/constructor/Inspector';
-import { Palette } from '@components/constructor/palette/Palette.tsx';
-import { PreviewPane } from '@components/constructor/preview/PreviewPane.tsx';
-import { ThemeEditor } from '@components/constructor/theme/ThemeEditor.tsx';
+} from '@/components/constructor/ops/schemaOps.ts';
+import { EditorRenderer } from '@/components/constructor/editor/EditorRenderer.tsx';
+import { Inspector } from '@/components/constructor/Inspector';
+import { Palette } from '@/components/constructor/palette/Palette.tsx';
+import { PreviewPane } from '@/components/constructor/preview/PreviewPane.tsx';
+import { ThemeEditor } from '@/components/constructor/theme/ThemeEditor.tsx';
 import { useSiteBuilder } from '@hooks/useSiteBuilder.ts';
 import { useAppSelector } from '@store/hooks.ts';
 import { selectAuth } from '@store/slices/authSlice.ts';
-import { SeedBlockTemplatesButton } from '@components/constructor/seed/SeedBlockTemplatesButton.tsx';
+import { SeedBlockTemplatesButton } from '@/components/constructor/seed/SeedBlockTemplatesButton.tsx';
 import type { NodeSubtree, PageSchema, SchemaPatch } from '@/types/siteTypes.ts';
 import {
 	canRedo,
@@ -35,10 +35,10 @@ import {
 	redo,
 	saveHistory,
 	undo,
-} from '@components/constructor/runtime/history.ts';
-import CodePreviewModal from '@components/CodePreviewModal.tsx';
+} from '@/components/constructor/runtime/history.ts';
+import CodePreviewModal from '@/components/CodePreviewModal.tsx';
 import { useParams } from 'react-router-dom';
-import { SiteNameEditor } from '@components/SiteNameEditor.tsx';
+import { SiteNameEditor } from '@/components/SiteNameEditor.tsx';
 
 function download(filename: string, content: string, mime = 'text/html') {
 	const blob = new Blob([content], { type: mime });

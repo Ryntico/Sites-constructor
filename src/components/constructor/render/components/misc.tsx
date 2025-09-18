@@ -1,5 +1,5 @@
 import React from 'react';
-import { isPercentSize } from '@components/constructor/render/helpers.ts';
+import { isPercentSize } from '@/components/constructor/render/helpers.ts';
 
 type BaseProps = {
 	base: React.CSSProperties;

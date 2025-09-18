@@ -1,4 +1,4 @@
-import { TYPE_MOVE, TYPE_TPL } from '@components/constructor/runtime/dnd/constants.ts';
+import { TYPE_MOVE, TYPE_TPL } from '@/components/constructor/runtime/dnd/constants.ts';
 
 export function typesToArray(types: DataTransfer['types']): string[] {
 	const maybeIterable = types as unknown as { [Symbol.iterator]?: unknown };

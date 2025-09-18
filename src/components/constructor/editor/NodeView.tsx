@@ -1,32 +1,32 @@
 import React from 'react';
 import type { Axis, PageSchema, Side, ThemeTokens } from '@/types/siteTypes.ts';
-import { mergeResponsive } from '@components/constructor/render/responsive.ts';
+import { mergeResponsive } from '@/components/constructor/render/responsive.ts';
 import {
 	isContainer,
 	getChildren,
 	findParentId,
-} from '@components/constructor/ops/schemaOps.ts';
+} from '@/components/constructor/ops/schemaOps.ts';
 
 import {
 	TYPE_MOVE,
 	TYPE_TPL,
 	TYPE_COPY_INTENT,
-} from '@components/constructor/runtime/dnd/constants.ts';
-import { acceptsDt, typesToArray } from '@components/constructor/runtime/dnd/utils.ts';
+} from '@/components/constructor/runtime/dnd/constants.ts';
+import { acceptsDt, typesToArray } from '@/components/constructor/runtime/dnd/utils.ts';
 
-import { renderPrimitive } from '@components/constructor/render/primitives.tsx';
+import { renderPrimitive } from '@/components/constructor/render/primitives.tsx';
 import {
 	computeAxis,
 	isFillLike,
 	buildWrapperStyle,
 	buildCenterStyle,
-} from '@components/constructor/render/helpers.ts';
+} from '@/components/constructor/render/helpers.ts';
 
-import { dndContainerStyle } from '@components/constructor/styles/dndContainerStyle.ts';
-import { ContainerLabel } from '@components/ContainerLabel.tsx';
-import { ChildFrame } from '@components/ChildFrame.tsx';
+import { dndContainerStyle } from '@/components/constructor/styles/dndContainerStyle.ts';
+import { ContainerLabel } from '@/components/ContainerLabel.tsx';
+import { ChildFrame } from '@/components/ChildFrame.tsx';
 
-import { EditableNodeWrapper } from '@components/EditableNodeWrapper.tsx';
+import { EditableNodeWrapper } from '@/components/EditableNodeWrapper.tsx';
 
 export type NodeViewProps = {
 	id: string;

@@ -1,7 +1,7 @@
 import { InspectorSection } from '../InspectorSection.tsx';
-import { TextRowWithValidate } from '@components/constructor/Inspector/InspectorInputs/TextRowWithValidate.tsx';
-import { NumRow } from '@components/constructor/Inspector/InspectorInputs/NumRow.tsx';
-import { SelectRow } from '@components/constructor/Inspector/InspectorInputs/SelectRow.tsx';
+import { TextRowWithValidate } from '@/components/constructor/Inspector/InspectorInputs/TextRowWithValidate.tsx';
+import { NumRow } from '@/components/constructor/Inspector/InspectorInputs/NumRow.tsx';
+import { SelectRow } from '@/components/constructor/Inspector/InspectorInputs/SelectRow.tsx';
 import type { NodeJson } from '@/types/siteTypes.ts';
 
 interface TextInputInspectorProps {
