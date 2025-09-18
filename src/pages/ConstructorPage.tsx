@@ -1,4 +1,4 @@
-import { Constructor } from '@components/constructor';
+import { Constructor } from '@/components/constructor';
 export default function ConstructorPage() {
 	return <Constructor />;
 }

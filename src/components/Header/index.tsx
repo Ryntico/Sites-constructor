@@ -1,7 +1,7 @@
 import { Group, Box } from '@mantine/core';
 import { HeaderNavigation } from './HeaderNavigation';
 import { HeaderProfile } from './HeaderProfile';
-import { ThemeSwitcher } from '@components/ThemeSwitcher.tsx';
+import { ThemeSwitcher } from '@/components/ThemeSwitcher.tsx';
 
 export const Header = () => {
 	return (

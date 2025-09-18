@@ -1,8 +1,8 @@
 import { useParams } from 'react-router-dom';
 import type { PageSchema, ThemeTokens } from '@/types/siteTypes';
-import { RenderTree } from '@components/constructor/render/Renderer';
+import { RenderTree } from '@/components/constructor/render/Renderer';
 import { getSite, listPages } from '@/services/firebase/sites';
-import { StyleReset } from '@components/constructor/render/StyleReset.tsx';
+import { StyleReset } from '@/components/constructor/render/StyleReset.tsx';
 import { type ReactElement, useEffect, useState } from 'react';
 
 export default function PublicPreview(): ReactElement {

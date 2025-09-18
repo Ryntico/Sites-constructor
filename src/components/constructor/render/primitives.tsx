@@ -1,6 +1,6 @@
 import React from 'react';
 import type { NodeJson, ThemeTokens } from '@/types/siteTypes.ts';
-import { isPercentSize } from '@components/constructor/render/helpers.ts';
+import { isPercentSize } from '@/components/constructor/render/helpers.ts';
 
 type StyleWithWH = React.CSSProperties & {
 	w?: string | number;

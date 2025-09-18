@@ -1,6 +1,6 @@
 import { InspectorSection } from '../InspectorSection.tsx';
-import { NumRow } from '@components/constructor/Inspector/InspectorInputs/NumRow.tsx';
-import { SelectRow } from '@components/constructor/Inspector/InspectorInputs/SelectRow.tsx';
+import { NumRow } from '@/components/constructor/Inspector/InspectorInputs/NumRow.tsx';
+import { SelectRow } from '@/components/constructor/Inspector/InspectorInputs/SelectRow.tsx';
 import type { NodeJson } from '@/types/siteTypes.ts';
 
 interface NumberInputInspectorProps {

@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
-import { render } from '@testing-library/react';
+import { act, render } from '@testing-library/react';
 import {
 	makeTheme,
 	makeSchemaEmptyContainer,
@@ -86,9 +86,11 @@ describe('EditorRenderer / NodeView', () => {
 		const dt = new DTMock();
 		dt.setData(TYPE_TPL, 'tplH1');
 
-		dispatchDrag(root, 'dragenter', dt);
-		dispatchDrag(root, 'dragleave', dt, { relatedTarget: document.body });
-		dispatchDrag(root, 'drop', dt);
+		act(() => {
+			dispatchDrag(root, 'dragenter', dt);
+			dispatchDrag(root, 'dragleave', dt, { relatedTarget: document.body });
+			dispatchDrag(root, 'drop', dt);
+		});
 	});
 
 	test('NodeView: drop шаблона в пустой контейнер вызывает handleDropInside', () => {
@@ -120,7 +122,10 @@ describe('EditorRenderer / NodeView', () => {
 		const dt = new DTMock();
 		dt.setData(TYPE_TPL, 'tplH1');
 
-		dispatchDrag(inner, 'drop', dt);
+		act(() => {
+			dispatchDrag(inner, 'drop', dt);
+		});
+
 
 		expect(handleDropInside).toHaveBeenCalled();
 		const last = handleDropInside.mock.calls.at(-1)!;
@@ -160,7 +165,10 @@ describe('EditorRenderer / NodeView', () => {
 		dt.setData(TYPE_MOVE, 'h1');
 		dt.setData(TYPE_COPY_INTENT, '0');
 
-		dispatchDrag(inner, 'drop', dt);
+		act(() => {
+			dispatchDrag(inner, 'drop', dt);
+		});
+
 
 		expect(handleDropInside).toHaveBeenCalledWith('section1', undefined, 'h1', {
 			copy: true,

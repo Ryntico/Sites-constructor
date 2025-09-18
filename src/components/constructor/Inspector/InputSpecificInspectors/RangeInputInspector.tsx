@@ -1,5 +1,5 @@
 import { InspectorSection } from '../InspectorSection.tsx';
-import { NumRow } from '@components/constructor/Inspector/InspectorInputs/NumRow.tsx';
+import { NumRow } from '@/components/constructor/Inspector/InspectorInputs/NumRow.tsx';
 import type { NodeJson } from '@/types/siteTypes.ts';
 
 interface RangeInputInspectorProps {

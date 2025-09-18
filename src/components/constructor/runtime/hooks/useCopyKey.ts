@@ -1,5 +1,5 @@
 import { useEffect, useRef } from 'react';
-import { isCopyKeyLike } from '@components/constructor/runtime/dnd/utils.ts';
+import { isCopyKeyLike } from '@/components/constructor/runtime/dnd/utils.ts';
 
 export function useCopyKey(isMac: boolean) {
 	const ref = useRef(false);

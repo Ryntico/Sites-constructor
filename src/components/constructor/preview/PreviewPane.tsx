@@ -1,7 +1,7 @@
 import { useMemo, useState } from 'react';
-import { RenderTree } from '@components/constructor/render/Renderer.tsx';
+import { RenderTree } from '@/components/constructor/render/Renderer.tsx';
 import type { PageSchema, ThemeTokens } from '@/types/siteTypes.ts';
-import { StyleReset } from '@components/constructor/render/StyleReset.tsx';
+import { StyleReset } from '@/components/constructor/render/StyleReset.tsx';
 
 const PRESETS = [
 	{ key: 'desktop', label: 'Desktop', width: '100%' as const },

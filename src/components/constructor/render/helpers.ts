@@ -1,6 +1,6 @@
 import type { CSSProperties } from 'react';
 import type { Action, Axis, PageSchema } from '@/types/siteTypes.ts';
-import { isContainer } from '@components/constructor/ops/schemaOps.ts';
+import { isContainer } from '@/components/constructor/ops/schemaOps.ts';
 
 export function computeAxis(base: CSSProperties, nodeType: string): Axis {
 	const disp = base?.display as CSSProperties['display'] | undefined;

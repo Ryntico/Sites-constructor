@@ -4,8 +4,8 @@ import {
 	TYPE_TPL,
 	TYPE_MOVE,
 	TYPE_COPY_INTENT,
-} from '@components/constructor/runtime/dnd/constants.ts';
-import { typesToArray } from '@components/constructor/runtime/dnd/utils.ts';
+} from '@/components/constructor/runtime/dnd/constants.ts';
+import { typesToArray } from '@/components/constructor/runtime/dnd/utils.ts';
 
 type Props = {
 	onDrop: (tplKey?: string, moveNodeId?: string, opts?: { copy?: boolean }) => void;

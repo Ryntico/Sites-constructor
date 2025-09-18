@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { Button, Card, Text, Group, Center, Box, Skeleton } from '@mantine/core';
-import { RenderTree } from '@components/constructor/render/Renderer';
+import { RenderTree } from '@/components/constructor/render/Renderer';
 import type { PageSchema, ThemeTokens } from '@/types/siteTypes';
 
 interface BlockCardProps {

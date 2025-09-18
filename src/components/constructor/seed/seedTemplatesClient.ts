@@ -1,8 +1,8 @@
 import { writeBatch, collection, doc } from 'firebase/firestore';
 import { db } from '@/services/firebase/app.ts';
-import { BLOCK_TEMPLATES } from '@components/constructor/palette/blockTemplates.ts';
-import { pageMock } from '@components/constructor/mocks/page.mock.ts';
-import { themeMock } from '@components/constructor/mocks/theme.mock.ts';
+import { BLOCK_TEMPLATES } from '@/components/constructor/palette/blockTemplates.ts';
+import { pageMock } from '@/components/constructor/mocks/page.mock.ts';
+import { themeMock } from '@/components/constructor/mocks/theme.mock.ts';
 
 export async function seedTemplatesClient() {
 	const batch = writeBatch(db);
