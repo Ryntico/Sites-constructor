@@ -13,9 +13,9 @@ import {
 } from '../const/router.ts';
 
 import { UserRole } from '../types/routerTypes.ts';
-import { NothingFoundBackground } from '@pages/404/404.tsx';
+import { NothingFoundBackground } from '@/pages/404/404.tsx';
+import ConstructorPage from '@/pages/ConstructorPage.tsx';
 
-const ConstructorPage = lazy(() => import('@pages/ConstructorPage.tsx'));
 
 const LoginPage = lazy(() =>
 	import('@pages/LoginPage').then((module) => ({ default: module.LoginPage })),
