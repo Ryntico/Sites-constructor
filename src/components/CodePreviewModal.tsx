@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import { prettifyHtml, highlightHtml, splitLines } from '@/utils/prettyHtmlViewer.ts';
+import { Button } from '@mantine/core';
 
 type Props = {
 	open: boolean;
@@ -62,15 +63,21 @@ export default function CodePreviewModal({
 				<div className="code-modal__header">
 					<strong>{title}</strong>
 					<div className="code-modal__actions">
-						<button className="btn" onClick={handleCopy}>
+						<Button
+							variant="outline"
+							onClick={handleCopy}>
 							{copied ? 'Скопировано' : 'Скопировать'}
-						</button>
-						<button className="btn" onClick={handleDownload}>
+						</Button>
+						<Button
+							variant="outline"
+							onClick={handleDownload}>
 							Скачать
-						</button>
-						<button className="btn btn--ghost" onClick={onClose}>
+						</Button>
+						<Button
+							variant="outline"
+							onClick={onClose}>
 							Закрыть
-						</button>
+						</Button>
 					</div>
 				</div>
 

@@ -1,9 +1,12 @@
 import {
-	createUserWithEmailAndPassword,
-	signInWithEmailAndPassword,
-	signOut,
-	updateProfile,
-	updateEmail,
+  createUserWithEmailAndPassword,
+  signInWithEmailAndPassword,
+  signOut,
+  updateProfile,
+  updateEmail,
+  updatePassword,
+  EmailAuthProvider,
+  reauthenticateWithCredential,
 } from 'firebase/auth';
 import type { User } from 'firebase/auth';
 
@@ -40,4 +43,21 @@ export async function updateUserEmail(newEmail: string) {
 	await updateEmail(auth.currentUser, newEmail);
 	await auth.currentUser.reload();
 	return auth.currentUser;
+}
+
+export async function changeUserPassword(
+  currentPassword: string,
+  newPassword: string
+): Promise<void> {
+  const user = auth.currentUser;
+  if (!user || !user.email) {
+    throw new Error('Not authenticated');
+  }
+
+  // Reauthenticate user
+  const credential = EmailAuthProvider.credential(user.email, currentPassword);
+  await reauthenticateWithCredential(user, credential);
+
+  // Update password
+  await updatePassword(user, newPassword);
 }

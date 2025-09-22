@@ -1,9 +1,10 @@
-import React, { useCallback } from 'react';
-import { Stack, TextInput, Image, ActionIcon, Box, Group, Alert, FileButton, Avatar } from '@mantine/core';
+import React, { useCallback, useState } from 'react';
+import { Stack, TextInput, Image, ActionIcon, Box, Group, Alert, FileButton, Avatar, Button } from '@mantine/core';
 import { useForm } from '@mantine/form';
 import { type UpdateProfileValues, useUpdateProfile } from '@hooks/useUpdateProfile.ts';
 import { useImageUpload } from '@hooks/useImageUpload.ts';
 import { useAppSelector } from '@store/hooks.ts';
+import { ChangePasswordForm } from '@components/profilePage/ChangePasswordForm';
 
 interface ProfileEditProps {
 	user: UpdateProfileValues;
@@ -71,6 +72,16 @@ export const ProfileEdit: React.FC<ProfileEditProps> = ({ user, onSave }) => {
 		},
 	});
 
+	const [showPasswordForm, setShowPasswordForm] = useState(false);
+
+	const togglePasswordForm = () => {
+		setShowPasswordForm(!showPasswordForm);
+	};
+
+	const handlePasswordChangeSuccess = () => {
+		setShowPasswordForm(false);
+	};
+
 	const handleFileChange = useCallback(
 		async (file: File | null) => {
 			if (!file || !currentUser?.uid) return;
@@ -100,118 +111,129 @@ export const ProfileEdit: React.FC<ProfileEditProps> = ({ user, onSave }) => {
 		}
 	};
 
-	const avatarUrl = form.values.avatarUrl || user.avatarUrl;
+	const avatarUrl = form.values.avatarUrl;
 
 	return (
-		<Stack gap="xl" align="center">
-			<Box w="100%">
-				<Group justify="right">
-					<ActionIcon
-						size="lg"
-						radius="xl"
-						color="green"
-						onClick={handleSubmit}
-						loading={isLoading}
+			<Stack gap="xl" align="center">
+				<Box pos="relative" w={240} h={240}>
+					{avatarUrl &&
+						<Image
+							src={avatarUrl}
+							alt="Profile avatar"
+							width={240}
+							height={240}
+							radius="xl"
+							style={{ border: '2px solid #000' }}
+						/>
+					}
+					{!avatarUrl &&
+						<Avatar size="xxl" radius="xl" />
+					}
+					<Group
+						gap="xs"
+						justify="center"
+						pos="absolute"
+						bottom={-20}
+						left={0}
+						right={0}
 					>
-						✓
-					</ActionIcon>
-				</Group>
-			</Box>
-
-			<Box pos="relative" w={240} h={240}>
-				{avatarUrl &&
-					<Image
-						src={avatarUrl}
-						alt="Profile avatar"
-						width={240}
-						height={240}
-						radius="xl"
-						style={{ border: '2px solid #000' }}
-					/>
-				}
-				{!avatarUrl &&
-					<Avatar size="xxl" radius="xl" />
-				}
-				<Group
-					gap="xs"
-					justify="center"
-					pos="absolute"
-					bottom={-20}
-					left={0}
-					right={0}
-				>
-					<FileButton onChange={handleFileChange} accept="image/png,image/jpeg,image/webp">
-						{(props) => (
+						<FileButton onChange={handleFileChange} accept="image/png,image/jpeg,image/webp">
+							{(props) => (
+								<ActionIcon
+									{...props}
+									variant="filled"
+									color="blue"
+									loading={isUploading}
+									size="lg"
+									radius="xl"
+									title="Изменить аватар"
+								>
+									<IconCameraPlus/>
+								</ActionIcon>
+							)}
+						</FileButton>
+						{avatarUrl && (
 							<ActionIcon
-								{...props}
 								variant="filled"
-								color="blue"
-								loading={isUploading}
+								color="red"
 								size="lg"
 								radius="xl"
-								title="Изменить аватар"
+								onClick={handleRemoveAvatar}
+								disabled={isUploading}
+								title="Удалить аватар"
 							>
-								<IconCameraPlus/>
+								<IconTrash/>
 							</ActionIcon>
 						)}
-					</FileButton>
-					{avatarUrl && (
-						<ActionIcon
-							variant="filled"
-							color="red"
-							size="lg"
-							radius="xl"
-							onClick={handleRemoveAvatar}
-							disabled={isUploading}
-							title="Удалить аватар"
-						>
-							<IconTrash/>
-						</ActionIcon>
-					)}
-				</Group>
-			</Box>
-
-			{isUploading && (
-				<Box w="100%" ta="center">
-					Загрузка: {Math.round(progress)}%
+					</Group>
 				</Box>
-			)}
 
-			<Box w="100%">
-				<form onSubmit={(e) => { e.preventDefault(); handleSubmit(); }}>
-					<Stack gap="lg">
-						<TextInput
-							label="Имя"
-							placeholder="Имя"
-							size="md"
-							key={form.key('firstName')}
-							{...form.getInputProps('firstName')}
-							disabled={isLoading || isUploading}
-						/>
+				{isUploading && (
+					<Box w="100%" ta="center">
+						Загрузка: {Math.round(progress)}%
+					</Box>
+				)}
 
-						<TextInput
-							label="Фамилия"
-							placeholder="Фамилия"
-							size="md"
-							key={form.key('lastName')}
-							{...form.getInputProps('lastName')}
-							disabled={isLoading || isUploading}
-						/>
+				<Box w="100%">
+					<form onSubmit={(e) => { e.preventDefault(); handleSubmit(); }}>
+						<Stack gap="lg">
+							<TextInput
+								label="Имя"
+								placeholder="Имя"
+								size="md"
+								key={form.key('firstName')}
+								{...form.getInputProps('firstName')}
+								disabled={isLoading || isUploading}
+							/>
 
-						<TextInput
-							label="Электронная почта"
-							placeholder="Электронная почта"
-							size="md"
-							key={form.key('email')}
-							{...form.getInputProps('email')}
-							disabled={isLoading || isUploading}
-						/>
-					</Stack>
-					{error && !isLoading && (
-						<Alert title={error} color="red" variant="light" mt="xs" />
-					)}
-				</form>
-			</Box>
-		</Stack>
+							<TextInput
+								label="Фамилия"
+								placeholder="Фамилия"
+								size="md"
+								key={form.key('lastName')}
+								{...form.getInputProps('lastName')}
+								disabled={isLoading || isUploading}
+							/>
+
+							<TextInput
+								label="Электронная почта"
+								placeholder="Электронная почта"
+								size="md"
+								key={form.key('email')}
+								{...form.getInputProps('email')}
+								disabled={isLoading || isUploading}
+							/>
+
+							<Group justify="space-between" mt="md">
+								<Button
+									variant="subtle"
+									onClick={togglePasswordForm}
+									type="button"
+								>
+									{showPasswordForm ? 'Скрыть смену пароля' : 'Изменить пароль'}
+								</Button>
+
+								<Button
+									variant="subtle"
+									color="green"
+									type="submit"
+									loading={isLoading}
+								>
+									Сохранить профиль
+								</Button>
+							</Group>
+
+							{showPasswordForm && (
+								<Box p="md" style={{ border: '1px solid #e9ecef', borderRadius: '8px' }}>
+									<ChangePasswordForm onSuccess={handlePasswordChangeSuccess} />
+								</Box>
+							)}
+						</Stack>
+						{error && !isLoading && (
+							<Alert title={error} color="red" variant="light" mt="xs" />
+						)}
+					</form>
+				</Box>
+			</Stack>
 	);
 };

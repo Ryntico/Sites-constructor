@@ -80,7 +80,7 @@ export const MainPage = () => {
   }, [nameFilter]);
 
   const [sort, setSort] = useState<{ field: SortField; order: SortOrder }>({
-    field: SortField.TITLE,
+    field: SortField.DATA,
     order: SortOrder.ASC
   });
 

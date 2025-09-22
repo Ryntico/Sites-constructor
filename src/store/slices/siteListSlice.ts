@@ -23,7 +23,7 @@ type SiteListState = {
 	};
 };
 
-export const PAGE_SIZE = 5;
+export const PAGE_SIZE = 8;
 
 const initialState: SiteListState = {
 	sites: [],

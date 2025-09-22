@@ -70,6 +70,7 @@ export default function PublicPreview(): ReactElement {
 			<div
 				data-preview-root
 				style={{
+					all: 'initial',
 					margin: '0 auto',
 					maxWidth: 1200,
 					background: theme.colors.page,

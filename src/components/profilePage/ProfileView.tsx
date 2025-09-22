@@ -1,5 +1,5 @@
 import React from 'react';
-import { Stack, Text, Image, ActionIcon, Box, Group, Avatar } from '@mantine/core';
+import { Stack, Text, Image, Box, Avatar, Button } from '@mantine/core';
 import { type UpdateProfileValues } from '@hooks/useUpdateProfile.ts';
 
 interface ProfileView {
@@ -10,14 +10,6 @@ interface ProfileView {
 export const ProfileView: React.FC<ProfileView> = ({ user, editCallback }) => {
 	return (
 		<Stack gap="xl" align="center">
-			<Box w="100%">
-				<Group justify="right">
-					<ActionIcon size="lg" radius="xl" color="blue" onClick={editCallback}>
-						✏️
-					</ActionIcon>
-				</Group>
-			</Box>
-
 			<Box>
 				{user.avatarUrl &&
 					<Image
@@ -43,6 +35,10 @@ export const ProfileView: React.FC<ProfileView> = ({ user, editCallback }) => {
 					{user.email}
 				</Text>
 			</Stack>
+
+			<Button variant="subtle" size="xs" onClick={editCallback}>
+				Редактировать
+			</Button>
 		</Stack>
 	);
 };
