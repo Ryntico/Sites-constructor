@@ -169,6 +169,12 @@ export type PageTemplateDoc = {
 	schema: PageSchema;
 };
 
+export type PageTemplateWithThemeDoc = {
+	name: string;
+	page: PageTemplateDoc;
+	theme: ThemeTokens;
+}
+
 export type PageDoc = {
 	id: string;
 	route: string;

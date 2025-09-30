@@ -15,6 +15,7 @@
 		"preview": "vite preview"
 	},
 	"dependencies": {
+		"@mantine/carousel": "^8.2.4",
 		"@mantine/code-highlight": "^8.2.4",
 		"@mantine/core": "^8.2.4",
 		"@mantine/dates": "^8.2.4",
@@ -36,6 +37,7 @@
 		"@tiptap/react": "^3.2.2",
 		"@tiptap/starter-kit": "^3.2.2",
 		"dayjs": "^1.11.13",
+		"embla-carousel-autoplay": "^8.6.0",
 		"firebase": "^12.1.0",
 		"react": "^19.1.1",
 		"react-dom": "^19.1.1",

@@ -39,6 +39,9 @@ import {
 import CodePreviewModal from '@/components/CodePreviewModal.tsx';
 import { useParams } from 'react-router-dom';
 import { SiteNameEditor } from '@/components/SiteNameEditor.tsx';
+import { SaveTemplateModal } from './SaveTemplateModal';
+import { savePageAsTemplate } from '@/services/firebase/templates';
+import { notifications } from '@mantine/notifications';
 
 function download(filename: string, content: string, mime = 'text/html') {
 	const blob = new Blob([content], { type: mime });
@@ -80,6 +83,8 @@ export function Constructor() {
 	const [mode, setMode] = useState<'edit' | 'preview'>('edit');
 	const [rightTab, setRightTab] = useState<'inspector' | 'theme'>('inspector');
 	const [showCode, setShowCode] = useState(false);
+	const [isSaveTemplateModalOpen, setIsSaveTemplateModalOpen] = useState(false);
+	const [isSavingTemplate, setIsSavingTemplate] = useState(false);
 
 	const historyKey = `hist:${siteId ?? 'no-siteNameEditor'}:${page?.id ?? 'no-page'}`;
 
@@ -153,6 +158,42 @@ export function Constructor() {
 		forceRender((x) => x + 1);
 		if (!res.schema.nodes[selectedId ?? '']) setSelectedId(null);
 	}
+
+	const handleSaveTemplate = async (name: string) => {
+		if (!schema || !theme || !user?.uid) return;
+
+		setIsSavingTemplate(true);
+		try {
+			await savePageAsTemplate({
+				ownerId: user.uid,
+				name,
+				page: {
+					id: `custom-${Date.now()}`,
+					name,
+					title: page?.title || 'Untitled',
+					route: page?.route || '/',
+					schema: schema,
+				},
+				theme: theme,
+			});
+
+			notifications.show({
+				title: 'Шаблон сохранен',
+				message: `Шаблон "${name}" успешно сохранен`,
+				color: 'green',
+			});
+			setIsSaveTemplateModalOpen(false);
+		} catch (error) {
+			console.error('Error saving template:', error);
+			notifications.show({
+				title: 'Ошибка',
+				message: 'Не удалось сохранить шаблон',
+				color: 'red',
+			});
+		} finally {
+			setIsSavingTemplate(false);
+		}
+	};
 
 	const exported = useMemo(() => {
 		if (!schema || !theme) return '';
@@ -277,6 +318,15 @@ export function Constructor() {
 								variant="outline"
 							>
 								Открыть по ссылке
+							</Button>
+							<Button
+								onClick={() => setIsSaveTemplateModalOpen(true)}
+								disabled={!exported}
+								variant="outline"
+								size="sm"
+								title="Сохранить текущую страницу как шаблон"
+							>
+								Сохранить как шаблон
 							</Button>
 						</Group>
 					</Group>
@@ -471,6 +521,13 @@ export function Constructor() {
 				fileName="page-export.html"
 				title="Исходный HTML (экспорт)"
 				autoCloseAfterCopyMs={0}
+			/>
+
+			<SaveTemplateModal
+				opened={isSaveTemplateModalOpen}
+				onClose={() => setIsSaveTemplateModalOpen(false)}
+				onSave={handleSaveTemplate}
+				loading={isSavingTemplate}
 			/>
 		</Box>
 	);

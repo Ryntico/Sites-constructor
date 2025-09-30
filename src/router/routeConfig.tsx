@@ -10,6 +10,7 @@ import {
 	getRouteNewProject,
 	getRouteProfile,
 	getRoutePublicPreview,
+	getRouteTemplates,
 } from '../const/router.ts';
 
 import { UserRole } from '../types/routerTypes.ts';
@@ -18,26 +19,32 @@ import ConstructorPage from '@/pages/ConstructorPage.tsx';
 
 
 const LoginPage = lazy(() =>
-	import('@pages/LoginPage').then((module) => ({ default: module.LoginPage })),
+	import('@/pages/LoginPage').then((module) => ({ default: module.LoginPage })),
 );
 
 const SignupPage = lazy(() =>
-	import('@pages/SignupPage').then((module) => ({ default: module.SignupPage })),
+	import('@/pages/SignupPage').then((module) => ({ default: module.SignupPage })),
 );
 
 const ProfilePage = lazy(() =>
-	import('@pages/ProfilePage.tsx').then((module) => ({
+	import('@/pages/ProfilePage.tsx').then((module) => ({
 		default: module.ProfilePage,
 	})),
 );
 
 const MainPage = lazy(() =>
-	import('@pages/MainPage.tsx').then((module) => ({
+	import('@/pages/MainPage.tsx').then((module) => ({
 		default: module.MainPage,
 	})),
 );
 
 const PublicPreviewPage = lazy(() => import('@pages/PublicPreview'));
+
+const TemplatesPage = lazy(() =>
+	import('@components/TemplatesCarousel.tsx').then((module) => ({
+		default: module.TemplatesCarousel,
+	})),
+);
 
 export const routeConfig: Record<AppRoutes, AppRoutesProps> = {
 	[AppRoutes.MAIN]: {
@@ -71,6 +78,12 @@ export const routeConfig: Record<AppRoutes, AppRoutesProps> = {
 	[AppRoutes.EXISTING_PROJECT]: {
 		path: getRouteExistingProject(':id'),
 		element: <ConstructorPage />,
+		authOnly: true,
+		roles: [UserRole.USER],
+	},
+	[AppRoutes.TEMPLATES]: {
+		path: getRouteTemplates(),
+		element: <TemplatesPage />,
 		authOnly: true,
 		roles: [UserRole.USER],
 	},

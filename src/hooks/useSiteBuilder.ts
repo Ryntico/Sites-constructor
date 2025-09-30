@@ -9,7 +9,7 @@ import {
 	createEmptySite,
 } from '@store/slices/siteSlice';
 import { loadTemplates, selectTemplates } from '@store/slices/templatesSlice';
-import type { PageSchema, SchemaPatch, ThemeTokens } from '@/types/siteTypes';
+import type { PageSchema, PageTemplateWithThemeDoc, SchemaPatch, ThemeTokens } from '@/types/siteTypes';
 import { useEffect, useMemo, useRef } from 'react';
 import { store } from '@/store';
 import { DEFAULT_THEME } from '@const/defaultTheme.ts';
@@ -81,14 +81,14 @@ export function useSiteBuilder(siteId: string, pageId: string) {
 	};
 
 	const getPageTplById = async (tplId: string) => {
-		let tpl = templates.pages.find((t) => t.id === tplId);
+		let tpl = templates.pagesWithThemes.find((t) => t.page.id === tplId);
 		if (!tpl) {
 			await dispatch(loadTemplates()).unwrap();
 			const updated = selectTemplates(store.getState());
-			tpl = updated.pages.find((t) => t.id === tplId);
+			tpl = updated.pagesWithThemes.find((t) => t.page.id === tplId);
 		}
 		if (!tpl) throw new Error(`Page template not found: ${tplId}`);
-		return tpl;
+		return tpl.page;
 	};
 
 	const createEmptySiteId = async (opts: {
@@ -109,6 +109,30 @@ export function useSiteBuilder(siteId: string, pageId: string) {
 				firstPageTitle: opts.firstPageTitle,
 				firstPageRoute: opts.firstPageRoute ?? '/',
 				theme: themeToUse,
+			}),
+		).unwrap();
+		return res.site.id as string;
+	};
+
+	const createSiteFromTemplateIdWithTheme = async (opts: {
+		ownerId: string | undefined;
+		name: string;
+		template: PageTemplateWithThemeDoc;
+	}) => {
+		if (!opts.ownerId) throw new Error('No ownerId');
+		const page = opts.template.page
+		const theme = opts.template.theme
+		const res = await dispatch(
+			createSiteFromTemplate({
+				ownerId: opts.ownerId,
+				name: opts.name,
+				theme: theme ?? DEFAULT_THEME,
+				pageTpl: {
+					id: page.id,
+					schema: page.schema,
+					title: page.title,
+					route: page.route,
+				},
 			}),
 		).unwrap();
 		return res.site.id as string;
@@ -183,9 +207,10 @@ export function useSiteBuilder(siteId: string, pageId: string) {
 		theme: siteState.site?.theme,
 		setTheme,
 		blockTemplates: templates.block,
-		pagesTemplates: templates.pages,
+		pagesTemplates: templates.pagesWithThemes,
 		createSiteFromTemplateId,
 		createPageFromTemplateId,
+		createSiteFromTemplateIdWithTheme,
 		createEmptySiteId,
 		listUserSites,
 		listPagesOf,
