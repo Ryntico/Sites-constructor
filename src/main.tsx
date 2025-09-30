@@ -6,6 +6,7 @@ import { BrowserRouter } from 'react-router-dom';
 import '@mantine/core/styles.css';
 import '@mantine/tiptap/styles.css';
 import '@mantine/notifications/styles.css';
+import '@mantine/carousel/styles.css';
 import { Provider } from 'react-redux';
 import { store } from './store';
 import { onAuthStateChanged } from 'firebase/auth';

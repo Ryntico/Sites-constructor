@@ -12,7 +12,6 @@ export const HeaderProfile = () => {
 	const { user } = useAppSelector(selectAuth);
 
 	const logoutReject = () => {
-		// в доке color есть и работает, но в типы не добавили
 		notifications.show({
 			title: 'Ошибка выхода',
 			message: 'Попробуйте еще раз!',

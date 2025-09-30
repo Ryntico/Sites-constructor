@@ -52,35 +52,37 @@ export const Filters = ({ nameFilter, onNameFilterChange, sort, onSortChange }: 
                     placeholder="Поиск по названию"
                     value={nameFilter}
                     onChange={(e) => onNameFilterChange(e.target.value)}
+                    rightSection={
+                        <Center>
+                            <Popover position="bottom" withArrow shadow="md">
+                                <Popover.Target>
+                                    <ActionIcon variant="subtle" onClick={toggle}>
+                                        <SortIcon></SortIcon>
+                                    </ActionIcon>
+                                </Popover.Target>
+                                <Popover.Dropdown>
+                                    <Radio.Group
+                                        value={sort ? JSON.stringify(sort) : ''}
+                                        onChange={(val) => {
+                                            const parsed = JSON.parse(val);
+                                            onSortChange(parsed);
+                                            close();
+                                        }}
+                                    >
+                                        {sortOptions.map(({ value, label }) => (
+                                            <Radio
+                                                key={label}
+                                                label={label}
+                                                value={JSON.stringify(value)}
+                                            />
+                                        ))}
+                                    </Radio.Group>
+                                </Popover.Dropdown>
+                            </Popover>
+                        </Center>
+                    }
                 />
             </Box>
-            <Center>
-                <Popover position="bottom" withArrow shadow="md">
-                    <Popover.Target>
-                        <ActionIcon variant="subtle" onClick={toggle}>
-                            <SortIcon></SortIcon>
-                        </ActionIcon>
-                    </Popover.Target>
-                    <Popover.Dropdown>
-                        <Radio.Group
-                            value={sort ? JSON.stringify(sort) : ''}
-                            onChange={(val) => {
-                                const parsed = JSON.parse(val);
-                                onSortChange(parsed);
-                                close();
-                            }}
-                        >
-                            {sortOptions.map(({ value, label }) => (
-                                <Radio
-                                    key={label}
-                                    label={label}
-                                    value={JSON.stringify(value)}
-                                />
-                            ))}
-                        </Radio.Group>
-                    </Popover.Dropdown>
-                </Popover>
-            </Center>
         </Box>
 )
 }

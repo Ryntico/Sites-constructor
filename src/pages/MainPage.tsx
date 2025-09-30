@@ -21,6 +21,7 @@ import {
 import { useAppDispatch, useAppSelector } from '@store/hooks.ts';
 import { selectAuth } from '@store/slices/authSlice.ts';
 import { subscribeToUserSites } from '@/services/firebase/sites.ts';
+import TemplatesCarousel from '@components/TemplatesCarousel.tsx';
 
 const IconAlertCircle = () =>
     <svg
@@ -196,6 +197,8 @@ export const MainPage = () => {
   return (
       <Stack p='md' justify='space-between' h='90vh'>
         <Box>
+          <TemplatesCarousel />
+
           <Filters
               nameFilter={nameFilter}
               onNameFilterChange={setNameFilter}
@@ -204,7 +207,7 @@ export const MainPage = () => {
           />
 
           {status === 'loading' && !sites.length && (
-              <Center>
+              <Center h='calc(100vh - 160px)'>
                 <Loader />
               </Center>
           )}

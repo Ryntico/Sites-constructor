@@ -8,7 +8,7 @@ export const Header = () => {
 		<Box
 			component="header"
 			h={60}
-			style={{ borderBottom: '1px solid var(--mantine-color-gray-3)' }}
+			style={{ borderBottom: '1px solid #ced4da' }}
 		>
 			<Group h="100%" px="md" justify="space-between" wrap="nowrap">
 				<HeaderNavigation />

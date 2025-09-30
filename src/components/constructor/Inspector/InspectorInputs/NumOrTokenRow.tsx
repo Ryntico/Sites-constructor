@@ -46,7 +46,6 @@ export function NumOrTokenRow({
 					}}
 					value={isTok ? '' : toNumStr(value as number | undefined)}
 					onChange={(e) => onNumChange(strToNumOrUndef(e.target.value))}
-					placeholder="px"
 					disabled={isTok}
 				/>
 				<TokenSelect
