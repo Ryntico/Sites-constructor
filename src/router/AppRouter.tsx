@@ -5,7 +5,7 @@ import { routeConfig } from './routeConfig';
 import { type AppRoutesProps, UserRole } from '../types/routerTypes.ts';
 import { RequireNotAuth } from '@/router/RequireNotAuth.tsx';
 import { Center, Loader } from '@mantine/core';
-import { ErrorBoundary } from '@/components/ErrorBoundary/ErrorBoundary';
+import { ErrorBoundary } from '@components/errorBoundary/ErrorBoundary';
 
 export const AppRouter = memo(() => {
   const renderWithWrapper = useCallback((route: AppRoutesProps) => {

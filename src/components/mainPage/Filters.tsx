@@ -1,22 +1,6 @@
 import { Popover, TextInput, Radio, Box, ActionIcon, Center } from '@mantine/core';
 import { useDisclosure } from "@mantine/hooks";
-
-const SortIcon = () =>
-    <svg
-        xmlns="http://www.w3.org/2000/svg"
-        width="48"
-        height="48"
-        viewBox="0 0 24 24"
-        fill="none"
-        stroke="#74C0fC"
-        strokeWidth="1"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-    >
-        <path d="M3 9l4 -4l4 4m-4 -4v14" />
-        <path d="M21 15l-4 4l-4 -4m4 4v-14" />
-    </svg>
-
+import { IconSort } from "@/components/ui/icons";
 
 export enum SortOrder {
     ASC = 'asc',
@@ -57,7 +41,7 @@ export const Filters = ({ nameFilter, onNameFilterChange, sort, onSortChange }: 
                             <Popover position="bottom" withArrow shadow="md">
                                 <Popover.Target>
                                     <ActionIcon variant="subtle" onClick={toggle}>
-                                        <SortIcon></SortIcon>
+                                        <IconSort></IconSort>
                                     </ActionIcon>
                                 </Popover.Target>
                                 <Popover.Dropdown>

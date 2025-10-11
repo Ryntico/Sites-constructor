@@ -1,5 +1,5 @@
 import '@/App.css';
-import { Header } from '@/components/Header';
+import { Header } from '@/components/header';
 import { AppRouter } from '@/router/AppRouter.tsx';
 import { selectAuth } from '@store/slices/authSlice';
 import { useAppSelector } from '@store/hooks';

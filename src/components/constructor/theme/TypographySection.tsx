@@ -1,6 +1,6 @@
 import { Grid, NumberInput, TextInput } from '@mantine/core';
 import type { ThemeTokens } from '@/types/siteTypes.ts';
-import { useThemeEditorContext } from '@/context/ThemeEditorContext/useThemeEditorContext.ts';
+import { useThemeEditorContext } from '@/context/themeEditorContext/useThemeEditorContext.ts';
 
 interface TypographySectionProps {
 	theme: ThemeTokens;

@@ -9,7 +9,7 @@ import { RadiusShadowSection } from './RadiusShadowSection.tsx';
 import { TypographySection } from './TypographySection.tsx';
 import { BlockquoteSection } from './BlockquoteSection.tsx';
 import { SpacingSection } from './SpacingSection.tsx';
-import { ThemeEditorProvider } from '@/context/ThemeEditorContext/ThemeEditorContext.tsx';
+import { ThemeEditorProvider } from '@/context/themeEditorContext/ThemeEditorContext.tsx';
 
 type Props = {
 	theme: ThemeTokens;

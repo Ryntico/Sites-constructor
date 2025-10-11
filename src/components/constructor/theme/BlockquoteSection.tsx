@@ -1,6 +1,6 @@
 import { Grid, ColorInput, TextInput, NumberInput } from '@mantine/core';
 import type { ThemeTokens } from '@/types/siteTypes.ts';
-import { useThemeEditorContext } from '@/context/ThemeEditorContext/useThemeEditorContext.ts';
+import { useThemeEditorContext } from '@/context/themeEditorContext/useThemeEditorContext.ts';
 
 interface BlockquoteSectionProps {
 	theme: ThemeTokens;

@@ -14,6 +14,7 @@ import {
 	ThemeIcon,
 } from '@mantine/core';
 import { Dropzone, IMAGE_MIME_TYPE } from '@mantine/dropzone';
+import { IconPhoto, IconUpload, IconX } from '@/components/ui/icons';
 
 type Props = {
 	ownerId?: string;
@@ -202,35 +203,4 @@ function formatBytes(n: number) {
 	const i = Math.floor(Math.log(n) / Math.log(k));
 	const v = parseFloat((n / Math.pow(k, i)).toFixed(2));
 	return `${v} ${sizes[i]}`;
-}
-
-function IconPhoto(props: React.SVGProps<SVGSVGElement>) {
-	return (
-		<svg width="18" height="18" viewBox="0 0 24 24" {...props} aria-hidden="true">
-			<path
-				fill="currentColor"
-				d="M19 19H5V5h7V3H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7h-2v7Zm-8-3l2.5-3.15L16 16l3-4l3 4H11Z"
-			/>
-			<circle cx="15.5" cy="8.5" r="1.5" fill="currentColor" />
-		</svg>
-	);
-}
-
-function IconUpload(props: React.SVGProps<SVGSVGElement>) {
-	return (
-		<svg width="16" height="16" viewBox="0 0 24 24" {...props} aria-hidden="true">
-			<path fill="currentColor" d="M5 20h14v-2H5v2Zm7-16l-5 5h3v4h4v-4h3l-5-5Z" />
-		</svg>
-	);
-}
-
-function IconX(props: React.SVGProps<SVGSVGElement>) {
-	return (
-		<svg width="16" height="16" viewBox="0 0 24 24" {...props} aria-hidden="true">
-			<path
-				fill="currentColor"
-				d="M18.3 5.71L12 12.01l-6.3-6.3L4.29 7.1l6.3 6.3l-6.3 6.3l1.41 1.41l6.3-6.3l6.3 6.3l1.41-1.41l-6.3-6.3l6.3-6.3z"
-			/>
-		</svg>
-	);
 }

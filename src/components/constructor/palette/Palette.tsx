@@ -1,4 +1,4 @@
-import { useState, useRef, type JSX } from 'react';
+import { useState, useRef, type JSX, type SVGProps } from 'react';
 import {
 	Paper,
 	Box,
@@ -10,37 +10,37 @@ import {
 } from '@mantine/core';
 import { PaletteItem } from './PaletteItem.tsx';
 import {
-	ChevronLeft,
-	DoubleChevronRight,
-	BoxCard,
-	RichText,
-	Image,
-	Button as ButtonIcon,
-	Form,
-	Blockquote,
-	Select,
-	Input,
-	Textarea,
-	Divider,
-	Header,
-	Paragraph,
-	Anchor,
-} from './PaletteIcons.tsx';
+	IconChevronLeft,
+	IconDoubleChevronRight,
+	IconBoxCard,
+	IconRichText,
+	IconImage,
+	IconButton,
+	IconForm,
+	IconBlockquote,
+	IconSelect,
+	IconInput,
+	IconTextarea,
+	IconDivider,
+	IconHeader,
+	IconParagraph,
+	IconAnchor,
+} from '@/components/ui/icons';
 
 const icons = {
-	'box_card': BoxCard,
-	'richtext': RichText,
-	'image_card': Image,
-	'button_primary': ButtonIcon,
-	'form': Form,
-	'input': Input,
-	'select': Select,
-	'textarea': Textarea,
-	'blockquote': Blockquote,
-	'divider': Divider,
-	'heading_h1': Header,
-	'paragraph': Paragraph,
-	'anchor': Anchor,
+	'box_card': IconBoxCard,
+	'richtext': IconRichText,
+	'image_card': IconImage,
+	'button_primary': IconButton,
+	'form': IconForm,
+	'input': IconInput,
+	'select': IconSelect,
+	'textarea': IconTextarea,
+	'blockquote': IconBlockquote,
+	'divider': IconDivider,
+	'heading_h1': IconHeader,
+	'paragraph': IconParagraph,
+	'anchor': IconAnchor,
 };
 
 export function Palette({ items }: { items: { id: string; name: string }[] }) {
@@ -72,7 +72,7 @@ export function Palette({ items }: { items: { id: string; name: string }[] }) {
 		}
 	});
 
-	const itemsForRender: { id: string; name: string; icon: JSX.Element }[] = itemsForMutateSort.map((item) => ({
+	const itemsForRender: { id: string; name: string; icon: (props: SVGProps<SVGSVGElement>) => JSX.Element }[] = itemsForMutateSort.map((item) => ({
 		...item,
 		icon: icons[item.id as keyof typeof icons] || icons['box_card'],
 	}));
@@ -107,7 +107,7 @@ export function Palette({ items }: { items: { id: string; name: string }[] }) {
 							 cursor: 'pointer',
 						 }}
 					>
-						<DoubleChevronRight />
+						<IconDoubleChevronRight />
 					</Box>
 				) : (
 					<Box>
@@ -120,7 +120,7 @@ export function Palette({ items }: { items: { id: string; name: string }[] }) {
 								p={4}
 								onClick={toggleCollapse}
 							>
-								<ChevronLeft />
+								<IconChevronLeft />
 							</Button>
 						</Group>
 
@@ -131,7 +131,7 @@ export function Palette({ items }: { items: { id: string; name: string }[] }) {
 						<Grid gutter="xs">
 							{itemsForRender.map((i) => (
 								<Grid.Col key={i.id} span={6}>
-									<PaletteItem name={i.name} mimeKey={i.id} icon={i.icon} />
+									<PaletteItem name={i.name} mimeKey={i.id} icon={i.icon({stroke: '#607d8b'})} />
 								</Grid.Col>
 							))}
 						</Grid>

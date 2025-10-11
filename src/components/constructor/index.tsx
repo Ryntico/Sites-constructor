@@ -17,7 +17,7 @@ import {
 	cloneSubtreeWithIds,
 } from '@/components/constructor/ops/schemaOps.ts';
 import { EditorRenderer } from '@/components/constructor/editor/EditorRenderer.tsx';
-import { Inspector } from '@/components/constructor/Inspector';
+import { Inspector } from '@/components/constructor/inspector';
 import { Palette } from '@/components/constructor/palette/Palette.tsx';
 import { PreviewPane } from '@/components/constructor/preview/PreviewPane.tsx';
 import { ThemeEditor } from '@/components/constructor/theme/ThemeEditor.tsx';
@@ -39,7 +39,7 @@ import {
 import CodePreviewModal from '@/components/CodePreviewModal.tsx';
 import { useParams } from 'react-router-dom';
 import { SiteNameEditor } from '@/components/SiteNameEditor.tsx';
-import { SaveTemplateModal } from './SaveTemplateModal';
+import { SaveTemplateModal } from '@/components/constructor/saveTemplateModal/SaveTemplateModal.tsx';
 import { savePageAsTemplate } from '@/services/firebase/templates';
 import { notifications } from '@mantine/notifications';
 

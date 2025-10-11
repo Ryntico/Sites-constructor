@@ -3,6 +3,7 @@ import { TextInput, Text } from '@mantine/core';
 import { useAppDispatch } from '@store/hooks.ts';
 import { updateSiteName } from '@store/slices/siteSlice.ts';
 import { useDebounce } from '@hooks/useDebounce.ts';
+import { IconCursorText } from './ui/icons';
 
 interface SiteNameEditorProps {
 	siteId: string;
@@ -11,25 +12,6 @@ interface SiteNameEditorProps {
 	variant?: 'default' | 'unstyled' | 'filled';
 	className?: string;
 }
-
-const CursorText = ({ style }: { style?: React.CSSProperties }) =>
-	<svg
-		xmlns="http://www.w3.org/2000/svg"
-		width="28"
-		height="28"
-		viewBox="0 0 24 24"
-		fill="none"
-		stroke="#73bffa"
-		strokeWidth="1"
-		strokeLinecap="round"
-		strokeLinejoin="round"
-		style={style}
-	>
-		<path d="M10 12h4" />
-		<path d="M9 4a3 3 0 0 1 3 3v10a3 3 0 0 1 -3 3" />
-		<path d="M15 4a3 3 0 0 0 -3 3v10a3 3 0 0 0 3 3" />
-	</svg>;
-
 
 export function SiteNameEditor({
 								   siteId,
@@ -114,7 +96,7 @@ export function SiteNameEditor({
 				lineHeight: variant === 'unstyled' ? '1.5rem' : undefined,
 			}}
 		>
-			{name} <CursorText style={{ verticalAlign: 'middle' }} />
+			{name} <IconCursorText style={{ verticalAlign: 'middle' }} />
 		</Text>
 
 	);

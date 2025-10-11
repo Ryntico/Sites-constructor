@@ -41,7 +41,7 @@ const MainPage = lazy(() =>
 const PublicPreviewPage = lazy(() => import('@pages/PublicPreview'));
 
 const TemplatesPage = lazy(() =>
-	import('@components/TemplatesCarousel.tsx').then((module) => ({
+	import('@components/mainPage/TemplatesCarousel.tsx').then((module) => ({
 		default: module.TemplatesCarousel,
 	})),
 );

@@ -12,7 +12,7 @@ import {
 	ButtonInspector,
 	ImageInspector,
 	BlockquoteInspector
-} from './NodeInspectors';
+} from './nodeInspectors';
 import {
 	LayoutInspector,
 	FlexItemInspector,
@@ -20,12 +20,12 @@ import {
 	SpacingInspector,
 	ColorInspector,
 	DecorInspector
-} from './StyleInspectors';
+} from './styleInspectors';
 import {
 	NumberInputInspector,
 	RangeInputInspector,
 	TextInputInspector
-} from './InputSpecificInspectors';
+} from './inputSpecificInspectors';
 
 type Props = {
 	schema: PageSchema;
